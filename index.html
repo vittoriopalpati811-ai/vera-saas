@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>VERA — ESG Platform per PMI italiane</title>
+<meta name="description" content="La piattaforma ESG progettata per le PMI italiane. Calcola le emissioni GHG, scegli lo standard giusto con l'AI e genera report conformi a VSME o GRI in 4 giorni*."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/vera.css?v=20260421"/>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     LANDING VIEW
+══════════════════════════════════════════════════ -->
+<div id="view-landing" class="view active">
+
+  <nav class="ln-nav">
+    <div class="ln-nav-i">
+      <div class="logo-mark">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <rect width="28" height="28" rx="7" fill="#14532d"/>
+          <path d="M7 20L14 8l7 12H7z" fill="#4ade80" opacity=".9"/>
+          <path d="M10.5 20l3.5-6 3.5 6h-7z" fill="#86efac" opacity=".7"/>
+        </svg>
+        <span class="wordmark">VERA</span>
+      </div>
+      <ul class="ln-nav-links">
+        <li><a href="#come-funziona">Come funziona</a></li>
+        <li><a href="#perche-vera">Perché VERA</a></li>
+        <li><a href="#prezzi">Prezzi</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+      <div class="ln-nav-cta">
+        <button class="btn btn-ghost" onclick="openApp()">Accedi</button>
+        <button class="btn btn-primary" onclick="openApp()">Prova gratis →</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-badge">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" fill="#16a34a" opacity=".3"/><circle cx="6" cy="6" r="3" fill="#16a34a"/></svg>
+      Nuovo: Valutazione standard AI in tempo reale
+    </div>
+    <h1>ESG semplice.<br/><em>Per le PMI italiane.</em></h1>
+    <p>L'unica piattaforma che capisce quale standard devi usare, calcola le tue emissioni GHG e genera il bilancio di sostenibilità conforme — in 4 giorni*, non 4 mesi.</p>
+    <div class="hero-actions">
+      <button class="btn btn-primary btn-lg" onclick="openApp()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        Inizia la valutazione AI
+      </button>
+      <a href="VERA_Whitepaper_IT.pdf" target="_blank" class="btn btn-outline btn-lg">Guarda il whitepaper →</a>
+    </div>
+    <p class="hero-note">Nessuna carta di credito · Primo report in 4 giorni* · Conforme VSME e GRI</p>
+  </section>
+
+  <!-- STATS -->
+  <div class="ln-stats">
+    <div class="ln-stats-i">
+      <div class="stat"><div class="stat-n">4 giorni*</div><div class="stat-l">al primo report</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat"><div class="stat-n">100%</div><div class="stat-l">conforme VSME · GRI</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat"><div class="stat-n">AI</div><div class="stat-l">al servizio del tuo bilancio di sostenibilità</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat"><div class="stat-n">€0</div><div class="stat-l">competenze ESG richieste</div></div>
+    </div>
+  </div>
+
+  <!-- PROBLEM -->
+  <section id="come-funziona" class="ln-section">
+    <div class="ln-section-label reveal">Il problema</div>
+    <h2 class="ln-section-title reveal">La rendicontazione ESG è un labirinto.<br/>VERA ti guida dall'inizio alla fine.</h2>
+    <div class="pain-grid">
+      <div class="pain-card reveal">
+        <div class="pain-icon">🤯</div>
+        <h3>VSME o GRI? Non lo so</h3>
+        <p>L'AI di VERA analizza la tua azienda in 2 minuti e ti dice esattamente quale standard usare e perché, con reasoning trasparente.</p>
+      </div>
+      <div class="pain-card reveal">
+        <div class="pain-icon">⏳</div>
+        <h3>Mesi di lavoro</h3>
+        <p>Con i consulenti tradizionali, un bilancio ESG richiede 3–6 mesi. VERA lo riduce a 4 giorni* con automazione completa del calcolo GHG.</p>
+      </div>
+      <div class="pain-card reveal">
+        <div class="pain-icon">💸</div>
+        <h3>Costi proibitivi</h3>
+        <p>Le consulenze ESG costano €8.000–25.000. VERA parte da €599/anno, con tutti gli standard inclusi e aggiornamenti automatici.</p>
+      </div>
+      <div class="pain-card reveal">
+        <div class="pain-icon">📋</div>
+        <h3>Normativa opaca</h3>
+        <p>VSME, CSRD, ESRS, GHG Protocol. VERA traduce ogni obbligo in azioni concrete, in italiano, con la fonte normativa citata.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="ln-section bg-surface full-w">
+    <div class="ln-section-inner">
+      <div class="ln-section-label reveal">Come funziona</div>
+      <h2 class="ln-section-title reveal">Quattro passi. Nessuna competenza ESG richiesta.</h2>
+      <div class="how-grid">
+        <div class="how-step reveal">
+          <div class="how-num">1</div>
+          <div class="how-icon">🤖</div>
+          <h3>Valutazione AI</h3>
+          <p>Rispondi a 8 domande sulla tua azienda. L'AI analizza in tempo reale e ti raccomanda il framework giusto (VSME o GRI) con reasoning dettagliato.</p>
+        </div>
+        <div class="how-step reveal">
+          <div class="how-num">2</div>
+          <div class="how-icon">📤</div>
+          <h3>Carica i dati</h3>
+          <p>Un file Excel con consumi energetici, rifiuti e trasporti. VERA lo valida riga per riga e mappa automaticamente ogni voce allo scope GHG corretto.</p>
+        </div>
+        <div class="how-step reveal">
+          <div class="how-num">3</div>
+          <div class="how-icon">⚡</div>
+          <h3>Calcolo automatico</h3>
+          <p>Algoritmo GHG Protocol (Scope 1, 2, 3) con fattori secondo la Metodologia VERA 2024. Ogni calcolo mostra la fonte del dato con riferimento di pagina.</p>
+        </div>
+        <div class="how-step reveal">
+          <div class="how-num">4</div>
+          <div class="how-icon">📄</div>
+          <h3>Report timbrato**</h3>
+          <p>PDF formale 40+ pagine conforme al tuo standard, pronto per banche e gare d'appalto. Con timbro metodologico digitale** e codice univoco verificabile.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI FEATURE HIGHLIGHT -->
+  <section id="perche-vera" class="ln-section">
+    <div class="ln-section-label reveal">Novità</div>
+    <h2 class="ln-section-title reveal">La prima piattaforma ESG con<br/><em>AI assessment in tempo reale.</em></h2>
+    <p class="ln-section-sub reveal">Prima di scegliere VSME o GRI, VERA ti fa 8 domande sulla tua azienda e ragiona come un consulente senior: dimensione, obblighi normativi, stakeholder, mercato di riferimento e budget — tutto ponderato secondo la pratica più comune per ciascun framework.</p>
+    <div class="ai-feature-grid reveal">
+      <div class="ai-feat-card">
+        <div class="ai-feat-icon">📊</div>
+        <h4>Score in tempo reale</h4>
+        <p>Ad ogni risposta, il punteggio VSME vs GRI si aggiorna istantaneamente. Vedi come cambia la raccomandazione man mano che rispondi.</p>
+      </div>
+      <div class="ai-feat-card">
+        <div class="ai-feat-icon">🧠</div>
+        <h4>Reasoning strutturato</h4>
+        <p>L'AI non dà solo una risposta — spiega il ragionamento punto per punto: normativa applicabile, pratiche di settore, aspettative degli stakeholder.</p>
+      </div>
+      <div class="ai-feat-card">
+        <div class="ai-feat-icon">📋</div>
+        <h4>Moduli specifici</h4>
+        <p>Oltre allo standard, indica quali moduli e disclosure specifiche rendicontare in base al profilo aziendale (es. VSME B1–B3 o GRI 302+305).</p>
+      </div>
+      <div class="ai-feat-card">
+        <div class="ai-feat-icon">✅</div>
+        <h4>Applicazione automatica</h4>
+        <p>Con un clic, la raccomandazione AI viene applicata all'onboarding: il report viene strutturato secondo lo standard scelto dall'inizio.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STRATEGIC VALUE -->
+  <section class="ln-section bg-surface full-w">
+    <div class="ln-section-inner">
+      <div class="ln-section-label reveal">Oltre la compliance</div>
+      <h2 class="ln-section-title reveal">Il bilancio di sostenibilità<br/>non è un obbligo. È una <em>bussola.</em></h2>
+      <p class="ln-section-sub reveal">Le PMI che già rendicontano la sostenibilità non lo fanno solo per le banche o i bandi pubblici. Lo fanno perché capiscono dove migliorare, dove sprecare meno, dove costruire vantaggio competitivo reale.</p>
+      <div class="pain-grid" style="margin-top:48px">
+        <div class="pain-card reveal">
+          <div class="pain-icon">🌍</div>
+          <h3>Impatto ambientale reale</h3>
+          <p>Misurare le emissioni non è solo adempimento. È il primo passo per ridurle — tagliando costi energetici, ottimizzando la logistica, scegliendo fornitori più efficienti.</p>
+        </div>
+        <div class="pain-card reveal">
+          <div class="pain-icon">🤝</div>
+          <h3>Impatto sociale e governance</h3>
+          <p>Formalizzare le pratiche su forza lavoro, sicurezza e anticorruzione tutela l'azienda e rafforza la reputazione verso clienti, dipendenti e territorio.</p>
+        </div>
+        <div class="pain-card reveal">
+          <div class="pain-icon">💰</div>
+          <h3>Accesso al credito verde</h3>
+          <p>Banche e istituti finanziari offrono condizioni migliori alle imprese con rating ESG documentato. Il bilancio VERA è già nel formato richiesto dagli istituti di credito italiani.</p>
+        </div>
+        <div class="pain-card reveal">
+          <div class="pain-icon">📈</div>
+          <h3>Gare e filiere produttive</h3>
+          <p>La PA richiede ESG nei bandi sopra soglia. Le grandi committenti — automotive, fashion, food — lo richiedono ai propri fornitori. Presentarsi certificati significa vincere più lavoro.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GUIDA STRATEGICA -->
+  <section class="ln-section">
+    <div class="ln-section-label reveal">Strumento di guida</div>
+    <h2 class="ln-section-title reveal">Chi misura, migliora.<br/><em>Chi non misura, spreca.</em></h2>
+    <p class="ln-section-sub reveal">Il bilancio di sostenibilità generato da VERA non è un documento da archiviare. È un cruscotto strategico: mostra dove l'azienda consuma di più, dove può migliorare l'efficienza e come si confronta con il benchmark di settore.</p>
+    <div class="how-grid" style="margin-top:48px">
+      <div class="how-step reveal">
+        <div class="how-num">→</div>
+        <div class="how-icon">🔍</div>
+        <h3>Diagnosi precisa</h3>
+        <p>Ogni voce del bilancio è tracciata con fonte, fattore di emissione e pagina di riferimento normativo. Zero ambiguità.</p>
+      </div>
+      <div class="how-step reveal">
+        <div class="how-num">→</div>
+        <div class="how-icon">🎯</div>
+        <h3>Obiettivi misurabili</h3>
+        <p>Confronta anno su anno le emissioni, i consumi energetici e i rifiuti. Imposta target realistici e monitora i progressi in tempo reale.</p>
+      </div>
+      <div class="how-step reveal">
+        <div class="how-num">→</div>
+        <div class="how-icon">🏆</div>
+        <h3>Vantaggio competitivo</h3>
+        <p>Un bilancio ESG solido e verificabile ti distingue dai concorrenti nei mercati B2B e ti apre porte che altrimenti resterebbero chiuse.</p>
+      </div>
+      <div class="how-step reveal">
+        <div class="how-num">→</div>
+        <div class="how-icon">♻️</div>
+        <h3>Economia circolare</h3>
+        <p>Identifica inefficienze nella gestione rifiuti e nei trasporti. I clienti VERA riducono in media il 15–20% delle emissioni Scope 3 entro 18 mesi.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPARISON TABLE -->
+  <section class="ln-section bg-surface full-w">
+    <div class="ln-section-inner">
+      <div class="ln-section-label reveal">Confronto</div>
+      <h2 class="ln-section-title reveal">VERA vs le alternative.</h2>
+      <div class="cmp-wrap reveal">
+        <table class="cmp-table">
+          <thead><tr>
+            <th>Criterio</th>
+            <th>Excel + consulente</th>
+            <th>Software enterprise</th>
+            <th class="vera-col">VERA ✦</th>
+          </tr></thead>
+          <tbody>
+            <tr><td>Valutazione standard AI</td><td class="cross">✗</td><td class="cross">✗</td><td class="vera-col check">✓ Incluso</td></tr>
+            <tr><td>Tempo al primo report</td><td>3–6 mesi</td><td>6–12 mesi</td><td class="vera-col">4 giorni*</td></tr>
+            <tr><td>Costo annuo</td><td>€8.000–25.000</td><td>€15.000+</td><td class="vera-col">€599/anno</td></tr>
+            <tr><td>Standard VSME e GRI</td><td class="cross">Dipende</td><td class="check">✓</td><td class="vera-col check">✓</td></tr>
+            <tr><td>Timbro metodologico</td><td class="cross">✗</td><td class="cross">✗</td><td class="vera-col check">✓</td></tr>
+            <tr><td>Fonti dei fattori visibili</td><td class="cross">Raramente</td><td class="cross">✗</td><td class="vera-col check">✓ con pagina</td></tr>
+            <tr><td>Interfaccia italiana</td><td class="cross">✗</td><td class="cross">✗</td><td class="vera-col check">✓ nativa</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="prezzi" class="ln-section">
+    <div class="ln-section-label reveal">Prezzi</div>
+    <h2 class="ln-section-title reveal">Semplice. Prevedibile. Senza sorprese.</h2>
+    <div class="pricing-grid">
+      <div class="plan reveal">
+        <div class="plan-name">Base</div>
+        <div class="plan-price">€599<span class="plan-cadence">/anno</span></div>
+        <ul class="plan-features">
+          <li>1 azienda rendicontata</li>
+          <li>Valutazione AI standard inclusa</li>
+          <li>Standard VSME</li>
+          <li>Calcolo GHG Scope 1, 2, 3</li>
+          <li>Report PDF</li>
+          <li>Timbro metodologico digitale</li>
+          <li>Possibilità di supporto dal consulente</li>
+        </ul>
+        <button class="btn btn-outline" style="width:100%" onclick="openApp()">Inizia gratis →</button>
+      </div>
+      <div class="plan featured reveal">
+        <div class="plan-badge">PIÙ SCELTO</div>
+        <div class="plan-name">Pro</div>
+        <div class="plan-price">€1.499<span class="plan-cadence">/anno</span></div>
+        <ul class="plan-features">
+          <li>Fino a 5 aziende</li>
+          <li>AI assessment avanzato</li>
+          <li>VSME + GRI Standards</li>
+          <li>Analisi Scope 3 completa</li>
+          <li>Analisi Doppia Materialità ESRS</li>
+          <li>Storico pluriennale e trend (if applicable)</li>
+          <li>Supporto dal consulente incluso</li>
+          <li>Onboarding dedicato con consulente</li>
+        </ul>
+        <button class="btn btn-primary" style="width:100%" onclick="openApp()">Inizia gratis →</button>
+      </div>
+      <div class="plan reveal">
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-price">Su misura</div>
+        <ul class="plan-features">
+          <li>Aziende illimitate</li>
+          <li>API + integrazioni ERP</li>
+          <li>Doppia Materialità + Stakeholder Engagement</li>
+          <li>White label</li>
+          <li>SLA garantito</li>
+          <li>Formazione team ESG</li>
+        </ul>
+        <button class="btn btn-outline" style="width:100%" onclick="openApp()">Contattaci →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="ln-section bg-surface full-w">
+    <div class="ln-section-inner">
+      <div class="ln-section-label reveal">FAQ</div>
+      <h2 class="ln-section-title reveal">Domande frequenti.</h2>
+      <div class="faq-list">
+        <div class="faq-item reveal">
+          <div class="faq-q" onclick="toggleFaq(this)">Come funziona la valutazione AI per lo standard? <span class="faq-arr">▼</span></div>
+          <div class="faq-a">L'AI di VERA ti pone 8 domande sulla tua azienda: dimensione, obblighi normativi, esperienza ESG, stakeholder, mercato, settore, budget e preferenze. Ad ogni risposta, aggiorna in tempo reale il punteggio VSME vs GRI. Alla fine, genera un'analisi strutturata che spiega il ragionamento punto per punto, indicando anche i moduli specifici da rendicontare.</div>
+        </div>
+        <div class="faq-item reveal">
+          <div class="faq-q" onclick="toggleFaq(this)">Sono obbligato a fare il bilancio ESG? <span class="faq-arr">▼</span></div>
+          <div class="faq-a">Dal 2026 tutte le PMI che entrano nella catena di fornitura di grandi imprese soggette a CSRD riceveranno richieste di dati ESG. Non è ancora un obbligo legale diretto per le PMI non quotate, ma lo diventerà di fatto per chi vuole mantenere i clienti principali. L'AI di VERA valuta anche questo nella sua raccomandazione.</div>
+        </div>
+        <div class="faq-item reveal">
+          <div class="faq-q" onclick="toggleFaq(this)">Che dati devo avere per usare VERA? <span class="faq-arr">▼</span></div>
+          <div class="faq-a">Bastano le bollette di gas ed elettricità, i rifornimenti carburante e i dati di smaltimento rifiuti. VERA ti fornisce un template Excel precompilato con il formato richiesto*. Per la valutazione AI non servono dati numerici: bastano le risposte alle 8 domande qualitative.</div>
+        </div>
+        <div class="faq-item reveal">
+          <div class="faq-q" onclick="toggleFaq(this)">Il report è accettato dalle banche e nei bandi? <span class="faq-arr">▼</span></div>
+          <div class="faq-a">Sì. Il report è conforme a VSME e GHG Protocol, richiesti da BEI, Banco BPM, Intesa Sanpaolo e nei principali bandi europei. Il timbro metodologico VERA** attesta la correttezza metodologica del calcolo con codice SHA-256 verificabile. La certificazione VERA non sostituisce l'assurance esterna secondo ISAE 3000.</div>
+        </div>
+        <div class="faq-item reveal">
+          <div class="faq-q" onclick="toggleFaq(this)">Posso ignorare la raccomandazione AI e scegliere io lo standard? <span class="faq-arr">▼</span></div>
+          <div class="faq-a">Assolutamente sì. La raccomandazione AI è un punto di partenza informato, non un obbligo. Puoi sempre sovrascrivere la scelta manualmente, con la certezza di capire le implicazioni grazie al reasoning dettagliato mostrato dall'AI.</div>
+        </div>
+        <div class="faq-item reveal">
+          <div class="faq-q" onclick="toggleFaq(this)">Quanto vale il timbro VERA rispetto all'assurance esterna? <span class="faq-arr">▼</span></div>
+          <div class="faq-a">Il timbro VERA** certifica la correttezza metodologica del calcolo GHG e l'adeguatezza del report rispetto allo standard scelto. Non ha lo stesso valore legale dell'assurance esterna secondo ISAE 3000, che richiede un revisore legale abilitato. Per le PMI che non hanno ancora l'obbligo di assurance, il timbro VERA è lo strumento ideale per dimostrare rigore metodologico a banche, clienti e bandi.</div>
+        </div>
+        <div class="faq-item reveal">
+          <div class="faq-q" onclick="toggleFaq(this)">Quando vedo il report pronto? <span class="faq-arr">▼</span></div>
+          <div class="faq-a">Il report viene generato dall'AI e poi revisionato dal consulente VERA prima di essere reso disponibile. Questo passaggio di revisione garantisce la qualità e la conformità del documento. I tempi indicativi sono di 4 giorni* dal caricamento dei dati.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA DARK -->
+  <div class="ln-section">
+    <div class="cta-dark reveal">
+      <h2>I primi 5 ci provano gratis.</h2>
+      <p>Nessuna carta di credito. Il primo report in 4 giorni*.</p>
+      <button class="btn btn-primary btn-lg" onclick="openApp()">Inizia la valutazione AI →</button>
+    </div>
+  </div>
+
+  <footer class="ln-footer">
+    <div class="ln-footer-i">
+      <div class="logo-mark">
+        <svg width="22" height="22" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="7" fill="#14532d"/><path d="M7 20L14 8l7 12H7z" fill="#4ade80" opacity=".9"/></svg>
+        <span class="wordmark" style="font-size:17px">VERA</span>
+      </div>
+      <div style="width:100%;text-align:left;font-size:11.5px;color:#94a3b8;line-height:1.6;margin-bottom:8px">
+        <p>* Il tempo indicativo di 4 giorni si riferisce alla generazione del report a partire da dati già strutturati e completi nel formato Excel richiesto da VERA. Sono escluse le fasi di raccolta, pulizia e strutturazione dei dati aziendali. Il sistema di gestione integrato (gestionale) è in fase di implementazione.</p>
+        <p>** Il timbro metodologico VERA attesta la coerenza, l'adeguatezza e la correttezza metodologica del processo di rendicontazione e dell'individuazione degli indicatori ESG, sulla base degli standard dichiarati. Non costituisce assurance legale ai sensi dell'ISAE 3000 e non sostituisce la revisione da parte di un revisore legale abilitato.</p>
+      </div>
+      <span class="footer-copy">© 2025 VERA ESG Platform · P.IVA 12345678901 · Made with ♥ in Italia</span>
+      <a href="mailto:ciao@vera-esg.it" class="footer-link">ciao@vera-esg.it</a>
+    </div>
+  </footer>
+
+</div><!-- /view-landing -->
+
+
+<!-- ══════════════════════════════════════════════════
+     LOGIN VIEW
+══════════════════════════════════════════════════ -->
+<div id="view-login" class="view">
+  <div class="login-wrap" style="max-width:420px">
+    <div class="login-brand">
+      <svg width="38" height="38" viewBox="0 0 28 28" fill="none">
+        <rect width="28" height="28" rx="7" fill="#14532d"/>
+        <path d="M7 20L14 8l7 12H7z" fill="#4ade80" opacity=".9"/>
+        <path d="M10.5 20l3.5-6 3.5 6h-7z" fill="#86efac" opacity=".7"/>
+      </svg>
+      <span class="wordmark" style="font-size:22px">VERA</span>
+    </div>
+
+    <!-- ── LOGIN PANEL ── -->
+    <div id="login-panel" style="background:var(--white);border:1px solid var(--border);border-radius:18px;padding:32px 28px;box-shadow:0 0 0 1px var(--border),0 20px 60px #00000066,0 0 80px oklch(0.72 0.21 150 / 0.06)"
+>
+      <h2 class="login-title" style="margin-bottom:6px">Accedi alla piattaforma</h2>
+      <p class="login-sub" style="margin-bottom:24px">Inserisci le tue credenziali per continuare</p>
+
+      <form id="login-form" onsubmit="veraAuth.handleLogin(event)" style="display:flex;flex-direction:column;gap:12px">
+        <input
+          id="login-email"
+          type="email"
+          placeholder="Email aziendale"
+          autocomplete="email"
+          required
+          style="padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;outline:none;transition:border .15s;background:var(--white);color:var(--text)"
+          onfocus="this.style.borderColor='#22d06a'" onblur="this.style.borderColor='var(--border)'"
+        />
+        <input
+          id="login-password"
+          type="password"
+          placeholder="Password"
+          autocomplete="current-password"
+          required
+          style="padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;outline:none;transition:border .15s;background:var(--white);color:var(--text)"
+          onfocus="this.style.borderColor='#22d06a'" onblur="this.style.borderColor='var(--border)'"
+        />
+        <div id="login-error" style="display:none;background:#2a0f0f;color:#fca5a5;border:1px solid #7f1d1d;border-radius:8px;padding:10px 14px;font-size:13px"></div>
+        <button
+          id="login-submit"
+          type="submit"
+          class="btn btn-primary"
+          style="padding:13px;font-size:15px;font-weight:700;border-radius:10px"
+        >Accedi →</button>
+      </form>
+
+      <div style="margin-top:20px;text-align:center;border-top:1px solid var(--border);padding-top:18px">
+        <p style="color:var(--text-2);font-size:14px;margin-bottom:10px">Non hai ancora un account?</p>
+        <button class="btn btn-outline" style="width:100%;padding:11px;font-size:14px" onclick="veraAuth.showRegister()">
+          Registra la tua azienda →
+        </button>
+      </div>
+    </div>
+
+    <!-- ── REGISTER PANEL ── -->
+    <div id="register-panel" style="display:none;background:var(--white);border:1px solid var(--border);border-radius:18px;padding:32px 28px;box-shadow:0 0 0 1px var(--border),0 20px 60px #00000066,0 0 80px oklch(0.72 0.21 150 / 0.06)"
+>
+      <h2 class="login-title" style="margin-bottom:6px">Crea il tuo account</h2>
+      <p class="login-sub" style="margin-bottom:24px">Compila i dati aziendali per iniziare</p>
+
+      <form id="register-form" onsubmit="veraAuth.handleRegister(event)" style="display:flex;flex-direction:column;gap:12px">
+        <input
+          id="reg-name"
+          type="text"
+          placeholder="Nome e cognome referente"
+          required
+          style="padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;outline:none;transition:border .15s;background:var(--white);color:var(--text)"
+          onfocus="this.style.borderColor='#22d06a'" onblur="this.style.borderColor='var(--border)'"
+        />
+        <input
+          id="reg-company"
+          type="text"
+          placeholder="Ragione sociale azienda"
+          required
+          style="padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;outline:none;transition:border .15s;background:var(--white);color:var(--text)"
+          onfocus="this.style.borderColor='#22d06a'" onblur="this.style.borderColor='var(--border)'"
+        />
+        <input
+          id="reg-email"
+          type="email"
+          placeholder="Email aziendale"
+          autocomplete="email"
+          required
+          style="padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;outline:none;transition:border .15s;background:var(--white);color:var(--text)"
+          onfocus="this.style.borderColor='#22d06a'" onblur="this.style.borderColor='var(--border)'"
+        />
+        <input
+          id="reg-password"
+          type="password"
+          placeholder="Password (min. 6 caratteri)"
+          autocomplete="new-password"
+          required
+          minlength="6"
+          style="padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;outline:none;transition:border .15s;background:var(--white);color:var(--text)"
+          onfocus="this.style.borderColor='#22d06a'" onblur="this.style.borderColor='var(--border)'"
+        />
+        <div id="reg-error" style="display:none;background:#2a0f0f;color:#fca5a5;border:1px solid #7f1d1d;border-radius:8px;padding:10px 14px;font-size:13px"></div>
+        <button
+          id="reg-submit"
+          type="submit"
+          class="btn btn-primary"
+          style="padding:13px;font-size:15px;font-weight:700;border-radius:10px"
+        >Crea account →</button>
+      </form>
+
+      <div style="margin-top:20px;text-align:center;border-top:1px solid var(--border);padding-top:18px">
+        <button class="btn btn-outline" style="width:100%;padding:11px;font-size:14px" onclick="veraAuth.showLogin()">
+          ← Hai già un account? Accedi
+        </button>
+      </div>
+    </div>
+
+    <button class="login-back-link" onclick="closeLogin()" style="margin-top:20px">← Torna al sito</button>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     APP VIEW
+══════════════════════════════════════════════════ -->
+<div id="view-app" class="view">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-logo">
+      <svg width="26" height="26" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="7" fill="#14532d"/><path d="M7 20L14 8l7 12H7z" fill="#4ade80" opacity=".9"/></svg>
+      <div>
+        <span class="sb-wordmark">VERA</span>
+        <small class="sb-sub">ESG Platform</small>
+      </div>
+    </div>
+
+    <div class="sb-section-label">Home</div>
+    <li class="sb-item active" id="nav-home" onclick="showScreen('home',this)">
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Home
+    </li>
+
+    <!-- Admin-only: Clienti section -->
+    <div class="sb-section-label sb-admin-only">Clienti</div>
+    <div class="sb-item sb-admin-only" id="nav-clients" onclick="showScreen('clients',this)">
+      <svg class="sb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      <span>Gestione Clienti</span>
+      <span id="pending-reports-badge" style="display:none;margin-left:auto;background:#ef4444;color:#fff;border-radius:999px;font-size:11px;font-weight:700;padding:2px 7px;min-width:18px;text-align:center;line-height:1.4">0</span>
+    </div>
+
+    <div class="sb-section-label">Analisi</div>
+    <div class="sb-item" id="nav-assess" onclick="showScreen('assess',this)">
+      <svg class="sb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+      <span>Valutazione AI</span>
+      <span class="sb-badge-new">NEW</span>
+    </div>
+    <div class="sb-item active" id="nav-dashboard" onclick="showScreen('dashboard',this)">
+      <svg class="sb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Dashboard
+    </div>
+
+    <div class="sb-section-label">Rendicontazione</div>
+    <div class="sb-item" id="nav-upload" onclick="showScreen('upload',this)">
+      <svg class="sb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+      Carica Dati
+    </div>
+    <div class="sb-item" id="nav-results" onclick="showScreen('results',this)">
+      <svg class="sb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      Calcolo GHG
+    </div>
+    <div class="sb-item" id="nav-report" onclick="showScreen('report',this)">
+      <svg class="sb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      Report ESG
+    </div>
+    <div class="sb-item" id="nav-materiality" onclick="showScreen('materiality',this)">
+      <svg class="sb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+      Doppia Materialità
+      <span class="sb-badge-new" style="background:var(--purple)">PRO</span>
+    </div>
+    <div class="sb-item" id="nav-stamp" onclick="showScreen('stamp',this)">
+      <svg class="sb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+      Timbro
+    </div>
+
+    <!-- PRO sidebar action — admin only, hidden for client -->
+    <div id="sb-pro-btn" class="sb-admin-only" style="display:none;padding:12px 16px">
+      <button onclick="proFeatures.advancedAssessment.run()" style="width:100%;padding:8px 12px;border:none;border-radius:8px;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;cursor:pointer;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px">
+        <span>⚡</span> AI Assessment Avanzato
+      </button>
+    </div>
+
+    <div class="sb-spacer"></div>
+    <div class="sb-section-label">Azienda</div>
+    <div class="sb-item sb-company">
+      <svg class="sb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+      <span id="sb-company-name">Metalfer S.r.l.</span>
+    </div>
+    <div class="sb-back" onclick="closeApp()">
+      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+      Torna al sito
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="app-main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="page-title" id="page-title">Dashboard</span>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-std" id="topbar-std-wrap">
+          <span class="std-badge" id="selected-std-badge">VSME</span>
+        </div>
+        <span id="topbar-role-badge" class="role-badge role-admin">Admin</span>
+        <span class="company-chip">Consulente · Admin</span>
+        <div class="avatar" title="Vittorio Palpati — Consulente">VP</div>
+      </div>
+    </header>
+
+    <!-- WIZARD PROGRESS BAR (client guided flow) -->
+    <div class="wizard-bar" id="wizard-bar"></div>
+
+    <div class="app-content">
+
+      <!-- ═══ HOME / DASHBOARD CHOICE ═══ -->
+      <div class="app-screen active" id="screen-home">
+        <div class="acard" style="margin-bottom:20px">
+          <div class="acard-title" id="home-greeting" style="font-size:20px">Bentornato su VERA</div>
+          <p class="acard-sub">Seleziona un'area per iniziare</p>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:8px">
+          <div class="acard home-tile" onclick="showScreen('dashboard',document.getElementById('nav-dashboard'))" style="cursor:pointer;transition:box-shadow .15s;border:1.5px solid transparent" onmouseenter="this.style.borderColor='#16a34a'" onmouseleave="this.style.borderColor='transparent'">
+            <div style="font-size:32px;margin-bottom:12px">📊</div>
+            <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:6px">Dashboard</div>
+            <div style="font-size:13px;color:var(--text-2)">KPI emissioni, avanzamento e stato del progetto</div>
+          </div>
+          <div class="acard home-tile" onclick="showScreen('upload',document.getElementById('nav-upload'))" style="cursor:pointer;transition:box-shadow .15s;border:1.5px solid transparent" onmouseenter="this.style.borderColor='#16a34a'" onmouseleave="this.style.borderColor='transparent'">
+            <div style="font-size:32px;margin-bottom:12px">📁</div>
+            <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:6px">Carica Dati GHG</div>
+            <div style="font-size:13px;color:var(--text-2)">Carica file Excel con consumi energetici e rifiuti</div>
+          </div>
+          <div class="acard home-tile" onclick="showScreen('report',document.getElementById('nav-report'))" style="cursor:pointer;transition:box-shadow .15s;border:1.5px solid transparent" onmouseenter="this.style.borderColor='#16a34a'" onmouseleave="this.style.borderColor='transparent'">
+            <div style="font-size:32px;margin-bottom:12px">📄</div>
+            <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:6px">Report ESG</div>
+            <div style="font-size:13px;color:var(--text-2)">Genera e scarica il bilancio di sostenibilità</div>
+          </div>
+          <div class="acard home-tile sb-admin-only" onclick="showScreen('clients',document.getElementById('nav-clients'))" style="cursor:pointer;transition:box-shadow .15s;border:1.5px solid transparent;display:none" onmouseenter="this.style.borderColor='#16a34a'" onmouseleave="this.style.borderColor='transparent'">
+            <div style="font-size:32px;margin-bottom:12px">👥</div>
+            <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:6px">Gestione Clienti</div>
+            <div style="font-size:13px;color:var(--text-2)">Visualizza e gestisci tutti i clienti</div>
+          </div>
+          <div class="acard home-tile" onclick="showScreen('assess',document.getElementById('nav-assess'))" style="cursor:pointer;transition:box-shadow .15s;border:1.5px solid transparent" onmouseenter="this.style.borderColor='#16a34a'" onmouseleave="this.style.borderColor='transparent'">
+            <div style="font-size:32px;margin-bottom:12px">🤖</div>
+            <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:6px">Valutazione AI</div>
+            <div style="font-size:13px;color:var(--text-2)">Identifica il framework ESG giusto per la tua azienda</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════
+           SCREEN: AI ASSESSMENT
+      ════════════════════════════════════════ -->
+      <div class="app-screen" id="screen-assess">
+        <div class="assess-container">
+
+          <!-- INTRO CARD -->
+          <div id="assess-intro">
+            <div class="assess-hero-card">
+              <div class="assess-hero-icon">🤖</div>
+              <h2>Valutazione AI dello standard ESG</h2>
+              <p>Rispondi a <strong>8 domande</strong> sulla tua azienda. L'AI analizza in tempo reale quale standard — <strong>VSME 2023</strong> o <strong>GRI Standards</strong> — è più adatto al tuo profilo, con reasoning dettagliato e indicazione dei moduli specifici.</p>
+              <div class="assess-features-row">
+                <div class="assess-feat"><span>📊</span>Score live ad ogni risposta</div>
+                <div class="assess-feat"><span>⏱</span>~2 minuti</div>
+                <div class="assess-feat"><span>🧠</span>Reasoning strutturato</div>
+              </div>
+              <button class="btn btn-primary btn-lg" onclick="VERA.assessment.start()">
+                Inizia la valutazione →
+              </button>
+            </div>
+          </div>
+
+          <!-- QUESTIONNAIRE -->
+          <div id="assess-quiz" style="display:none">
+            <!-- Progress bar -->
+            <div class="assess-progress-wrap">
+              <div class="assess-progress-header">
+                <span class="assess-progress-label" id="assess-q-label">Domanda 1 di 8</span>
+                <span class="assess-progress-pct" id="assess-progress-pct">0%</span>
+              </div>
+              <div class="assess-progress-track">
+                <div class="assess-progress-fill" id="assess-progress-fill" style="width:0%"></div>
+              </div>
+            </div>
+
+            <!-- Live score bar -->
+            <div class="live-score-bar" id="live-score">
+              <div class="live-score-label">
+                <span class="lsl-vsme">VSME</span>
+                <span class="lsl-sep">vs</span>
+                <span class="lsl-gri">GRI</span>
+              </div>
+              <div class="live-score-track">
+                <div class="live-score-vsme" id="live-vsme-bar" style="width:50%">
+                  <span class="live-score-pct" id="live-vsme-pct">50%</span>
+                </div>
+                <div class="live-score-gri" id="live-gri-bar" style="width:50%">
+                  <span class="live-score-pct" id="live-gri-pct">50%</span>
+                </div>
+              </div>
+              <div class="live-score-hint" id="live-score-hint">Rispondi per vedere la valutazione</div>
+            </div>
+
+            <!-- Question card -->
+            <div class="assess-q-card" id="assess-q-card">
+              <div class="assess-q-category" id="assess-q-category">Dimensione aziendale</div>
+              <div class="assess-q-icon" id="assess-q-icon">👥</div>
+              <h3 class="assess-q-text" id="assess-q-text">Domanda...</h3>
+              <p class="assess-q-sub" id="assess-q-sub"></p>
+              <div class="assess-options" id="assess-options"></div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="assess-nav">
+              <button class="btn btn-ghost" id="assess-back-btn" onclick="VERA.assessment.prev()" style="display:none">← Indietro</button>
+              <div class="assess-q-dots" id="assess-dots"></div>
+              <button class="btn btn-primary" id="assess-next-btn" onclick="VERA.assessment.next()" disabled>
+                Avanti →
+              </button>
+            </div>
+          </div>
+
+          <!-- AI ANALYSIS PHASE -->
+          <div id="assess-analyzing" style="display:none">
+            <div class="assess-terminal-wrap">
+              <div class="assess-terminal-header">
+                <div class="terminal-dots">
+                  <span style="background:#ff5f57"></span>
+                  <span style="background:#ffbd2e"></span>
+                  <span style="background:#28c840"></span>
+                </div>
+                <span class="terminal-title">VERA AI — Analisi standard ESG</span>
+              </div>
+              <div class="assess-terminal" id="assess-terminal">
+                <span class="terminal-cursor" id="terminal-cursor">▋</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- RESULTS PHASE -->
+          <div id="assess-results" style="display:none">
+            <div class="assess-result-card">
+              <div class="assess-result-header">
+                <div class="assess-result-badge" id="result-badge">VSME 2023</div>
+                <div class="assess-result-title">
+                  <h3 id="result-title">Standard raccomandato</h3>
+                  <p id="result-subtitle">Basato sull'analisi del profilo aziendale</p>
+                </div>
+                <div class="assess-conf-wrap">
+                  <div class="assess-conf-label">Confidenza</div>
+                  <div class="assess-conf-val" id="result-conf">82%</div>
+                </div>
+              </div>
+
+              <!-- Dual score gauge -->
+              <div class="assess-gauge-row">
+                <div class="gauge-item">
+                  <div class="gauge-name">VSME 2023</div>
+                  <div class="gauge-track">
+                    <div class="gauge-fill gauge-vsme" id="gauge-vsme" style="width:50%"></div>
+                  </div>
+                  <div class="gauge-pct" id="gauge-vsme-pct">50%</div>
+                </div>
+                <div class="gauge-item">
+                  <div class="gauge-name">GRI Standards</div>
+                  <div class="gauge-track">
+                    <div class="gauge-fill gauge-gri" id="gauge-gri" style="width:50%"></div>
+                  </div>
+                  <div class="gauge-pct" id="gauge-gri-pct">50%</div>
+                </div>
+              </div>
+
+              <!-- Key reasons -->
+              <div class="assess-reasons" id="assess-reasons"></div>
+
+              <!-- Recommended modules -->
+              <div class="assess-modules-wrap">
+                <div class="assess-modules-title">Moduli / Disclosure raccomandati</div>
+                <div class="assess-modules-list" id="assess-modules"></div>
+              </div>
+
+              <!-- Full reasoning accordion -->
+              <div class="assess-reasoning-wrap">
+                <div class="assess-reasoning-toggle" onclick="VERA.assessment.toggleReasoning()">
+                  <span>📄 Visualizza il reasoning completo dell'AI</span>
+                  <span id="reasoning-arrow">▼</span>
+                </div>
+                <div class="assess-reasoning-body" id="assess-reasoning-body" style="display:none">
+                  <pre id="assess-full-reasoning" class="reasoning-pre"></pre>
+                </div>
+              </div>
+
+              <!-- PRO Features Banner -->
+              <div style="background:#f5f3ff;border:1px solid #c4b5fd;border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                <div style="flex:1;min-width:200px">
+                  <div style="font-size:13px;font-weight:700;color:#7c3aed;margin-bottom:4px">🤖 Funzioni PRO disponibili</div>
+                  <div style="font-size:12px;color:#6d28d9">Approfondisci l'analisi con le funzionalità avanzate del piano PRO/Enterprise</div>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <button class="btn btn-sm" onclick="VERA.pro.advancedAssessment.run()"
+                    style="background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer;font-weight:600">
+                    🤖 AI Assessment Avanzato <span style="background:rgba(255,255,255,0.25);font-size:10px;padding:1px 5px;border-radius:10px;margin-left:4px">PRO</span>
+                  </button>
+                  <button class="btn btn-sm" onclick="VERA.pro.scope3Complete.run()"
+                    style="background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer;font-weight:600">
+                    🌍 Scope 3 Completo <span style="background:rgba(255,255,255,0.25);font-size:10px;padding:1px 5px;border-radius:10px;margin-left:4px">PRO</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Actions -->
+              <div class="assess-result-actions">
+                <button class="btn btn-primary btn-lg" onclick="VERA.assessment.applyRecommendation()">
+                  ✓ Applica raccomandazione e continua
+                </button>
+                <button class="btn btn-outline" onclick="VERA.assessment.restart()">
+                  ↺ Rifai la valutazione
+                </button>
+                <button class="btn btn-ghost" onclick="VERA.assessment.skipToManual()">
+                  Scegli manualmente →
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div><!-- /screen-assess -->
+
+      <!-- ════════════════════════════════════════
+           SCREEN: CLIENTS (admin only)
+      ════════════════════════════════════════ -->
+      <div class="app-screen" id="screen-clients">
+        <div class="clients-toolbar">
+          <div>
+            <h2 class="clients-title">Gestione Clienti</h2>
+            <p class="clients-sub" id="clients-sub">Caricamento clienti...</p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="veraAuth.showCreateClientModal()">
+            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Nuovo cliente
+          </button>
+        </div>
+
+        <div class="acard" style="margin-bottom:16px">
+          <div class="acard-title">Aziende in gestione</div>
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr><th>Azienda</th><th>Settore</th><th>Standard</th><th>Dipendenti</th><th>Stato</th><th>Azioni</th></tr>
+              </thead>
+              <tbody id="clients-table-body">
+                <tr><td colspan="6" style="text-align:center;color:var(--text-3);padding:24px">
+                  <div style="display:inline-flex;align-items:center;gap:8px">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                    Caricamento clienti...
+                  </div>
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="grid-2" style="gap:14px">
+          <div class="acard">
+            <div class="acard-title">Riepilogo portfolio</div>
+            <div class="status-list">
+              <div class="status-row"><span>Report completati</span><span id="stat-completed" class="tag tag-g">—</span></div>
+              <div class="status-row"><span>In lavorazione</span><span id="stat-in-progress" class="tag" style="background:#fef9c3;color:#854d0e;border-color:#fde68a">—</span></div>
+              <div class="status-row"><span>Clienti attivi</span><span id="stat-active" class="tag" style="background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe">—</span></div>
+              <div class="status-row"><span>Nuova registrazione</span><span id="stat-new" class="tag" style="background:#ffe4e6;color:#be123c;border-color:#fecdd3">—</span></div>
+              <div class="status-row"><span>Totale clienti</span><span id="stat-total" class="tag tag-g">—</span></div>
+            </div>
+          </div>
+          <div class="acard">
+            <div class="acard-title">Azioni rapide</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+              <button class="btn btn-outline btn-sm" style="justify-content:flex-start" onclick="showScreen('assess',document.getElementById('nav-assess'))">🤖 Avvia valutazione AI per nuovo cliente</button>
+              <button class="btn btn-outline btn-sm" style="justify-content:flex-start" onclick="showScreen('upload',document.getElementById('nav-upload'))">📤 Carica dati cliente</button>
+              <button class="btn btn-outline btn-sm" style="justify-content:flex-start" onclick="showScreen('stamp',document.getElementById('nav-stamp'))">🏷 Applica timbro metodologico</button>
+              <button class="btn btn-outline btn-sm" style="justify-content:flex-start" onclick="VERA.ui.toast('Seleziona un cliente e poi approva il report dalla scheda cliente','info')">✅ Approva report cliente</button>
+            </div>
+          </div>
+        </div>
+      </div><!-- /screen-clients -->
+
+      <!-- ════════════════════════════════════════
+           SCREEN: DASHBOARD
+      ════════════════════════════════════════ -->
+      <div class="app-screen active" id="screen-dashboard">
+        <!-- AI Assessment banner (shown if not done) -->
+        <div class="ai-banner" id="ai-banner">
+          <div class="ai-banner-icon">🤖</div>
+          <div class="ai-banner-text">
+            <strong>Nuovo: Valutazione AI standard</strong>
+            <span>Rispondi a 8 domande e scopri quale framework ESG è adatto alla tua azienda.</span>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="showScreen('assess',document.getElementById('nav-assess'))">Inizia ora →</button>
+          <button class="ai-banner-close" onclick="this.parentElement.style.display='none'">✕</button>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card g">
+            <div class="kpi-label">Emissioni totali</div>
+            <div class="kpi-value" id="kpi-total">37.7</div>
+            <div class="kpi-sub">tCO<sub>2</sub>e · 2024</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Scope 1 (dirette)</div>
+            <div class="kpi-value" id="kpi-s1">12.7</div>
+            <div class="kpi-sub">tCO<sub>2</sub>e</div>
+          </div>
+          <div class="kpi-card b">
+            <div class="kpi-label">Scope 2 (energia)</div>
+            <div class="kpi-value" id="kpi-s2">18.7</div>
+            <div class="kpi-sub">tCO<sub>2</sub>e</div>
+          </div>
+          <div class="kpi-card o">
+            <div class="kpi-label">Scope 3 (catena)</div>
+            <div class="kpi-value" id="kpi-s3">6.3</div>
+            <div class="kpi-sub">tCO<sub>2</sub>e</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="acard">
+            <div class="acard-title">Distribuzione per scope</div>
+            <div class="scope-bar-wrap">
+              <div class="scope-bar-s1" style="width:33.7%" title="Scope 1 · 33.7%"></div>
+              <div class="scope-bar-s2" style="width:49.6%" title="Scope 2 · 49.6%"></div>
+              <div class="scope-bar-s3" style="width:16.7%" title="Scope 3 · 16.7%"></div>
+            </div>
+            <div class="scope-legend">
+              <div class="legend-row"><span class="legend-dot g"></span><div><b>Scope 1 · 33.7%</b><br/>Gas naturale, gasolio</div></div>
+              <div class="legend-row"><span class="legend-dot b"></span><div><b>Scope 2 · 49.6%</b><br/>Elettricità</div></div>
+              <div class="legend-row"><span class="legend-dot o"></span><div><b>Scope 3 · 16.7%</b><br/>Rifiuti + trasporti</div></div>
+            </div>
+          </div>
+          <div class="acard">
+            <div class="acard-title">Stato attività</div>
+            <div class="status-list">
+              <div class="status-row"><span>Standard scelto</span><span class="tag tag-g">✓ <span id="dash-std-label">VSME 2023</span></span></div>
+              <div class="status-row"><span>Caricamento dati</span><span class="tag tag-g">✓ Completato</span></div>
+              <div class="status-row"><span>Calcolo GHG</span><span class="tag tag-g">✓ Completato</span></div>
+              <div class="status-row"><span>Report <span id="dash-std">VSME</span></span><span class="tag tag-g">✓ Generato</span></div>
+              <div class="status-row"><span>Timbro metodologico</span><span class="tag tag-g">✓ Applicato</span></div>
+              <div class="status-row" id="report-approval-row" style="display:none">
+                <span>Approvazione consulente</span>
+                <button class="btn btn-primary btn-sm" id="btn-approve-report" onclick="VERA.stamp.approveReport()" style="padding:4px 10px;font-size:11px">✅ Approva e pubblica</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="acard">
+          <div class="acard-title">Ultimi job</div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Job</th><th>File</th><th>Periodo</th><th>Standard</th><th>Righe</th><th>Status</th><th class="num">tCO<sub>2</sub>e</th></tr></thead>
+              <tbody id="jobs-tbody">
+                <tr><td>#4</td><td>dati_2024_annuale.xlsx</td><td>2024</td><td><span class="tag tag-g" id="job-std">VSME</span></td><td>6</td><td><span class="tag tag-g">Completato</span></td><td class="num">37.7</td></tr>
+                <tr><td>#3</td><td>dati_2023_annuale.xlsx</td><td>2023</td><td><span class="tag tag-g">VSME</span></td><td>6</td><td><span class="tag tag-g">Completato</span></td><td class="num">38.8</td></tr>
+                <tr><td>#2</td><td>dati_2022_annuale.xlsx</td><td>2022</td><td><span class="tag tag-g">VSME</span></td><td>6</td><td><span class="tag tag-g">Completato</span></td><td class="num">42.1</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- /screen-dashboard -->
+
+      <!-- ════════════════════════════════════════
+           SCREEN: UPLOAD / ONBOARDING
+      ════════════════════════════════════════ -->
+      <div class="app-screen" id="screen-upload">
+        <div class="onboard-wrap">
+          <div class="steps-bar">
+            <div class="step-item active" id="step1"><div class="step-num">1</div><span>Standard</span></div>
+            <div class="step-line"></div>
+            <div class="step-item" id="step2"><div class="step-num">2</div><span>Azienda</span></div>
+            <div class="step-line"></div>
+            <div class="step-item" id="step3"><div class="step-num">3</div><span>Carica file</span></div>
+            <div class="step-line"></div>
+            <div class="step-item" id="step4"><div class="step-num">4</div><span>Avvia calcolo</span></div>
+          </div>
+
+          <!-- Step 1: Standard selection -->
+          <div class="acard" id="std-panel">
+            <div class="acard-title">1 — Scegli lo standard di rendicontazione</div>
+            <p class="acard-sub">Il report finale sarà strutturato secondo lo standard scelto. <a href="#" onclick="showScreen('assess',document.getElementById('nav-assess'));return false" class="link-green">Usa l'AI per scegliere →</a></p>
+            <div class="std-grid" id="std-grid">
+              <div class="std-card selected" id="std-vsme" onclick="VERA.onboarding.selectStd('vsme')">
+                <div class="std-check" id="std-vsme-check">✓</div>
+                <div class="std-src-badge">EFRAG 2023</div>
+                <h3>VSME</h3>
+                <p>Voluntary SME Standard. Pensato per PMI. Moduli B1–B5 (Ambiente, Sociale, Governance). Consigliato per il primo bilancio.</p>
+                <div class="std-ai-rec" id="vsme-ai-rec" style="display:none">
+                  <span>🤖</span> Raccomandato dall'AI
+                </div>
+              </div>
+              <div class="std-card" id="std-gri" onclick="VERA.onboarding.selectStd('gri')">
+                <div class="std-check" id="std-gri-check">✓</div>
+                <div class="std-src-badge" style="background:var(--blue-l);color:#1e40af;border-color:#bfdbfe">GRI 2021</div>
+                <h3>GRI Standards</h3>
+                <p>Framework globale. GRI 2, 302, 305, 306. Richiesto da clienti internazionali e bandi europei.</p>
+                <div class="std-ai-rec" id="gri-ai-rec" style="display:none">
+                  <span>🤖</span> Raccomandato dall'AI
+                </div>
+              </div>
+            </div>
+            <div class="std-panel-footer">
+              <button class="btn btn-ghost btn-sm" onclick="showScreen('assess',document.getElementById('nav-assess'))">
+                🤖 Chiedi all'AI →
+              </button>
+              <button class="btn btn-primary" onclick="VERA.onboarding.confirmStd()">
+                Continua con <span id="btn-std-label">VSME</span> →
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 2: Company info -->
+          <div class="acard" id="company-panel" style="display:none">
+            <div class="acard-title">2 — Dati aziendali</div>
+            <div class="form-grid">
+              <div class="field-group" style="grid-column:1/-1">
+                <label>Ragione sociale</label>
+                <input type="text" id="field-ragione-sociale" value="Metalfer S.r.l." placeholder="Es. Rossi Srl"/>
+              </div>
+              <div class="field-group">
+                <label>Codice Fiscale / P.IVA</label>
+                <input type="text" id="field-cf" value="02345678901"/>
+              </div>
+              <div class="field-group">
+                <label>Settore ATECO</label>
+                <input type="text" id="field-ateco" value="25.11 — Manifatturiero"/>
+              </div>
+              <div class="field-group">
+                <label>Anno di rendicontazione</label>
+                <input type="text" id="field-anno" value="2024"/>
+              </div>
+              <div class="field-group">
+                <label>Numero dipendenti</label>
+                <input type="text" id="field-dipendenti" value="120"/>
+              </div>
+              <div class="field-group">
+                <label>Sede principale</label>
+                <input type="text" id="field-sede" value="Brescia (BS)"/>
+              </div>
+            </div>
+            <div class="panel-footer">
+              <button class="btn btn-ghost" onclick="VERA.onboarding.backToStd()">← Indietro</button>
+              <button class="btn btn-outline btn-sm" onclick="VERA.questionnaire.open(state.selectedStd||'vsme','manuf')" title="Compila le disclosure dettagliate per il tuo standard">
+                📋 Questionario Disclosure
+              </button>
+              <button class="btn btn-primary" onclick="VERA.onboarding.goToUpload()">Continua →</button>
+            </div>
+          </div>
+
+          <!-- Step 3: Upload file -->
+          <div class="acard" id="upload-panel" style="display:none">
+            <div class="acard-title">3 — Carica il file dei consumi</div>
+            <div class="info-banner" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#166534;">
+              ℹ️ Dopo il caricamento, il consulente VERA revisionerà il report prima che sia disponibile per te. Riceverai una notifica via email.
+            </div>
+            <p class="acard-sub">Carica un file .xlsx o .csv con i dati di consumo energetico, rifiuti e trasporti per l'anno selezionato.</p>
+            <div class="upload-zone" id="drop-zone" onclick="VERA.upload.simulate()">
+              <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--text-3)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+              <h3>Trascina il file qui</h3>
+              <p>oppure clicca per selezionarlo · .xlsx · .csv · max 10 MB</p>
+              <input type="file" id="file-input" accept=".csv,.xlsx,.xls,.txt" style="display:none" onchange="aiFileParser.processFile(this.files[0], function(rows){ upload._applyParsedRows(rows); })">
+              <button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="document.getElementById('file-input').click()">📂 Sfoglia file</button>
+            </div>
+            <div id="upload-prog" style="display:none;margin-top:14px">
+              <div class="upload-prog-header">
+                <span>dati_2024_annuale.xlsx</span>
+                <span id="prog-pct" class="prog-pct">0%</span>
+              </div>
+              <div class="prog-track"><div class="prog-fill" id="prog-bar" style="width:0%"></div></div>
+            </div>
+          </div>
+
+          <!-- Step 4: Validation result -->
+          <div class="acard" id="valid-panel" style="display:none;margin-top:16px">
+            <div class="acard-title">Validazione completata</div>
+            <div class="validation-ok">✓ File validato con successo · 6 righe valide · 0 errori</div>
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr><th>Materiale</th><th>Tipo</th><th>Quantità</th><th>Unità</th><th>Scope</th><th>Fonte FE</th></tr></thead>
+                <tbody>
+                  <tr><td>Gas naturale</td><td>natural_gas</td><td class="num">42.500</td><td>kWh</td><td><span class="tag tag-g">S1</span></td><td class="src-note">Metodologia VERA 2024, p.8</td></tr>
+                  <tr><td>Gasolio automezzi</td><td>diesel</td><td class="num">1.820</td><td>L</td><td><span class="tag tag-g">S1</span></td><td class="src-note">Metodologia VERA 2024, p.10</td></tr>
+                  <tr><td>Elettricità (rete)</td><td>electricity</td><td class="num">66.020</td><td>kWh</td><td><span class="tag tag-b">S2</span></td><td class="src-note">Metodologia VERA 2024, p.42</td></tr>
+                  <tr><td>Rifiuti discarica</td><td>waste_landfill</td><td class="num">8.400</td><td>kg</td><td><span class="tag tag-o">S3</span></td><td class="src-note">IPCC AR6, p.1022</td></tr>
+                  <tr><td>Rifiuti riciclo</td><td>waste_recycling</td><td class="num">3.200</td><td>kg</td><td><span class="tag tag-o">S3</span></td><td class="src-note">Metodologia VERA 2024, p.22</td></tr>
+                  <tr><td>Trasporto merci</td><td>transport_road</td><td class="num">12.400</td><td>tkm</td><td><span class="tag tag-o">S3</span></td><td class="src-note">Metodologia VERA 2024, p.45</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="panel-footer" style="margin-top:14px">
+              <button class="btn btn-ghost" onclick="VERA.upload.reset()">← Ricarica</button>
+              <button class="btn btn-primary" onclick="VERA.upload.goToCalc()">Avvia calcolo GHG →</button>
+            </div>
+          </div>
+        </div>
+      </div><!-- /screen-upload -->
+
+      <!-- ════════════════════════════════════════
+           SCREEN: GHG RESULTS
+      ════════════════════════════════════════ -->
+      <div class="app-screen" id="screen-results">
+        <div class="results-header">
+          <div>
+            <h2 class="results-title" id="results-title">Calcolo GHG — Job #1 · Metalfer S.r.l.</h2>
+            <p class="results-sub" id="results-sub">GHG Protocol Corporate Standard · Market-based · Anno 2024</p>
+          </div>
+          <span class="tag tag-g">✓ Completato</span>
+        </div>
+        <div class="rkpi-row">
+          <div class="rkpi"><div class="rkpi-label">Scope 1</div><div class="rkpi-val g">12.698 <small>kgCO<sub>2</sub>e</small></div><div class="rkpi-sub">Gas + gasolio</div></div>
+          <div class="rkpi"><div class="rkpi-label">Scope 2</div><div class="rkpi-val b">18.684 <small>kgCO<sub>2</sub>e</small></div><div class="rkpi-sub">Elettricità market-based</div></div>
+          <div class="rkpi"><div class="rkpi-label">Scope 3</div><div class="rkpi-val o">6.294 <small>kgCO<sub>2</sub>e</small></div><div class="rkpi-sub">Rifiuti + trasporti</div></div>
+          <div class="rkpi highlighted"><div class="rkpi-label">Totale</div><div class="rkpi-val g">37.676 <small>kgCO<sub>2</sub>e</small></div><div class="rkpi-sub">= 37,7 tCO<sub>2</sub>e</div></div>
+        </div>
+        <div class="acard" style="margin-bottom:16px">
+          <div class="acard-title">Dettaglio per categoria — con fonte del fattore di emissione</div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Materiale</th><th>Scope</th><th>Quantità</th><th>FE (kgCO<sub>2</sub>e/u)</th><th>Fonte FE</th><th class="num">Emissioni (kgCO<sub>2</sub>e)</th></tr></thead>
+              <tbody id="breakdown-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="acard">
+          <div class="acard-title">Note metodologiche</div>
+          <div class="method-notes">
+            <p>• <b>Standard:</b> GHG Protocol Corporate Accounting and Reporting Standard (WRI/WBCSD, rev. 2015)</p>
+            <p>• <b>Scope 2:</b> metodo market-based – fattore Metodologia VERA 2024, p.42 (0,28307 kgCO<sub>2</sub>e/kWh, rete IT)</p>
+            <p>• <b>GWP:</b> IPCC AR6, Global Warming Potential a 100 anni (CO₂=1, CH₄=29,8, N₂O=273)</p>
+            <p>• <b>Scope 3:</b> Categoria 5 (rifiuti) e Categoria 4 (trasporti)</p>
+          </div>
+          <div class="panel-footer" style="margin-top:14px">
+            <button class="btn btn-primary" onclick="showScreen('report',document.getElementById('nav-report'))">Genera Report →</button>
+          </div>
+        </div>
+      </div><!-- /screen-results -->
+
+      <!-- ════════════════════════════════════════
+           SCREEN: REPORT
+      ════════════════════════════════════════ -->
+      <div class="app-screen" id="screen-report">
+        <div id="report-request-section" style="margin-bottom:16px">
+          <!-- Shown for clients (non-admin): request report button -->
+          <div id="report-client-actions" class="acard">
+            <div class="acard-title">Report ESG — Richiesta</div>
+            <p class="acard-sub">Il report viene generato in tempo reale e inviato al consulente per revisione e approvazione prima di essere disponibile.</p>
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+              <button class="btn btn-primary" id="btn-request-report" onclick="reportFlow.requestReport()">
+                📄 Genera e invia al consulente
+              </button>
+              <button class="btn btn-outline btn-sm" onclick="reportFlow.downloadPDF()" id="btn-download-pdf" style="display:none">
+                ⬇ Scarica PDF approvato
+              </button>
+              <button class="btn btn-outline btn-sm" onclick="sustainabilityPlan.generate()" style="border-color:#16a34a;color:#16a34a">
+                🌿 Piano di Sostenibilità PDF
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="report-toolbar">
+          <button class="btn btn-primary btn-sm" id="btn-vsme" onclick="VERA.report.switch('vsme')">VSME 2023</button>
+          <button class="btn btn-outline btn-sm" id="btn-gri" onclick="VERA.report.switch('gri')">GRI Standards</button>
+          <button class="btn btn-outline btn-sm" onclick="sustainabilityPlan.generate()" style="border-color:#16a34a;color:#16a34a">🌿 Piano Sostenibilità</button>
+          <div style="flex:1"></div>
+          <a href="vera-report-vsme-2024.pdf" download="VERA-Report-Metalfer-2024.pdf" class="btn btn-outline btn-sm" onclick="VERA.ui.toast('Download PDF avviato…','success')">
+            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            PDF (40 pp.)
+          </a>
+          <button class="btn btn-outline btn-sm" onclick="VERA.report.downloadExcel()">
+            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Excel
+          </button>
+          <button class="btn btn-outline btn-sm" id="report-stamp-btn" onclick="showScreen('stamp',document.getElementById('nav-stamp'))">Applica timbro →</button>
+        </div>
+
+        <!-- VSME VIEW -->
+        <div id="rpt-vsme">
+          <div class="acard rpt-header-card">
+            <div class="rpt-std-badge vsme">VSME 2023</div>
+            <div>
+              <div class="rpt-title">Rendicontazione di Sostenibilità</div>
+              <div class="rpt-sub">Metalfer S.r.l. · CF 02345678901 · Manifatturiero · 2024</div>
+              <div class="rpt-note">Conforme VSME 2023 (EFRAG) · GHG Protocol · Fattori Metodologia VERA 2024</div>
+            </div>
+          </div>
+          <div class="acard" style="margin-bottom:14px">
+            <div class="acard-title">B1 — Base di preparazione</div>
+            <div class="def-grid">
+              <div><span class="def-label">Perimetro:</span> Controllo operativo · Stabilimento BS</div>
+              <div><span class="def-label">Metodologia:</span> GHG Protocol Corporate Standard</div>
+              <div><span class="def-label">Fattori:</span> Metodologia VERA 2024 + IPCC AR6 (GWP100)</div>
+              <div><span class="def-label">Dati:</span> Primari (bollette, FIR, DDT)</div>
+            </div>
+          </div>
+          <div class="acard" style="margin-bottom:14px">
+            <div class="acard-title">B2-E1 — Cambiamenti climatici · Emissioni GHG</div>
+            <div class="rkpi-row" style="margin-bottom:0">
+              <div class="rkpi"><div class="rkpi-label">Scope 1 (B2-E1-2)</div><div class="rkpi-val g" style="font-size:17px">12.698 kgCO<sub>2</sub>e</div><div class="src-note">Gas nat. (DEFRA p.8) + Gasolio (DEFRA p.10)</div></div>
+              <div class="rkpi"><div class="rkpi-label">Scope 2 (B2-E1-3)</div><div class="rkpi-val b" style="font-size:17px">18.684 kgCO<sub>2</sub>e</div><div class="src-note">Elettricità (DEFRA p.42, market-based)</div></div>
+              <div class="rkpi"><div class="rkpi-label">Scope 3 (B2-E1-4)</div><div class="rkpi-val o" style="font-size:17px">6.294 kgCO<sub>2</sub>e</div><div class="src-note">Rifiuti (IPCC p.1022) + Trasporti (DEFRA p.45)</div></div>
+              <div class="rkpi highlighted"><div class="rkpi-label">Totale (B2-E1-1)</div><div class="rkpi-val g" style="font-size:17px">37.676 kgCO<sub>2</sub>e</div><div class="src-note">= 37,7 tCO<sub>2</sub>e</div></div>
+            </div>
+          </div>
+          <div class="acard" style="margin-bottom:14px">
+            <div class="acard-title">B2-E2 — Energia · B2-E3 — Rifiuti · B2-E4 — Trasporti</div>
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr><th>Codice</th><th>Indicatore</th><th>Valore 2024</th><th>Fonte</th></tr></thead>
+                <tbody>
+                  <tr><td>B2-E2-1</td><td>Consumo energetico totale</td><td>108.520 kWh</td><td class="src-note">Bollette Eni + Edison 2024</td></tr>
+                  <tr><td>B2-E2-2</td><td>Quota energia rinnovabile</td><td>0%</td><td class="src-note">Contratto Edison 2024</td></tr>
+                  <tr><td>B2-E3-1</td><td>Rifiuti generati totali</td><td>11.600 kg</td><td class="src-note">Registro FIR 2024</td></tr>
+                  <tr><td>B2-E3-2</td><td>Rifiuti a discarica</td><td>8.400 kg · 4.931 kgCO<sub>2</sub>e</td><td class="src-note">IPCC AR6, p.1022 · FE 0,587</td></tr>
+                  <tr><td>B2-E3-3</td><td>Rifiuti a riciclo</td><td>3.200 kg · 67 kgCO<sub>2</sub>e</td><td class="src-note">Metodologia VERA 2024, p.22 · FE 0,021</td></tr>
+                  <tr><td>B2-E4-1</td><td>Trasporto merci (tkm)</td><td>12.400 tkm · 1.185 kgCO<sub>2</sub>e</td><td class="src-note">Metodologia VERA 2024, p.45 · FE 0,0956</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="acard">
+            <div class="acard-title">Fattori di emissione utilizzati</div>
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr><th>Categoria</th><th>Scope</th><th>FE</th><th>Unità</th><th>GWP</th><th>Fonte</th><th>Pag.</th></tr></thead>
+                <tbody>
+                  <tr><td>Elettricità (rete IT)</td><td><span class="tag tag-b">S2</span></td><td>0,28307</td><td>kgCO<sub>2</sub>e/kWh</td><td>AR6</td><td class="src-note">Metodologia VERA 2024</td><td class="src-note">p.42 Tab.7</td></tr>
+                  <tr><td>Gas naturale</td><td><span class="tag tag-g">S1</span></td><td>0,18386</td><td>kgCO<sub>2</sub>e/kWh</td><td>AR6</td><td class="src-note">Metodologia VERA 2024</td><td class="src-note">p.8 Tab.1</td></tr>
+                  <tr><td>Gasolio (L)</td><td><span class="tag tag-g">S1</span></td><td>2,68490</td><td>kgCO<sub>2</sub>e/L</td><td>AR6</td><td class="src-note">Metodologia VERA 2024</td><td class="src-note">p.10 Tab.2</td></tr>
+                  <tr><td>Rifiuti discarica</td><td><span class="tag tag-o">S3</span></td><td>0,58700</td><td>kgCO<sub>2</sub>e/kg</td><td>AR6</td><td class="src-note">IPCC AR6 WG3</td><td class="src-note">p.1022 Tab.11.2</td></tr>
+                  <tr><td>Rifiuti riciclo</td><td><span class="tag tag-o">S3</span></td><td>0,02100</td><td>kgCO<sub>2</sub>e/kg</td><td>AR6</td><td class="src-note">Metodologia VERA 2024</td><td class="src-note">p.22 Tab.6</td></tr>
+                  <tr><td>Trasporto stradale</td><td><span class="tag tag-o">S3</span></td><td>0,09560</td><td>kgCO<sub>2</sub>e/tkm</td><td>AR6</td><td class="src-note">Metodologia VERA 2024</td><td class="src-note">p.45 Tab.14</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- GRI VIEW -->
+        <div id="rpt-gri" style="display:none">
+          <div class="acard rpt-header-card">
+            <div class="rpt-std-badge gri">GRI 2021</div>
+            <div>
+              <div class="rpt-title">GRI Standards Report</div>
+              <div class="rpt-sub">Metalfer S.r.l. · GRI 2, 302, 305, 306 · 2024</div>
+            </div>
+          </div>
+          <div class="acard" style="margin-bottom:14px">
+            <div class="acard-title">GRI 305 — Emissioni</div>
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr><th>Disclosure</th><th>Valore</th><th>Unità</th><th>Fonte FE</th></tr></thead>
+                <tbody>
+                  <tr><td>305-1 Scope 1</td><td class="num">12.698</td><td>kgCO<sub>2</sub>e</td><td class="src-note">Metodologia VERA 2024 p.8+p.10</td></tr>
+                  <tr><td>305-2 Scope 2 (market-based)</td><td class="num">18.684</td><td>kgCO<sub>2</sub>e</td><td class="src-note">Metodologia VERA 2024 p.42</td></tr>
+                  <tr><td>305-3 Scope 3</td><td class="num">6.294</td><td>kgCO<sub>2</sub>e</td><td class="src-note">IPCC AR6 p.1022 + DEFRA p.22+p.45</td></tr>
+                  <tr><td><b>Totale</b></td><td class="num"><b>37.676</b></td><td><b>kgCO<sub>2</sub>e</b></td><td class="src-note">= 37,7 tCO<sub>2</sub>e</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="acard" style="margin-bottom:14px">
+            <div class="acard-title">GRI 302 — Energia</div>
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr><th>Disclosure</th><th>Valore</th><th>Unità</th><th>Note</th></tr></thead>
+                <tbody>
+                  <tr><td>302-1 Consumo interno</td><td class="num">108.520</td><td>kWh</td><td class="src-note">Gas + Gasolio + Elettricità</td></tr>
+                  <tr><td>302-3 Intensità energetica</td><td class="num">904</td><td>kWh/dip</td><td class="src-note">120 dipendenti · 2024</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="acard">
+            <div class="acard-title">GRI 306 — Rifiuti</div>
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr><th>Disclosure</th><th>Valore</th><th>Unità</th><th>Note</th></tr></thead>
+                <tbody>
+                  <tr><td>306-3 Rifiuti generati</td><td class="num">11.600</td><td>kg</td><td class="src-note">FIR 2024</td></tr>
+                  <tr><td>306-4 Rifiuti recuperati</td><td class="num">3.200</td><td>kg</td><td class="src-note">27,6% del totale</td></tr>
+                  <tr><td>306-5 Rifiuti smaltiti</td><td class="num">8.400</td><td>kg</td><td class="src-note">72,4% — discarica</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div><!-- /screen-report -->
+
+      <!-- ════════════════════════════════════════
+           SCREEN: STAMP
+      ════════════════════════════════════════ -->
+      <div class="app-screen" id="screen-stamp">
+        <div class="acard" style="margin-bottom:16px">
+          <div class="acard-title">Timbro metodologico digitale</div>
+          <p class="acard-sub">Il timbro VERA certifica la coerenza del calcolo con <b>GHG Protocol</b> e <b><span id="stamp-std-label">VSME 2023</span></b>. Ogni timbro ha un codice univoco SHA-256 verificabile.</p>
+          <div class="info-banner" style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#991b1b;">
+            ⚠️ <strong>Attenzione:</strong> L'applicazione del timbro metodologico è un'azione <strong>non reversibile</strong>. Il timbro certifica il report nella sua versione attuale. Qualsiasi modifica successiva richiederebbe un nuovo timbro.
+          </div>
+          <div class="stamp-pre-row">
+            <span class="stamp-pre-info" id="stamp-pre-info">Report: Metalfer S.r.l. · <span id="stamp-std-name">VSME</span> · 2024</span>
+            <button class="btn btn-primary" id="btn-apply-stamp" onclick="VERA.stamp.confirmAndApply()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+              Applica timbro
+            </button>
+          </div>
+        </div>
+
+        <div id="stamp-result" style="display:none">
+          <div class="acard stamp-box">
+            <div class="stamp-visual-wrap">
+              <div class="stamp-svg-container">
+                <svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="90" cy="90" r="85" fill="none" stroke="#14532d" stroke-width="4"/>
+                  <circle cx="90" cy="90" r="74" fill="none" stroke="#16a34a" stroke-width="1.5"/>
+                  <circle cx="90" cy="90" r="70" fill="#f0fdf4"/>
+                  <g stroke="#16a34a" stroke-width="1">
+                    <line x1="90" y1="5" x2="90" y2="12"/>
+                    <line x1="90" y1="168" x2="90" y2="175"/>
+                    <line x1="5" y1="90" x2="12" y2="90"/>
+                    <line x1="168" y1="90" x2="175" y2="90"/>
+                    <line x1="28" y1="28" x2="33" y2="33"/>
+                    <line x1="147" y1="147" x2="152" y2="152"/>
+                    <line x1="147" y1="28" x2="152" y2="23"/>
+                    <line x1="28" y1="152" x2="23" y2="147"/>
+                  </g>
+                  <text x="90" y="82" font-family="Arial Black,Arial" font-weight="900" font-size="30" fill="#14532d" text-anchor="middle">VERA</text>
+                  <text x="90" y="97" font-family="Arial,Helvetica" font-weight="700" font-size="9" fill="#16a34a" text-anchor="middle" letter-spacing="2">ESG PLATFORM</text>
+                  <line x1="40" y1="102" x2="140" y2="102" stroke="#16a34a" stroke-width="1"/>
+                  <text x="90" y="114" font-family="Arial,Helvetica" font-weight="700" font-size="8.5" fill="#14532d" text-anchor="middle" letter-spacing="1">TIMBRO METODOLOGICO</text>
+                  <text x="90" y="130" font-family="Arial Black,Arial" font-weight="900" font-size="16" fill="#16a34a" text-anchor="middle">2024</text>
+                  <text x="90" y="148" font-family="Arial" font-size="13" fill="#16a34a" text-anchor="middle">✓</text>
+                  <path id="topArc" fill="none" d="M 20 90 A 70 70 0 0 1 160 90"/>
+                  <text fill="#14532d" font-family="Arial,Helvetica" font-weight="700" font-size="7.5" letter-spacing="1.5">
+                    <textPath href="#topArc" startOffset="5%">GHG PROTOCOL · VSME 2023</textPath>
+                  </text>
+                  <path id="botArc" fill="none" d="M 20 90 A 70 70 0 0 0 160 90"/>
+                  <text fill="#14532d" font-family="Arial,Helvetica" font-weight="700" font-size="7.5" letter-spacing="1.5">
+                    <textPath href="#botArc" startOffset="5%">METALFER S.R.L. · 2024</textPath>
+                  </text>
+                </svg>
+                <div class="stamp-code-display" id="stamp-code-display"></div>
+              </div>
+              <div class="stamp-info">
+                <div class="stamp-ok-label">✓ Timbro applicato con successo</div>
+                <div class="stamp-details-grid">
+                  <span>Azienda</span><span>Metalfer S.r.l.</span>
+                  <span>Standard</span><span id="stamp-std-info">VSME 2023</span>
+                  <span>Emissioni</span><span>37.676 kgCO<sub>2</sub>e</span>
+                  <span>Data</span><span id="stamp-date"></span>
+                  <span>Emesso da</span><span>VERA ESG Platform</span>
+                </div>
+                <div class="stamp-hash-label">SHA-256</div>
+                <div id="stamp-hash" class="stamp-hash-value"></div>
+                <div class="stamp-actions">
+                  <a href="vera-report-vsme-2024.pdf" download="VERA-Report-Metalfer-2024-Timbrato.pdf" class="btn btn-outline btn-sm" onclick="VERA.ui.toast('PDF timbrato scaricato','success')">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    PDF timbrato
+                  </a>
+                  <button class="btn btn-outline btn-sm" onclick="VERA.stamp.verify()">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Verifica
+                  </button>
+                  <button class="btn btn-sm" onclick="VERA.stamp.approveReport()"
+                    style="background:#16a34a;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer;font-weight:600">
+                    📤 Pubblica al cliente
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /screen-stamp -->
+
+      <!-- ═══ DOPPIA MATERIALITÀ ═══════════════════════════
+      ════════════════════════════════════════ -->
+      <div class="app-screen" id="screen-materiality">
+        <!-- Contenuto iniettato dinamicamente da materialityModule.init() -->
+        <div class="acard" style="text-align:center;padding:48px 24px;color:var(--text-2)">
+          <div style="font-size:32px;margin-bottom:12px">⏳</div>
+          <div style="font-size:14px;color:var(--text-3)">Caricamento modulo materialità…</div>
+        </div>
+      </div><!-- /screen-materiality -->
+
+    </div><!-- /app-content -->
+  </div><!-- /app-main -->
+</div><!-- /view-app -->
+
+<!-- TOAST -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<!-- Supabase JS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/vera.js?v=20260421"></script>
+<script src="js/vera-supabase.js?v=20260421"></script>
+<script src="js/vera-materiality.js?v=20260421"></script>
+<script src="js/vera-animations.js?v=20260421"></script>
+</body>
+</html>

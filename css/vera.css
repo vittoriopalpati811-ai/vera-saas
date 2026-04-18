@@ -59,9 +59,9 @@
   --text-4:oklch(0.27 0.04 265);
 
   /* ── Typography ── */
-  --font:'Outfit',system-ui,sans-serif;
-  --font-display:'Syne','Outfit',system-ui,sans-serif;
-  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --font:'Inter',system-ui,-apple-system,sans-serif;
+  --font-display:'Syne','Inter',system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,'Cascadia Code',monospace;
 
   /* ── Layout ── */
   --max:1100px; --px:clamp(1.25rem,5vw,3.5rem);
@@ -100,9 +100,13 @@ body{
   background:var(--bg);
   color:var(--text);
   -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
   overflow-x:hidden;
-  line-height:1.5;
+  line-height:1.6;
   font-weight:400;
+  font-size:15px;
+  letter-spacing:-0.01em;
 }
 
 a{color:var(--green);text-decoration:none}
@@ -161,17 +165,17 @@ img{max-width:100%;display:block}
 
 /* ── SHARED TABLES ───────────────────────────────────────── */
 .tbl-wrap{overflow-x:auto;margin-top:8px}
-table{width:100%;border-collapse:collapse;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:13.5px;line-height:1.5}
 th{
-  text-align:left;font-size:10.5px;font-weight:700;
-  color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;
-  padding:8px 12px;border-bottom:2px solid var(--border);background:var(--bg);
+  text-align:left;font-size:11px;font-weight:600;
+  color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;
+  padding:9px 12px;border-bottom:2px solid var(--border);background:var(--bg);
 }
-td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;line-height:1.45}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--bg)}
-td.num{text-align:right;font-variant-numeric:tabular-nums}
-.src-note{font-size:10.5px;color:var(--text-3);font-style:italic}
+td.num{text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.src-note{font-size:11px;color:var(--text-3);font-style:italic;line-height:1.4}
 
 /* ── LANDING NAV ─────────────────────────────────────────── */
 .ln-nav{
@@ -217,7 +221,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
   max-width:640px;margin-left:auto;margin-right:auto;
 }
 .hero h1 em{font-style:normal;color:var(--green)}
-.hero > p{font-size:1.1rem;color:var(--text-2);max-width:580px;margin:0 auto 36px;line-height:1.68}
+.hero > p{font-size:1.1rem;color:var(--text-2);max-width:580px;margin:0 auto 36px;line-height:1.7;font-weight:400}
 .hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 .hero-note{margin-top:16px;font-size:12.5px;color:var(--text-3)}
 
@@ -248,7 +252,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
   letter-spacing:-.035em;line-height:1.12;margin-bottom:22px;
 }
 .ln-section-title em{font-style:normal;color:var(--green)}
-.ln-section-sub{font-size:1rem;color:var(--text-2);max-width:600px;line-height:1.68;margin-bottom:40px}
+.ln-section-sub{font-size:1.05rem;color:var(--text-2);max-width:600px;line-height:1.72;margin-bottom:40px;font-weight:400}
 
 /* Reveal animation */
 .reveal{
@@ -281,7 +285,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 }
 .how-icon{font-size:1.6rem;margin-bottom:10px}
 .how-step h3{font-size:15px;font-weight:700;margin-bottom:7px}
-.how-step p{font-size:13px;color:var(--text-2);line-height:1.6}
+.how-step p{font-size:13.5px;color:var(--text-2);line-height:1.65}
 
 /* AI feature grid */
 .ai-feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:40px}
@@ -291,7 +295,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 }
 .ai-feat-icon{font-size:1.6rem;margin-bottom:12px}
 .ai-feat-card h4{font-size:14.5px;font-weight:700;margin-bottom:7px}
-.ai-feat-card p{font-size:13px;color:var(--text-2);line-height:1.6}
+.ai-feat-card p{font-size:13.5px;color:var(--text-2);line-height:1.65}
 
 /* Comparison table */
 .cmp-wrap{overflow-x:auto;margin-top:40px}
@@ -335,7 +339,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 .faq-a{
   padding:0 20px;max-height:0;overflow:hidden;
   transition:max-height .3s var(--ease),padding .3s var(--ease);
-  font-size:13.5px;color:var(--text-2);line-height:1.68;
+  font-size:14px;color:var(--text-2);line-height:1.72;
 }
 .faq-item.open .faq-a{padding:0 20px 18px;max-height:300px}
 
@@ -397,7 +401,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 /* Pill-style items — NO border-left stripe (impeccable anti-pattern) */
 .sb-item{
   display:flex;align-items:center;gap:10px;
-  cursor:pointer;font-size:13px;font-weight:500;
+  cursor:pointer;font-size:13.5px;font-weight:500;
   color:var(--sb-text);
   transition:background-color var(--t) var(--ease), color var(--t) var(--ease);
   user-select:none;position:relative;
@@ -439,7 +443,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 }
 .topbar-left{display:flex;align-items:center;gap:14px}
 .topbar-right{display:flex;align-items:center;gap:12px}
-.page-title{font-size:15px;font-weight:600}
+.page-title{font-size:15px;font-weight:600;letter-spacing:-0.01em}
 .std-badge{
   background:var(--blue-l);color:var(--blue-d);
   font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;letter-spacing:.04em;
@@ -473,9 +477,9 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 }
 .acard-title{
   font-size:11px;font-weight:700;text-transform:uppercase;
-  letter-spacing:.06em;color:var(--text-3);margin-bottom:14px;
+  letter-spacing:.07em;color:var(--text-3);margin-bottom:14px;
 }
-.acard-sub{font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.6}
+.acard-sub{font-size:13.5px;color:var(--text-2);margin-bottom:16px;line-height:1.65}
 
 /* ── KPI GRID ────────────────────────────────────────────── */
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px}
@@ -499,12 +503,14 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 .kpi-card.g .kpi-value{color:var(--green)}
 .kpi-card.b .kpi-value{color:var(--blue)}
 .kpi-card.o .kpi-value{color:var(--orange)}
-.kpi-label{font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.kpi-label{font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
 .kpi-value{
-  font-family:var(--font-display);
+  font-family:var(--font);
   font-size:28px;font-weight:700;color:var(--text);line-height:1;
+  font-variant-numeric:tabular-nums;font-feature-settings:"tnum";
+  letter-spacing:-0.02em;
 }
-.kpi-sub{font-size:11.5px;color:var(--text-3);margin-top:4px}
+.kpi-sub{font-size:11.5px;color:var(--text-3);margin-top:5px;letter-spacing:.01em}
 
 /* ── GRID 2 ──────────────────────────────────────────────── */
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
@@ -594,10 +600,10 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 /* ── FORM ────────────────────────────────────────────────── */
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
 .field-group{display:flex;flex-direction:column;gap:5px}
-.field-group label{font-size:12.5px;font-weight:600;color:var(--text-2)}
+.field-group label{font-size:12px;font-weight:600;color:var(--text-2);letter-spacing:.02em;text-transform:uppercase}
 .field-group input{
   border:1.5px solid var(--border);border-radius:7px;padding:9px 12px;
-  font-size:14px;font-family:var(--font);color:var(--text);
+  font-size:14.5px;font-family:var(--font);color:var(--text);line-height:1.5;
   transition:border-color var(--t) var(--ease);background:var(--white);
 }
 .field-group input:focus{outline:none;border-color:var(--green)}
@@ -832,8 +838,9 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 .terminal-title{color:#888;font-size:12px;font-family:var(--mono);flex:1;text-align:center}
 .assess-terminal{
   background:#0d1117;padding:24px;min-height:240px;
-  font-family:var(--mono);font-size:13px;line-height:1.9;
+  font-family:var(--mono);font-size:12.5px;line-height:1.85;
   color:#c9d1d9;white-space:pre-wrap;overflow-y:auto;max-height:480px;
+  letter-spacing:0.01em;
 }
 .terminal-line-ok{color:#3fb950}
 .terminal-line-warn{color:#d29922}

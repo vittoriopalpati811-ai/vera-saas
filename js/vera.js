@@ -27,7 +27,7 @@ const QUESTIONS = [
     category: 'Contesto normativo',
     icon: '⚖️',
     text: 'Hai obblighi ESG normativi o sei quotata in borsa?',
-    sub: 'La CSRD obbliga le grandi imprese quotate dal 2024; le PMI fornitore dal 2026',
+    sub: 'Verifica se hai obblighi normativi ESG o requisiti da parte di clienti/banche',
     options: [
       { value: 'listed',    label: 'Quotata in borsa',          hint: 'Soggetta a CSRD / ESRS',     vsme: 0, gri: 5 },
       { value: 'indirect',  label: 'Obblighi CSRD indiretti',   hint: 'Fornitore di grandi imprese', vsme: 2, gri: 3 },
@@ -82,19 +82,6 @@ const QUESTIONS = [
       { value: 'build', label: 'Edilizia / Infrastrutture',  hint: 'Impatto fisico elevato',      vsme: 3, gri: 3 },
       { value: 'trade', label: 'Commercio / Distribuzione',  hint: 'Supply chain principale',     vsme: 3, gri: 2 },
       { value: 'serv',  label: 'Servizi / Consulenza',       hint: 'Prevalentemente sociale',     vsme: 4, gri: 2 },
-    ]
-  },
-  {
-    id: 'budget',
-    category: 'Budget ESG',
-    icon: '💶',
-    text: 'Qual è il budget orientativo per la rendicontazione ESG?',
-    sub: 'GRI richiede risorse maggiori; VSME è accessibile anche con budget ridotti',
-    options: [
-      { value: 'min', label: 'Meno di €1.000',    hint: 'Budget minimo',    vsme: 5, gri: 0 },
-      { value: 'low', label: '€1.000 – €3.000',   hint: 'Budget contenuto', vsme: 4, gri: 1 },
-      { value: 'med', label: '€3.000 – €10.000',  hint: 'Budget medio',     vsme: 2, gri: 3 },
-      { value: 'hi',  label: 'Oltre €10.000',     hint: 'Budget elevato',   vsme: 0, gri: 5 },
     ]
   },
   {
@@ -192,18 +179,8 @@ function buildReasoning(answers) {
   };
   lines.push(secMap[answers.sector] || '');
 
-  // 7 — Budget
-  lines.push('\n── [7] FATTIBILITÀ E BUDGET');
-  const budMap = {
-    min: '✓ Budget < €1.000: VSME con VERA a €599/anno è la sola opzione\n  realistica. GRI richiederebbe €3.000–8.000 per il primo ciclo.',
-    low: '✓ Budget €1.000–€3.000: adeguato per VSME completo con verifica\n  interna. GRI richiederebbe compromessi su qualità della verifica.',
-    med: '⚡ Budget €3.000–€10.000: GRI diventa realistico con limited\n  assurance. VSME con questo budget consente verifica esterna completa.',
-    hi:  '✓ Budget > €10.000: GRI con reasonable assurance è accessibile.\n  Consente stakeholder engagement strutturato e analisi di materialità.',
-  };
-  lines.push(budMap[answers.budget] || '');
-
-  // 8 — Esplicito
-  lines.push('\n── [8] PREFERENZE ESPLICITE');
+  // 7 — Esplicito
+  lines.push('\n── [7] PREFERENZE ESPLICITE');
   const expPlMap = {
     none:  '○ Nessuna indicazione: la raccomandazione si basa sul profilo\n  complessivo senza vincoli di stakeholder specifici.',
     vreq:  '✓✓ VSME richiesto esplicitamente: peso decisivo nella scelta.\n  Una richiesta diretta elimina ogni ambiguità del processo decisionale.',
@@ -381,10 +358,6 @@ function buildRec(answers) {
     if (answers.obligations === 'listed')
       reasons.push({ icon: '⚖️', text: 'Azienda quotata: GRI è interoperabile con CSRD/ESRS ed è preferito dagli analisti istituzionali.' });
   }
-  if ((answers.budget === 'min' || answers.budget === 'low') && isVSME) {
-    reasons.push({ icon: '💶', text: 'Budget contenuto: VSME con VERA parte da €599/anno; GRI richiederebbe €3.000–8.000 al primo ciclo.' });
-  }
-
   return {
     standard: isVSME ? 'VSME 2023' : 'GRI Standards',
     isVSME,
@@ -401,78 +374,8 @@ function buildRec(answers) {
    CLIENT DATA STORE
 ══════════════════════════════════════════════════════════ */
 
-const CLIENTS_DATA = {
-  metalfer: {
-    id: 'metalfer', initials: 'ME',
-    avatarBg: '#dcfce7', avatarColor: '#14532d',
-    name: 'Metalfer S.r.l.', cf: '02345678901',
-    sector: 'Manifatturiero', ateco: '25.11',
-    employees: 120, city: 'Brescia (BS)', year: 2024,
-    std: 'vsme', status: 'completed', step: 5,
-    ghg: { s1: 12698, s2: 18684, s3: 6294, total: 37676 },
-    stamp: { applied: true, code: 'VS-2024-R7KXMNPQ',
-      hash: 'a3f8c2e91b4d7f06a8e2c5d3b1a9f4e7c2b5d8a1f3e6c9b2d5a8f1e4c7b0d3a6',
-      date: '10 aprile 2025' },
-    ghgRows: [
-      { mat:'Gas naturale',     scope:1, tag:'tag-g', qty:'42.500 kWh',  fe:'0,18386', src:'DEFRA 2024, Table 1A (0,18386 kgCO₂e/kWh)',   em:7820  },
-      { mat:'Gasolio automezzi',scope:1, tag:'tag-g', qty:'1.820 L',     fe:'2,68490', src:'DEFRA 2024, Table 1C (2,68490 kgCO₂e/L)',  em:4878  },
-      { mat:'Elettricità',      scope:2, tag:'tag-b', qty:'66.020 kWh',  fe:'0,28307', src:'ISPRA 2024 — Fattore nazionale IT 0,28307 kgCO₂e/kWh',  em:18684 },
-      { mat:'Rifiuti discarica',scope:3, tag:'tag-o', qty:'8.400 kg',    fe:'0,58700', src:'IPCC AR6 WG3, Table A.IV.2',  em:4931  },
-      { mat:'Rifiuti riciclo',  scope:3, tag:'tag-o', qty:'3.200 kg',    fe:'0,02100', src:'DEFRA 2024, Table 6',  em:67    },
-      { mat:'Trasporto merci',  scope:3, tag:'tag-o', qty:'12.400 tkm',  fe:'0,09560', src:'DEFRA 2024, Table 12 (0,09560 kgCO₂e/tkm)',  em:1185  },
-    ],
-  },
-  rossi: {
-    id: 'rossi', initials: 'RB',
-    avatarBg: '#dbeafe', avatarColor: '#1e40af',
-    name: 'Rossi & Bianchi S.p.A.', cf: '04567890123',
-    sector: 'Edilizia', ateco: '41.20',
-    employees: 380, city: 'Milano (MI)', year: 2024,
-    std: 'gri', status: 'completed', step: 5,
-    ghg: { s1: 45230, s2: 67840, s3: 29230, total: 142300 },
-    stamp: { applied: true, code: 'GR-2024-XK7PQMNA',
-      hash: 'f9e2a4b7d1c8e3f6a9b2d5c8e1f4a7b0d3c6e9f2a5b8d1e4c7a0b3d6e9f2a5c8',
-      date: '22 marzo 2025' },
-    ghgRows: [
-      { mat:'Gas naturale',        scope:1, tag:'tag-g', qty:'180.000 kWh', fe:'0,18386', src:'DEFRA 2024, Table 1A (0,18386 kgCO₂e/kWh)',  em:33095 },
-      { mat:'Gasolio cantiere',    scope:1, tag:'tag-g', qty:'4.520 L',     fe:'2,68490', src:'DEFRA 2024, Table 1C (2,68490 kgCO₂e/L)', em:12135 },
-      { mat:'Elettricità',         scope:2, tag:'tag-b', qty:'239.600 kWh', fe:'0,28307', src:'ISPRA 2024 — Fattore nazionale IT 0,28307 kgCO₂e/kWh', em:67840 },
-      { mat:'Rifiuti costruzione', scope:3, tag:'tag-o', qty:'45.000 kg',   fe:'0,58700', src:'IPCC AR6 WG3, Table A.IV.2', em:26415 },
-      { mat:'Trasporto materiali', scope:3, tag:'tag-o', qty:'29.500 tkm',  fe:'0,09560', src:'DEFRA 2024, Table 12 (0,09560 kgCO₂e/tkm)', em:2820  },
-    ],
-  },
-  verde: {
-    id: 'verde', initials: 'VE',
-    avatarBg: '#fef3c7', avatarColor: '#92400e',
-    name: 'Verde Energia S.r.l.', cf: '07654321098',
-    sector: 'Servizi energetici', ateco: '35.11',
-    employees: 45, city: 'Torino (TO)', year: 2024,
-    std: 'vsme', status: 'in_progress', step: 2,
-    ghg: null, stamp: { applied: false },
-    ghgRows: [],
-  },
-  tecno: {
-    id: 'tecno', initials: 'TT',
-    avatarBg: '#f3e8ff', avatarColor: '#7c3aed',
-    name: 'Tecno Trade S.p.A.', cf: '03456789012',
-    sector: 'Commercio', ateco: '46.90',
-    employees: 85, city: 'Roma (RM)', year: 2024,
-    std: 'vsme', status: 'draft', step: 1,
-    ghg: null, stamp: { applied: false },
-    ghgRows: [],
-  },
-  nova: {
-    id: 'nova', initials: 'NB',
-    avatarBg: '#ffe4e6', avatarColor: '#be123c',
-    name: 'NovaBuild S.r.l.', cf: '09876543210',
-    sector: 'Edilizia', ateco: '41.10',
-    employees: 28, city: 'Napoli (NA)', year: 2024,
-    std: 'vsme', status: 'new', step: 0,
-    plan: null,
-    ghg: null, stamp: { applied: false },
-    ghgRows: [],
-  },
-};
+// Client data is loaded from Supabase — no hardcoded demo data
+const CLIENTS_DATA = {};
 
 let _currentClientId = null;
 function currentClient() { return _currentClientId ? CLIENTS_DATA[_currentClientId] : null; }
@@ -511,7 +414,7 @@ function _updateClientUI(c) {
   }
 
   // Standard badges everywhere
-  _syncStdBadges(c.std);
+  if (c.std) _syncStdBadges(c.std);
 
   // Dashboard KPIs
   if (c.ghg) {
@@ -519,9 +422,16 @@ function _updateClientUI(c) {
     _setText('kpi-s1',     (c.ghg.s1    / 1000).toFixed(1));
     _setText('kpi-s2',     (c.ghg.s2    / 1000).toFixed(1));
     _setText('kpi-s3',     (c.ghg.s3    / 1000).toFixed(1));
-    _setText('results-title', `Calcolo GHG — Job #${Object.keys(CLIENTS_DATA).indexOf(c.id)+1} · ${c.name}`);
+    _setText('results-title', `Calcolo GHG — ${c.name}`);
     _setText('results-sub',   `GHG Protocol Corporate Standard · Market-based · Anno ${c.year}`);
-    _setText('stamp-pre-info', `Report: ${c.name} · ${c.std.toUpperCase()} · ${c.year}`);
+    _setText('stamp-pre-info', `Report: ${c.name} · ${(c.std || 'vsme').toUpperCase()} · ${c.year}`);
+  } else {
+    _setText('kpi-total', '—');
+    _setText('kpi-s1',    '—');
+    _setText('kpi-s2',    '—');
+    _setText('kpi-s3',    '—');
+    _setText('results-title', c.name ? `Calcolo GHG — ${c.name}` : 'Calcolo GHG');
+    _setText('results-sub',   'Nessun dato inserito — carica i dati per calcolare le emissioni');
   }
 
   // Company form
@@ -539,14 +449,15 @@ function _updateClientUI(c) {
   updateWizardProgress(c);
 
   // Stamp state
-  state.stampApplied = c.stamp.applied;
-  if (c.stamp.applied) {
+  _setText('stamp-company-name', c.name || '—');
+  state.stampApplied = c.stamp?.applied;
+  if (c.stamp?.applied) {
     const sr = document.getElementById('stamp-result');
     if (sr) sr.style.display = 'block';
     _setText('stamp-hash', c.stamp.hash || '');
     _setText('stamp-code-display', c.stamp.code || '');
     _setText('stamp-date', c.stamp.date || '');
-    _setText('stamp-std-info', c.std === 'vsme' ? 'VSME 2023 (EFRAG)' : 'GRI Standards 2021');
+    _setText('stamp-std-info', (c.std || 'vsme') === 'vsme' ? 'VSME 2023 (EFRAG)' : 'GRI Standards 2021');
     const btn = document.getElementById('btn-apply-stamp');
     if (btn) { btn.textContent = '✓ Timbro applicato'; btn.disabled = true; }
   }
@@ -1360,15 +1271,18 @@ const VSME_QUESTIONS = {
     { id:'vsme_transp_mode',label:'Modalità di trasporto prevalente', type:'select', options:['Strada','Ferrovia','Aereo','Mare','Multimodale'] },
   ],
   'B2-E5':[
-    { id:'vsme_bio_sites',label:'L\'azienda opera in o vicino ad aree protette/sensibili?', type:'select', options:['No','Sì — specificare sotto'] },
-    { id:'vsme_bio_impact',label:'Descrizione dell\'impatto sulla biodiversità (se applicabile)', type:'textarea' },
+    { id:'vsme_bio_address',label:'Indirizzo / coordinate dello stabilimento principale', type:'text', placeholder:'es. Via Roma 1, 25121 Brescia (BS)', required:true },
+    { id:'vsme_bio_other', label:'Altri siti produttivi (se presenti)', type:'textarea', placeholder:'Elencare indirizzi separati da virgola' },
+    { id:'vsme_bio_impact',label:'Eventuali impatti noti sulla biodiversità locale (opzionale)', type:'textarea' },
   ],
   'B3-S1':[
-    { id:'vsme_emp_total',label:'Numero totale di dipendenti', type:'number', required:true },
-    { id:'vsme_emp_f',    label:'Di cui: donne (%)', type:'number' },
-    { id:'vsme_wage_gap', label:'Gap retributivo di genere (% differenza M/F)', type:'number' },
-    { id:'vsme_injuries', label:'Infortuni sul lavoro registrabili nell\'anno', type:'number' },
-    { id:'vsme_training', label:'Ore medie di formazione per dipendente', type:'number' },
+    { id:'vsme_emp_total', label:'Numero totale di dipendenti', type:'number', required:true },
+    { id:'vsme_emp_f_n',   label:'Di cui: donne (numero assoluto)', type:'number' },
+    { id:'vsme_emp_m_n',   label:'Di cui: uomini (numero assoluto)', type:'number' },
+    { id:'vsme_wage_f_avg',label:'Retribuzione media annua — donne (€ lordi)', type:'number', placeholder:'es. 28000' },
+    { id:'vsme_wage_m_avg',label:'Retribuzione media annua — uomini (€ lordi)', type:'number', placeholder:'es. 32000' },
+    { id:'vsme_injuries',  label:'Infortuni sul lavoro registrabili nell\'anno', type:'number' },
+    { id:'vsme_training',  label:'Ore medie di formazione per dipendente', type:'number' },
   ],
   'B3-S2':[
     { id:'vsme_supply_n', label:'Numero di fornitori chiave nella catena del valore', type:'number' },
@@ -2302,16 +2216,16 @@ const upload = {
 
   goToCalc() {
     const c = currentClient();
-    if (c && c.step < 4) {
-      c.step = 4;
-      if (!c.ghg) c.ghg = {s1:12698,s2:18684,s3:6294,total:37676};
-      if (!c.ghgRows || !c.ghgRows.length) c.ghgRows = [];
+    if (!c || !c.ghg || !c.ghgRows?.length) {
+      toast('Nessun dato GHG inserito. Carica un file o inserisci i dati manualmente.', 'error');
+      return;
     }
+    if (c.step < 4) c.step = 4;
     // Show report generation animation
     reportGen.generate(() => {
-      if (c) { _updateClientUI(c); }
+      _updateClientUI(c);
       showScreen('results', document.getElementById('nav-results'));
-      const total = (c && c.ghg) ? (c.ghg.total/1000).toFixed(1) : '37.7';
+      const total = (c.ghg.total / 1000).toFixed(1);
       toast(`Report pronto! ${total} tCO₂e`, 'success');
     });
   },
@@ -3783,11 +3697,6 @@ function showScreen(id, navEl) {
     toast('Il timbro metodologico può essere applicato solo dal consulente', 'error');
     return;
   }
-  // Guard materiality screen — pro/enterprise only
-  if (id === 'materiality' && !auth.isPro()) {
-    toast('Disponibile nel piano Pro', 'error');
-    return;
-  }
   document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + id).classList.add('active');
   document.querySelectorAll('.sb-item').forEach(n => n.classList.remove('active'));
@@ -3933,12 +3842,9 @@ const auth = {
     const proSidebarBtn = document.getElementById('sb-pro-btn');
     if (proSidebarBtn) proSidebarBtn.style.display = isAdmin ? '' : 'none';
 
-    // nav-materiality — visible only for pro/enterprise (checked after plan is set)
+    // nav-materiality — always visible; the module itself handles plan restrictions
     const navMateriality = document.getElementById('nav-materiality');
-    if (navMateriality) {
-      const plan = this.getPlan();
-      navMateriality.style.display = (plan === 'pro' || plan === 'enterprise' || isAdmin) ? '' : 'none';
-    }
+    if (navMateriality) navMateriality.style.display = '';
   },
 
   getRole()  { return this._role || sessionStorage.getItem('vera_role') || 'client'; },
@@ -3959,11 +3865,6 @@ const auth = {
   setPlan(plan) {
     this._plan = plan;
     sessionStorage.setItem('vera_plan', plan);
-    // Update nav-materiality visibility whenever plan changes
-    const navMateriality = document.getElementById('nav-materiality');
-    if (navMateriality) {
-      navMateriality.style.display = (plan === 'pro' || plan === 'enterprise' || this.isAdmin()) ? '' : 'none';
-    }
   },
 
   // Guard: returns true and shows toast if not PRO

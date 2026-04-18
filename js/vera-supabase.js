@@ -67,7 +67,7 @@ function _buildClientObj(client, ghgEntries, reports) {
     employees:   client.employees || 0,
     city:        client.city      || '',
     year:        client.year      || 2024,
-    std:         client.standard  || 'vsme',
+    std:         client.standard  || null,  // null = not yet determined by AI assessment
     status:      client.status    || 'new',
     step:        client.step      || 0,
     plan:        client.plan      || 'base',
@@ -408,7 +408,7 @@ const veraAuth = {
       employees:    fields.employees    ? parseInt(fields.employees, 10) : null,
       city:         fields.city         || '',
       year:         fields.year         ? parseInt(fields.year, 10) : new Date().getFullYear(),
-      standard:     fields.standard     || 'vsme',
+      standard:     fields.standard     || null,
       status:       'new',
       step:         0,
       created_at:   new Date().toISOString(),
@@ -495,15 +495,9 @@ const veraAuth = {
                 style="width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box;outline:none"
                 onfocus="this.style.borderColor='#16a34a'" onblur="this.style.borderColor='#d1d5db'"/>
             </div>
-            <div>
-              <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Standard ESG</label>
-              <select id="cc-standard"
-                style="width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box;outline:none;background:#fff;cursor:pointer"
-                onfocus="this.style.borderColor='#16a34a'" onblur="this.style.borderColor='#d1d5db'">
-                <option value="vsme">VSME</option>
-                <option value="gri">GRI 2021</option>
-              </select>
-            </div>
+          </div>
+          <div style="padding:10px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:12.5px;color:#166534">
+            ✦ Lo standard ESG (VSME o GRI) verrà determinato dall'AI dopo il completamento del questionario di assessment.
           </div>
 
           <div id="cc-error" style="display:none;padding:10px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;font-size:13px;color:#dc2626"></div>
@@ -549,7 +543,7 @@ const veraAuth = {
       employees:    (document.getElementById('cc-employees') || {}).value || '',
       city:         (document.getElementById('cc-city')      || {}).value || '',
       year:         (document.getElementById('cc-year')      || {}).value || '',
-      standard:     (document.getElementById('cc-standard')  || {}).value || 'vsme',
+      standard:     null, // determined by AI assessment questionnaire
     };
 
     if (submitEl) { submitEl.disabled = true; submitEl.textContent = 'Creazione...'; }

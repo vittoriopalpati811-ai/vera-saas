@@ -952,40 +952,40 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:
 .footer-link:hover{color:var(--text)}
 
 /* ══════════════════════════════════════════════════════════
-   LANDING — APPLE OFF-WHITE THEME
+   LANDING — APPLE CLEAN WHITE THEME
    ─────────────────────────────────────────────────────────
-   Apple palette:
-     page bg   #f5f5f7  (sporco / dirty white)
-     surface   #ffffff  (cards, panels)
-     border    #d2d2d7  (light dividers)
-     text-1    #1d1d1f  (Apple near-black)
-     text-2    #6e6e73  (Apple secondary)
-     text-3    #86868b  (Apple tertiary)
-   Hero + nav keep their dark look; aurora clipped to hero.
+   bg       #ffffff  pure white everywhere
+   surface  #ffffff  cards on white — separated by border+shadow
+   subtle   #f7f7f8  only for table headers, FAQ hover, footer
+   border   #e5e5ea  hairline dividers
+   text-1   #1d1d1f  Apple near-black
+   text-2   #6e6e73  Apple secondary
+   text-3   #86868b  Apple tertiary
 ══════════════════════════════════════════════════════════ */
 
-/* CSS tokens scoped to landing */
+/* ── CSS tokens ── */
 #view-landing {
-  --ap-bg:      #f5f5f7;
+  --ap-bg:      #ffffff;
+  --ap-subtle:  #f7f7f8;
   --ap-surface: #ffffff;
   --ap-border:  #d2d2d7;
-  --ap-border2: #e8e8ed;
+  --ap-border2: #e5e5ea;
   --ap-text1:   #1d1d1f;
   --ap-text2:   #6e6e73;
   --ap-text3:   #86868b;
-  --ap-green:   #1a8a3c;   /* slightly deeper green for dark-on-light */
+  --ap-green:   #1a8a3c;
   --ap-green-bg:#f2faf5;
-  --ap-shadow:  0 2px 8px rgba(0,0,0,.06), 0 8px 28px rgba(0,0,0,.07);
-  --ap-shadow-h:0 6px 20px rgba(0,0,0,.09), 0 16px 48px rgba(0,0,0,.10);
+  --ap-shadow:  0 1px 3px rgba(0,0,0,.07), 0 6px 20px rgba(0,0,0,.06);
+  --ap-shadow-h:0 4px 16px rgba(0,0,0,.10), 0 12px 36px rgba(0,0,0,.09);
 }
 
 /* ── Aurora clipped to hero zone only ── */
 #vera-bg { height: min(860px, 96vh); }
 
-/* ── Full-page off-white base ── */
-#view-landing { background: var(--ap-bg); }
+/* ── Pure white base — no tint anywhere ── */
+#view-landing { background: #ffffff; }
 
-/* ── Hero + nav: stay dark ── */
+/* ── Hero + nav: keep dark ── */
 .hero { background: #0a0d14; }
 .ln-nav {
   background: rgba(10,13,20,0.97) !important;
@@ -993,9 +993,9 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:
   backdrop-filter: blur(24px) saturate(180%) !important;
 }
 
-/* ── Stats bar: white surface, dark text ── */
+/* ── Stats bar ── */
 .ln-stats {
-  background: var(--ap-surface) !important;
+  background: var(--ap-subtle) !important;
   border-color: var(--ap-border2) !important;
   backdrop-filter: none !important;
 }
@@ -1006,7 +1006,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:
 .ln-stats .stat-l { color: var(--ap-text2); }
 .ln-stats .stat-sep { background: var(--ap-border2); }
 
-/* ── ALL sections: uniform #f5f5f7 — no alternating ── */
+/* ── All sections: transparent (shows white) ── */
 .ln-section          { background: transparent !important; }
 .ln-section.bg-surface { background: transparent !important; border: none !important; }
 
@@ -1025,14 +1025,13 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:
 .ai-feature-grid { grid-template-columns: repeat(2,1fr); gap: 14px; }
 .pricing-grid    { grid-template-columns: repeat(2,1fr); gap: 16px; }
 
-/* ── Shared card reset ── */
+/* ── Cards: white + hairline border + shadow (pop on white bg) ── */
 .pain-card, .how-step, .ai-feat-card, .plan {
-  background:     var(--ap-surface) !important;
+  background:     #ffffff !important;
   border:         1px solid var(--ap-border2) !important;
   box-shadow:     var(--ap-shadow) !important;
   backdrop-filter: none !important;
 }
-/* Cards inside bg-surface: same shadow everywhere — uniform look */
 
 /* ── Card text ── */
 .pain-card h3, .how-step h3, .ai-feat-card h4 { color: var(--ap-text1); }
@@ -1077,22 +1076,22 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:
 .plan-badge   { background: #1a8a3c !important; color: #fff !important; }
 
 /* ── Comparison table ── */
-.cmp-table th  { background: var(--ap-bg); color: var(--ap-text3); border-color: var(--ap-border2); }
+.cmp-table th  { background: var(--ap-subtle); color: var(--ap-text3); border-color: var(--ap-border2); }
 .cmp-table td  { color: var(--ap-text1); border-color: var(--ap-border2); }
-.cmp-table tr:hover td { background: #f0f0f2; }
+.cmp-table tr:hover td { background: #f7f7f8; }
 .cmp-table .vera-col { background: #f2faf5 !important; }
 .cmp-table .vera-col.check { color: var(--ap-green); font-weight: 700; }
 .check { color: var(--ap-green); }
 .cross { color: var(--ap-text3); }
 
 /* ── FAQ ── */
-.faq-item  { border-color: var(--ap-border2); background: var(--ap-surface); }
+.faq-item  { border-color: var(--ap-border2); background: transparent; }
 .faq-q     { color: var(--ap-text1); }
-.faq-q:hover { background: var(--ap-bg); }
+.faq-q:hover { background: var(--ap-subtle); }
 .faq-a     { color: var(--ap-text2); }
 .faq-arr   { color: var(--ap-text3); }
 
-/* ── CTA — green-tinted surface ── */
+/* ── CTA — green-tinted ── */
 .cta-dark {
   background: linear-gradient(150deg, #edf7f0 0%, #dff2e7 100%) !important;
   border: 1px solid #b2dfbe !important;
@@ -1104,7 +1103,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:
 .cta-dark p  { color: #1a5c33; }
 
 /* ── Footer ── */
-.ln-footer         { background: var(--ap-surface); border-color: var(--ap-border2); }
+.ln-footer         { background: var(--ap-subtle); border-color: var(--ap-border2); }
 .footer-copy       { color: var(--ap-text3); }
 .footer-link       { color: var(--ap-text3); }
 .footer-link:hover { color: var(--ap-text1); }

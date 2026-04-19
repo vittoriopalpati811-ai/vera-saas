@@ -94,6 +94,14 @@
   --sb-wordmark:oklch(0.91 0.09 148);
 }
 
+/* ── GLOBAL FOCUS (Priority 1 — Accessibility) ───────────── */
+:focus-visible{
+  outline:2px solid var(--green);
+  outline-offset:2px;
+  border-radius:4px;
+}
+button:focus-visible,a:focus-visible{outline-radius:6px}
+
 html{scroll-behavior:smooth}
 body{
   font-family:var(--font);
@@ -263,28 +271,54 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:
 }
 .reveal.visible{opacity:1;transform:translateY(0)}
 
+/* ── ICON CONTAINERS (SVG-based, no emoji) ───────────────── */
+.card-icon{
+  width:42px;height:42px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:14px;flex-shrink:0;
+}
+.card-icon-orange{background:oklch(0.18 0.05 50);color:var(--orange)}
+.card-icon-green {background:var(--green-bg);color:var(--green)}
+.card-icon-blue  {background:var(--blue-l);color:var(--blue-d)}
+.card-icon-purple{background:var(--purple-l);color:var(--purple)}
+
 /* Pain cards */
 .pain-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:44px}
 .pain-card{
   background:var(--surface);border:1px solid var(--border);
   border-radius:var(--radius);padding:22px;
-  transition:border-color var(--t) var(--ease);
+  transition:border-color var(--t) var(--ease),
+             transform var(--t) var(--ease),
+             box-shadow var(--t) var(--ease);
 }
-.pain-card:hover{border-color:var(--border-2)}
-.pain-icon{font-size:1.5rem;margin-bottom:12px}
+.pain-card:hover{
+  border-color:var(--border-2);
+  transform:translateY(-2px);
+  box-shadow:0 6px 24px #00000044;
+}
 .pain-card h3{font-size:14.5px;font-weight:700;margin-bottom:7px}
 .pain-card p{font-size:13px;color:var(--text-2);line-height:1.6}
 
 /* How-it-works */
 .how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:28px;margin-top:44px}
-.how-step{position:relative;padding:24px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+.how-step{
+  position:relative;padding:24px;background:var(--white);
+  border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);
+  transition:border-color var(--t) var(--ease),
+             transform var(--t) var(--ease),
+             box-shadow var(--t) var(--ease);
+}
+.how-step:hover{
+  border-color:var(--green-border);
+  transform:translateY(-2px);
+  box-shadow:0 8px 32px #00000055;
+}
 .how-num{
   width:32px;height:32px;border-radius:8px;
   background:var(--green-bg);border:1.5px solid var(--green-border);
   display:flex;align-items:center;justify-content:center;
   font-size:13px;font-weight:800;color:var(--green);margin-bottom:10px;
 }
-.how-icon{font-size:1.6rem;margin-bottom:10px}
 .how-step h3{font-size:15px;font-weight:700;margin-bottom:7px}
 .how-step p{font-size:13.5px;color:var(--text-2);line-height:1.65}
 
@@ -293,8 +327,10 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:
 .ai-feat-card{
   background:var(--bg);border:1px solid var(--border);
   border-radius:var(--radius);padding:22px;
+  transition:border-color var(--t) var(--ease),
+             transform var(--t) var(--ease);
 }
-.ai-feat-icon{font-size:1.6rem;margin-bottom:12px}
+.ai-feat-card:hover{border-color:var(--blue-d);transform:translateY(-1px)}
 .ai-feat-card h4{font-size:14.5px;font-weight:700;margin-bottom:7px}
 .ai-feat-card p{font-size:13.5px;color:var(--text-2);line-height:1.65}
 

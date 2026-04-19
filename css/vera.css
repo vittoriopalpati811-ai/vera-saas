@@ -952,172 +952,175 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:
 .footer-link:hover{color:var(--text)}
 
 /* ══════════════════════════════════════════════════════════
-   LANDING — WHITE DOMINANT LIGHT THEME
-   Hero + nav stay dark; everything below = clean white.
+   LANDING — APPLE OFF-WHITE THEME
+   ─────────────────────────────────────────────────────────
+   Apple palette:
+     page bg   #f5f5f7  (sporco / dirty white)
+     surface   #ffffff  (cards, panels)
+     border    #d2d2d7  (light dividers)
+     text-1    #1d1d1f  (Apple near-black)
+     text-2    #6e6e73  (Apple secondary)
+     text-3    #86868b  (Apple tertiary)
+   Hero + nav keep their dark look; aurora clipped to hero.
 ══════════════════════════════════════════════════════════ */
 
-/* Aurora only covers hero zone */
-#vera-bg {
-  height: min(820px, 92vh);
+/* CSS tokens scoped to landing */
+#view-landing {
+  --ap-bg:      #f5f5f7;
+  --ap-surface: #ffffff;
+  --ap-border:  #d2d2d7;
+  --ap-border2: #e8e8ed;
+  --ap-text1:   #1d1d1f;
+  --ap-text2:   #6e6e73;
+  --ap-text3:   #86868b;
+  --ap-green:   #1a8a3c;   /* slightly deeper green for dark-on-light */
+  --ap-green-bg:#f2faf5;
+  --ap-shadow:  0 2px 8px rgba(0,0,0,.06), 0 8px 28px rgba(0,0,0,.07);
+  --ap-shadow-h:0 6px 20px rgba(0,0,0,.09), 0 16px 48px rgba(0,0,0,.10);
 }
 
-/* White page */
-#view-landing { background: #ffffff; }
+/* ── Aurora clipped to hero zone only ── */
+#vera-bg { height: min(860px, 96vh); }
 
-/* Hero explicitly dark */
+/* ── Full-page off-white base ── */
+#view-landing { background: var(--ap-bg); }
+
+/* ── Hero + nav: stay dark ── */
 .hero { background: #0a0d14; }
 .ln-nav {
-  background: rgba(10, 13, 20, 0.96) !important;
-  border-bottom-color: rgba(255,255,255,0.06) !important;
-  backdrop-filter: blur(20px) !important;
+  background: rgba(10,13,20,0.97) !important;
+  border-bottom-color: rgba(255,255,255,0.05) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
 }
 
-/* ── Stats bar — light ── */
+/* ── Stats bar: white surface, dark text ── */
 .ln-stats {
-  background: #f8fafc !important;
-  border-color: #e2e8f0 !important;
+  background: var(--ap-surface) !important;
+  border-color: var(--ap-border2) !important;
   backdrop-filter: none !important;
 }
 .ln-stats .stat-n {
-  background: linear-gradient(135deg, #0f172a 20%, #16a34a 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  background: linear-gradient(135deg, var(--ap-text1) 10%, var(--ap-green) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
-.ln-stats .stat-l { color: #64748b; }
-.ln-stats .stat-sep { background: #e2e8f0; }
+.ln-stats .stat-l { color: var(--ap-text2); }
+.ln-stats .stat-sep { background: var(--ap-border2); }
 
-/* ── Sections — white / off-white alternating ── */
-.ln-section { background: #ffffff; }
+/* ── ALL sections: transparent so #f5f5f7 fills the sides ── */
+.ln-section          { background: transparent !important; }
 .ln-section.bg-surface {
-  background: #f8fafc !important;
-  border-top: 1px solid #e2e8f0 !important;
-  border-bottom: 1px solid #e2e8f0 !important;
+  /* Full-width white band between gray sections — Apple's alternating rhythm */
+  background: var(--ap-surface) !important;
+  border-top:    1px solid var(--ap-border2) !important;
+  border-bottom: 1px solid var(--ap-border2) !important;
 }
-.ln-section-label  { color: #16a34a; }
-.ln-section-title  { color: #0f172a; }
-.ln-section-sub    { color: #64748b; }
 
-/* ── Pain / info cards ── */
-.pain-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
-.pain-card {
-  background: #ffffff !important;
-  border: 1px solid #e8edf2 !important;
-  box-shadow: 0 1px 3px rgba(15,23,42,0.04), 0 4px 16px rgba(15,23,42,0.06) !important;
+/* ── Section typography ── */
+.ln-section-label { color: var(--ap-green); }
+.ln-section-title { color: var(--ap-text1); }
+.ln-section-title em {
+  background: linear-gradient(135deg, var(--ap-green) 0%, #3ecf6f 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.ln-section-sub { color: var(--ap-text2); }
+
+/* ── 2×2 grids ── */
+.pain-grid       { grid-template-columns: repeat(2,1fr); gap: 14px; }
+.how-grid        { grid-template-columns: repeat(2,1fr); gap: 14px; }
+.ai-feature-grid { grid-template-columns: repeat(2,1fr); gap: 14px; }
+.pricing-grid    { grid-template-columns: repeat(2,1fr); gap: 16px; }
+
+/* ── Shared card reset ── */
+.pain-card, .how-step, .ai-feat-card, .plan {
+  background:     var(--ap-surface) !important;
+  border:         1px solid var(--ap-border2) !important;
+  box-shadow:     var(--ap-shadow) !important;
   backdrop-filter: none !important;
 }
-.pain-card:hover {
-  border-color: #cbd5e1 !important;
-  box-shadow: 0 8px 32px rgba(15,23,42,0.10) !important;
+/* Cards inside white sections need a hair more contrast */
+.ln-section.bg-surface .pain-card,
+.ln-section.bg-surface .how-step {
+  border-color: var(--ap-border) !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,.04), 0 6px 20px rgba(0,0,0,.06) !important;
+}
+
+/* ── Card text ── */
+.pain-card h3, .how-step h3, .ai-feat-card h4 { color: var(--ap-text1); }
+.pain-card p,  .how-step p,  .ai-feat-card p  { color: var(--ap-text2); }
+
+/* ── Card hover ── */
+.pain-card:hover, .ai-feat-card:hover {
+  border-color: var(--ap-border) !important;
+  box-shadow: var(--ap-shadow-h) !important;
   transform: translateY(-3px) !important;
-}
-.pain-card h3 { color: #0f172a; }
-.pain-card p  { color: #475569; }
-
-/* ── How steps ── */
-.how-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
-.how-step {
-  background: #ffffff !important;
-  border: 1px solid #e8edf2 !important;
-  box-shadow: 0 1px 3px rgba(15,23,42,0.04), 0 4px 16px rgba(15,23,42,0.06) !important;
-  backdrop-filter: none !important;
 }
 .how-step:hover {
-  border-color: #86efac !important;
-  box-shadow: 0 10px 36px rgba(15,23,42,0.09), 0 0 0 1px #86efac !important;
+  border-color: #a3e6ba !important;
+  box-shadow: var(--ap-shadow-h), 0 0 0 1px #a3e6ba !important;
   transform: translateY(-4px) !important;
 }
-.how-step h3 { color: #0f172a; }
-.how-step p  { color: #475569; }
-.how-num {
-  background: #f0fdf4 !important;
-  border-color: #86efac !important;
-  color: #16a34a !important;
-}
 
-/* ── AI feature cards ── */
-.ai-feature-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
-.ai-feat-card {
-  background: #ffffff !important;
-  border: 1px solid #e8edf2 !important;
-  box-shadow: 0 1px 3px rgba(15,23,42,0.04), 0 4px 16px rgba(15,23,42,0.06) !important;
-  backdrop-filter: none !important;
-}
-.ai-feat-card:hover {
-  border-color: #93c5fd !important;
-  box-shadow: 0 10px 36px rgba(15,23,42,0.09), 0 0 0 1px #93c5fd !important;
-  transform: translateY(-3px) !important;
-}
-.ai-feat-card h4 { color: #0f172a; }
-.ai-feat-card p  { color: #475569; }
+/* ── Card icons ── */
+.card-icon-orange { background: #fff3eb !important; color: #c2410c !important; }
+.card-icon-green  { background: var(--ap-green-bg) !important; color: var(--ap-green) !important; }
+.card-icon-blue   { background: #eef4ff !important; color: #2563eb !important; }
+.card-icon-purple { background: #f4f0ff !important; color: #6d28d9 !important; }
 
-/* ── Card icons — light bg tints ── */
-.card-icon-orange { background: #fff7ed !important; color: #ea580c !important; }
-.card-icon-green  { background: #f0fdf4 !important; color: #16a34a !important; }
-.card-icon-blue   { background: #eff6ff !important; color: #2563eb !important; }
-.card-icon-purple { background: #f5f3ff !important; color: #7c3aed !important; }
-
-/* ── Pricing cards ── */
-.pricing-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
-.plan {
-  background: #ffffff !important;
-  border: 1.5px solid #e8edf2 !important;
-  box-shadow: 0 1px 3px rgba(15,23,42,0.04), 0 4px 16px rgba(15,23,42,0.07) !important;
-  backdrop-filter: none !important;
-}
+/* ── Pricing ── */
+.plan { border-radius: var(--radius-lg) !important; }
 .plan:hover {
-  border-color: #cbd5e1 !important;
-  box-shadow: 0 12px 40px rgba(15,23,42,0.10) !important;
+  border-color: var(--ap-border) !important;
+  box-shadow: var(--ap-shadow-h) !important;
 }
 .plan.featured {
-  background: linear-gradient(145deg, #f0fdf4, #ffffff) !important;
-  border-color: #4ade80 !important;
-  box-shadow: 0 0 0 1px rgba(74,222,128,.2), 0 8px 32px rgba(34,208,106,.12) !important;
+  background: linear-gradient(160deg, #f2faf5, #ffffff) !important;
+  border-color: #6ee99a !important;
+  box-shadow: 0 0 0 1px rgba(110,233,154,.25), 0 8px 32px rgba(26,138,60,.10) !important;
 }
 .plan.featured:hover {
-  box-shadow: 0 0 0 1px rgba(74,222,128,.35), 0 16px 48px rgba(34,208,106,.18) !important;
+  box-shadow: 0 0 0 1px rgba(110,233,154,.4), 0 16px 48px rgba(26,138,60,.16) !important;
 }
-.plan-name    { color: #64748b; }
-.plan-price   { color: #0f172a; }
-.plan-cadence { color: #94a3b8; }
-.plan-features li { color: #374151; }
-.plan-badge   { background: #22d06a !important; color: #fff !important; }
+.plan-name    { color: var(--ap-text3); }
+.plan-price   { color: var(--ap-text1); }
+.plan-cadence { color: var(--ap-text3); }
+.plan-features li { color: var(--ap-text2); }
+.plan-badge   { background: #1a8a3c !important; color: #fff !important; }
 
 /* ── Comparison table ── */
-.cmp-table th  { background: #f8fafc; color: #64748b; border-color: #e2e8f0; }
-.cmp-table td  { color: #0f172a; border-color: #e2e8f0; }
-.cmp-table tr:hover td { background: #f1f5f9; }
-.cmp-table .vera-col { background: #f0fdf4 !important; }
-.cmp-table .vera-col.check { color: #16a34a; font-weight: 700; }
-.check { color: #16a34a; }
-.cross { color: #94a3b8; }
+.cmp-table th  { background: var(--ap-bg); color: var(--ap-text3); border-color: var(--ap-border2); }
+.cmp-table td  { color: var(--ap-text1); border-color: var(--ap-border2); }
+.cmp-table tr:hover td { background: #f0f0f2; }
+.cmp-table .vera-col { background: #f2faf5 !important; }
+.cmp-table .vera-col.check { color: var(--ap-green); font-weight: 700; }
+.check { color: var(--ap-green); }
+.cross { color: var(--ap-text3); }
 
 /* ── FAQ ── */
-.faq-item { border-color: #e8edf2; background: #ffffff; }
-.faq-q    { color: #0f172a; }
-.faq-q:hover { background: #f8fafc; }
-.faq-a    { color: #475569; }
-.faq-arr  { color: #94a3b8; }
+.faq-item  { border-color: var(--ap-border2); background: var(--ap-surface); }
+.faq-q     { color: var(--ap-text1); }
+.faq-q:hover { background: var(--ap-bg); }
+.faq-a     { color: var(--ap-text2); }
+.faq-arr   { color: var(--ap-text3); }
 
-/* ── CTA section — green tint on white ── */
+/* ── CTA — green-tinted surface ── */
 .cta-dark {
-  background: linear-gradient(145deg, #f0fdf4 0%, #dcfce7 100%) !important;
-  border-color: #86efac !important;
+  background: linear-gradient(150deg, #edf7f0 0%, #dff2e7 100%) !important;
+  border: 1px solid #b2dfbe !important;
   box-shadow: none !important;
 }
-.cta-dark::after  { background: linear-gradient(90deg, transparent, #4ade80, transparent); }
-.cta-dark::before { background: radial-gradient(ellipse 80% 70% at 50% 110%, rgba(74,222,128,.12) 0%, transparent 65%); }
+.cta-dark::before { background: radial-gradient(ellipse 80% 70% at 50% 115%, rgba(26,138,60,.10) 0%, transparent 65%); }
+.cta-dark::after  { background: linear-gradient(90deg, transparent, #6ee99a, transparent); }
 .cta-dark h2 { color: #14532d; }
-.cta-dark p  { color: #166534; }
+.cta-dark p  { color: #1a5c33; }
 
-/* ── Footer — off-white ── */
-.ln-footer { background: #f8fafc; border-color: #e2e8f0; }
-.footer-copy { color: #64748b; }
-.footer-link { color: #64748b; }
-.footer-link:hover { color: #0f172a; }
-.ln-footer .wordmark { color: #16a34a; }
+/* ── Footer ── */
+.ln-footer         { background: var(--ap-surface); border-color: var(--ap-border2); }
+.footer-copy       { color: var(--ap-text3); }
+.footer-link       { color: var(--ap-text3); }
+.footer-link:hover { color: var(--ap-text1); }
+.ln-footer .wordmark { color: var(--ap-green); }
 
-/* ── Responsive: single column on narrow ── */
+/* ── Single column on mobile ── */
 @media (max-width: 580px) {
   .pain-grid,
   .how-grid,

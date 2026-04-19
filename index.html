@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="css/vera.css?v=20260419d"/>
+<link rel="stylesheet" href="css/vera.css?v=20260419e"/>
 </head>
 <body>
 
@@ -50,20 +50,139 @@
 
   <!-- HERO -->
   <section class="hero">
-    <div class="hero-badge">
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" fill="#16a34a" opacity=".3"/><circle cx="6" cy="6" r="3" fill="#16a34a"/></svg>
-      Nuovo: Valutazione standard AI in tempo reale
-    </div>
-    <h1>ESG semplice.<br/><em>Per le PMI italiane.</em></h1>
-    <p>L'unica piattaforma che capisce quale standard devi usare, calcola le tue emissioni GHG e genera il bilancio di sostenibilità conforme — in 4 giorni*, non 4 mesi.</p>
-    <div class="hero-actions">
-      <button class="btn btn-primary btn-lg" onclick="openApp()">
-        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-        Inizia la valutazione AI
-      </button>
-      <a href="VERA_Whitepaper_IT.pdf" target="_blank" class="btn btn-outline btn-lg">Guarda il whitepaper →</a>
-    </div>
-    <p class="hero-note">Nessuna carta di credito · Primo report in 4 giorni* · Conforme VSME e GRI</p>
+    <!-- Crossfade bg layers (transition between two "scenes") -->
+    <div class="hero-bg-a" aria-hidden="true"></div>
+    <div class="hero-bg-b" aria-hidden="true"></div>
+
+    <div class="hero-inner">
+
+      <!-- ── Text column ── -->
+      <div class="hero-text">
+        <div class="hero-badge">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" fill="#16a34a" opacity=".3"/><circle cx="6" cy="6" r="3" fill="#16a34a"/></svg>
+          Nuovo: Valutazione standard AI in tempo reale
+        </div>
+        <h1>ESG semplice.<br/><em>Per le PMI italiane.</em></h1>
+        <p>L'unica piattaforma che capisce quale standard devi usare, calcola le tue emissioni GHG e genera il bilancio di sostenibilità conforme — in 4 giorni*, non 4 mesi.</p>
+        <div class="hero-actions">
+          <button class="btn btn-primary btn-lg" onclick="openApp()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Inizia la valutazione AI
+          </button>
+          <a href="VERA_Whitepaper_IT.pdf" target="_blank" class="btn btn-outline btn-lg">Guarda il whitepaper →</a>
+        </div>
+        <p class="hero-note">Nessuna carta di credito · Primo report in 4 giorni* · Conforme VSME e GRI</p>
+      </div><!-- /hero-text -->
+
+      <!-- ── Visual column — deconstructed report (CSS-only) ── -->
+      <div class="hero-visual" aria-hidden="true">
+        <div class="hero-visual-glow"></div>
+
+        <div class="doc-stack">
+
+          <!-- Page 3 — back: indicatori table -->
+          <div class="doc-slot doc-slot-3">
+            <div class="doc-page doc-p3">
+              <div class="dp-hd">
+                <div class="dp-hd-dot" style="background:#4ade80"></div>
+                <div class="dp-hd-lines">
+                  <div class="dp-l dp-l-title"></div>
+                  <div class="dp-l dp-l-sub"></div>
+                </div>
+              </div>
+              <div class="dp-sep"></div>
+              <div class="dp-table">
+                <div class="dp-row"><span class="dp-dot" style="background:#4ade80"></span><div class="dp-l dp-l-md"></div><div class="dp-val">45.2</div></div>
+                <div class="dp-row"><span class="dp-dot" style="background:#60a5fa"></span><div class="dp-l dp-l-sm"></div><div class="dp-val">892</div></div>
+                <div class="dp-row"><span class="dp-dot" style="background:#4ade80"></span><div class="dp-l dp-l-lg"></div><div class="dp-val">1.240</div></div>
+                <div class="dp-row"><span class="dp-dot" style="background:#fb923c"></span><div class="dp-l dp-l-md"></div><div class="dp-val">11.6</div></div>
+              </div>
+              <div class="dp-sep" style="margin-top:10px"></div>
+              <div class="dp-pill dp-pill-green" style="margin-top:8px">VSME 2023 ✓</div>
+            </div>
+          </div>
+
+          <!-- Page 2 — middle: GHG bar chart -->
+          <div class="doc-slot doc-slot-2">
+            <div class="doc-page doc-p2">
+              <div class="dp-hd">
+                <div class="dp-hd-dot" style="background:#60a5fa"></div>
+                <div class="dp-hd-lines">
+                  <div class="dp-l dp-l-title"></div>
+                  <div class="dp-l dp-l-xs"></div>
+                </div>
+              </div>
+              <div class="dp-chart">
+                <div class="dp-chart-bars">
+                  <div class="dp-bar-w"><div class="dp-bar" style="--bh:38%"></div><div class="dp-bar-lbl">S1</div></div>
+                  <div class="dp-bar-w"><div class="dp-bar" style="--bh:61%"></div><div class="dp-bar-lbl">S2</div></div>
+                  <div class="dp-bar-w"><div class="dp-bar dp-bar-hi" style="--bh:87%"></div><div class="dp-bar-lbl">S3</div></div>
+                  <div class="dp-bar-w"><div class="dp-bar dp-bar-total" style="--bh:70%;background:linear-gradient(180deg,#22d06a,#16a34a)"></div><div class="dp-bar-lbl">tot</div></div>
+                </div>
+                <div class="dp-chart-axis"></div>
+              </div>
+              <div class="dp-legend">
+                <div class="dp-leg-item"><span class="dp-dot" style="background:#4ade80"></span><div class="dp-l dp-l-sm"></div></div>
+                <div class="dp-leg-item"><span class="dp-dot" style="background:#60a5fa"></span><div class="dp-l dp-l-xs"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Page 1 — front: cover -->
+          <div class="doc-slot doc-slot-1">
+            <div class="doc-page doc-p1">
+              <!-- Shine overlay -->
+              <div class="dp-shine"></div>
+
+              <!-- Logo + wordmark -->
+              <div class="dp-logo">
+                <svg width="20" height="20" viewBox="0 0 28 28" fill="none">
+                  <rect width="28" height="28" rx="6" fill="#14532d"/>
+                  <path d="M7 20L14 8l7 12H7z" fill="#4ade80"/>
+                  <path d="M10.5 20l3.5-6 3.5 6h-7z" fill="#86efac"/>
+                </svg>
+                <span class="dp-wordmark">VERA</span>
+              </div>
+
+              <!-- Title area (typography lines) -->
+              <div class="dp-cover-title">
+                <div class="dp-l dp-l-xl"></div>
+                <div class="dp-l dp-l-xxl" style="margin-top:5px"></div>
+                <div class="dp-l dp-l-sm" style="margin-top:8px;opacity:.4"></div>
+              </div>
+
+              <!-- Green divider -->
+              <div class="dp-divider"></div>
+
+              <!-- ESG pills -->
+              <div class="dp-esg-row">
+                <div class="dp-esg-pill" style="background:#dcfce7;color:#15803d">E</div>
+                <div class="dp-esg-pill" style="background:#dbeafe;color:#1d4ed8">S</div>
+                <div class="dp-esg-pill" style="background:#ede9fe;color:#6d28d9">G</div>
+              </div>
+
+              <!-- Stamp -->
+              <div class="dp-stamp-wrap">
+                <svg class="dp-stamp-svg" width="60" height="60" viewBox="0 0 60 60" fill="none">
+                  <circle cx="30" cy="30" r="28" stroke="#16a34a" stroke-width="1.5" opacity=".5"/>
+                  <circle cx="30" cy="30" r="22" stroke="#16a34a" stroke-width="0.8" stroke-dasharray="3 3" opacity=".4"/>
+                  <path d="M20 30l7 7 13-14" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="dp-stamp-txt">VSME 2023</div>
+              </div>
+
+              <!-- Footer lines -->
+              <div class="dp-cover-footer">
+                <div class="dp-l dp-l-md" style="opacity:.25"></div>
+                <div class="dp-l dp-l-xs" style="opacity:.18;margin-top:4px"></div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /doc-stack -->
+      </div><!-- /hero-visual -->
+
+    </div><!-- /hero-inner -->
   </section>
 
   <!-- STATS -->
@@ -1425,7 +1544,7 @@
 <script src="js/vera.js?v=20260426"></script>
 <script src="js/vera-supabase.js?v=20260426"></script>
 <script src="js/vera-materiality.js?v=20260425"></script>
-<script src="js/vera-animations.js?v=20260419d"></script>
+<script src="js/vera-animations.js?v=20260419e"></script>
 <script src="js/vera-bubbles.js?v=20260417"></script>
 <script src="js/vera-chat.js?v=20260426"></script>
 </body>

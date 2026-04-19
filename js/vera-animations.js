@@ -147,7 +147,7 @@ const veraAnims = {
 
   /* ── Word-split hero h1 into animatable spans ────────────── */
   _splitHeroWords() {
-    const h1 = document.querySelector('.hero h1');
+    const h1 = document.querySelector('.hero-text h1') || document.querySelector('.hero h1');
     if (!h1 || h1.querySelector('.hw')) return h1;
 
     const nodes = Array.from(h1.childNodes);
@@ -194,7 +194,7 @@ const veraAnims = {
     // Badge
     const badge = document.querySelector('.hero-badge');
     if (badge) {
-      badge.style.cssText += 'opacity:0;transform:translateY(14px)';
+      badge.style.cssText += ';opacity:0;transform:translateY(14px)';
       setTimeout(() => {
         badge.style.transition = `opacity 550ms ${e}, transform 550ms ${e}`;
         badge.style.opacity    = '1';
@@ -215,17 +215,28 @@ const veraAnims = {
     });
     nextAt += 80 + words.length * 60;
 
-    // Subtitle, actions, note — sequential
-    ['.hero > p', '.hero-actions', '.hero-note'].forEach((sel, i) => {
+    // Subtitle, actions, note — sequential (new .hero-text selectors)
+    ['.hero-text > p', '.hero-actions', '.hero-note'].forEach((sel, i) => {
       const el = document.querySelector(sel);
       if (!el) return;
-      el.style.cssText += 'opacity:0;transform:translateY(18px)';
+      el.style.cssText += ';opacity:0;transform:translateY(18px)';
       setTimeout(() => {
         el.style.transition = `opacity 620ms ${e}, transform 620ms ${e}`;
         el.style.opacity    = '1';
         el.style.transform  = 'translateY(0)';
       }, nextAt + 80 + i * 110);
     });
+
+    // Hero visual: enter from right with slight scale
+    const visual = document.querySelector('.hero-visual');
+    if (visual) {
+      visual.style.cssText += ';opacity:0;transform:translateX(28px) scale(0.96)';
+      setTimeout(() => {
+        visual.style.transition = `opacity 900ms ${e}, transform 900ms ${e}`;
+        visual.style.opacity    = '1';
+        visual.style.transform  = 'translateX(0) scale(1)';
+      }, 200);
+    }
   },
 
   /* ── Scroll reveal: solo elements + staggered card grids ── */

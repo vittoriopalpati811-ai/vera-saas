@@ -434,6 +434,12 @@ function _updateClientUI(c) {
     _setText('results-sub',   'Nessun dato inserito — carica i dati per calcolare le emissioni');
   }
 
+  // Scope distribution bars (dynamic)
+  _updateScopeBars(c);
+
+  // Status activity rows (dynamic)
+  _updateStatusRows(c);
+
   // Company form
   _setVal('field-ragione-sociale', c.name);
   _setVal('field-cf',              c.cf);
@@ -544,7 +550,6 @@ function _syncStdBadges(std) {
   const badge = document.getElementById('selected-std-badge');
   if (badge) badge.className = 'std-badge' + (std === 'vsme' ? ' vsme' : '');
   _setText('dash-std',       label);
-  _setText('dash-std-label', std === 'vsme' ? 'VSME 2023' : 'GRI Standards');
   _setText('job-std',        label);
   _setText('stamp-std-label',std === 'vsme' ? 'VSME 2023' : 'GRI Standards');
   _setText('stamp-std-name', label);
@@ -560,18 +565,76 @@ function _syncStdBadges(std) {
 function _updateDashboardTable(c) {
   const tbody = document.getElementById('jobs-tbody');
   if (!tbody) return;
-  const completed = Object.values(CLIENTS_DATA).filter(cl => cl.status === 'completed' && cl.id !== c.id).slice(0,2);
-  const rows = [c, ...completed].filter(Boolean).map((cl, i) => `
+
+  // Only show real data (no hardcoded Metalfer rows)
+  if (!c || !c.ghg) {
+    tbody.innerHTML = `<tr id="jobs-empty-row"><td colspan="7" style="text-align:center;color:var(--text-3);padding:20px 0;font-size:13px">Nessun job completato — carica i dati GHG per iniziare</td></tr>`;
+    return;
+  }
+
+  const std = c.std ? c.std.toUpperCase() : '—';
+  const statusClass = c.status === 'completed' ? 'tag tag-g' : 'tag';
+  const statusLabel = c.status === 'completed' ? 'Completato' : 'In corso';
+  const tco2 = c.ghg ? (c.ghg.total / 1000).toFixed(1) : '—';
+  const rows = c.ghgRows ? c.ghgRows.length : '—';
+
+  tbody.innerHTML = `
     <tr>
-      <td>#${4 - i}</td>
-      <td>${cl.id === c.id ? `dati_${cl.year}_annuale.xlsx` : `archivio_${cl.year}.xlsx`}</td>
-      <td>${cl.year}</td>
-      <td><span class="tag tag-g">${cl.std.toUpperCase()}</span></td>
-      <td>6</td>
-      <td><span class="tag tag-g">${cl.status === 'completed' ? 'Completato' : 'In corso'}</span></td>
-      <td class="num">${cl.ghg ? (cl.ghg.total/1000).toFixed(1) : '—'}</td>
-    </tr>`).join('');
-  tbody.innerHTML = rows;
+      <td>#1</td>
+      <td>dati_${c.year}_annuale.xlsx</td>
+      <td>${c.year}</td>
+      <td><span class="tag tag-g" id="job-std">${std}</span></td>
+      <td>${rows}</td>
+      <td><span class="${statusClass}">${statusLabel}</span></td>
+      <td class="num">${tco2}</td>
+    </tr>`;
+}
+
+function _updateScopeBars(c) {
+  const hasDist = !!(c && c.ghg && c.ghg.total > 0);
+  const wrap  = document.getElementById('scope-bar-wrap');
+  const lgnd  = document.getElementById('scope-legend');
+  const empty = document.getElementById('scope-empty');
+  if (wrap)  wrap.style.display  = hasDist ? ''     : 'none';
+  if (lgnd)  lgnd.style.display  = hasDist ? ''     : 'none';
+  if (empty) empty.style.display = hasDist ? 'none' : '';
+  if (!hasDist) return;
+
+  const t  = c.ghg.total;
+  const p1 = +(c.ghg.s1 / t * 100).toFixed(1);
+  const p2 = +(c.ghg.s2 / t * 100).toFixed(1);
+  const p3 = +(c.ghg.s3 / t * 100).toFixed(1);
+
+  const b1 = document.getElementById('scope-bar-s1');
+  const b2 = document.getElementById('scope-bar-s2');
+  const b3 = document.getElementById('scope-bar-s3');
+  if (b1) { b1.style.width = p1 + '%'; b1.title = `Scope 1 · ${p1}%`; }
+  if (b2) { b2.style.width = p2 + '%'; b2.title = `Scope 2 · ${p2}%`; }
+  if (b3) { b3.style.width = p3 + '%'; b3.title = `Scope 3 · ${p3}%`; }
+
+  const l1 = document.getElementById('legend-s1');
+  const l2 = document.getElementById('legend-s2');
+  const l3 = document.getElementById('legend-s3');
+  if (l1) l1.innerHTML = `<b>Scope 1 · ${p1}%</b><br/>Combustibili diretti`;
+  if (l2) l2.innerHTML = `<b>Scope 2 · ${p2}%</b><br/>Energia acquistata`;
+  if (l3) l3.innerHTML = `<b>Scope 3 · ${p3}%</b><br/>Catena del valore`;
+}
+
+function _updateStatusRows(c) {
+  function setRow(id, done, doneText, pendingText) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = done ? 'tag tag-g' : 'tag';
+    el.textContent = done ? `✓ ${doneText}` : `○ ${pendingText}`;
+  }
+  if (!c) return;
+  const stdLabel = c.std ? c.std.toUpperCase() : '—';
+  _setText('dash-std', c.std ? c.std.toUpperCase() : '—');
+  setRow('status-std',    c.std != null,         stdLabel,     'Da definire');
+  setRow('status-data',   c.step >= 3,            'Completato', 'In attesa');
+  setRow('status-ghg',    !!(c.ghg),             'Completato', 'In attesa');
+  setRow('status-report', c.step >= 5,            'Generato',   'In attesa');
+  setRow('status-stamp',  !!(c.stamp?.applied),  'Applicato',  'In attesa');
 }
 
 
@@ -3662,12 +3725,25 @@ function stepUndone(id) {
    GLOBAL FUNCTIONS (called from HTML)
 ══════════════════════════════════════════════════════════ */
 
-function openApp() {
+function openApp(tab) {
   document.getElementById('view-landing').style.display = 'none';
   document.getElementById('view-landing').classList.remove('active');
   const loginEl = document.getElementById('view-login');
   loginEl.style.display = 'flex';
   loginEl.classList.add('active');
+
+  // 'signup' → show register panel; default ('login') → show login panel
+  if (tab === 'signup') {
+    const lp = document.getElementById('login-panel');
+    const rp = document.getElementById('register-panel');
+    if (lp) lp.style.display = 'none';
+    if (rp) rp.style.display = 'block';
+  } else {
+    const lp = document.getElementById('login-panel');
+    const rp = document.getElementById('register-panel');
+    if (lp) lp.style.display = 'block';
+    if (rp) rp.style.display = 'none';
+  }
 }
 
 function closeLogin() {

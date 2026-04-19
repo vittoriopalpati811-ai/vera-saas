@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="css/vera.css?v=20260425e"/>
+<link rel="stylesheet" href="css/vera.css?v=20260426"/>
 </head>
 <body>
 
@@ -34,8 +34,8 @@
         <li><a href="#faq">FAQ</a></li>
       </ul>
       <div class="ln-nav-cta">
-        <button class="btn btn-ghost" onclick="openApp()">Accedi</button>
-        <button class="btn btn-primary" onclick="openApp()">Prova gratis →</button>
+        <button class="btn btn-ghost" onclick="openApp('login')">Accedi</button>
+        <button class="btn btn-primary" onclick="openApp('signup')">Prova gratis →</button>
       </div>
     </div>
   </nav>
@@ -903,25 +903,28 @@
         <div class="grid-2">
           <div class="acard">
             <div class="acard-title">Distribuzione per scope</div>
-            <div class="scope-bar-wrap">
-              <div class="scope-bar-s1" style="width:33.7%" title="Scope 1 · 33.7%"></div>
-              <div class="scope-bar-s2" style="width:49.6%" title="Scope 2 · 49.6%"></div>
-              <div class="scope-bar-s3" style="width:16.7%" title="Scope 3 · 16.7%"></div>
+            <div class="scope-bar-wrap" id="scope-bar-wrap" style="display:none">
+              <div class="scope-bar-s1" id="scope-bar-s1" style="width:0%" title="Scope 1"></div>
+              <div class="scope-bar-s2" id="scope-bar-s2" style="width:0%" title="Scope 2"></div>
+              <div class="scope-bar-s3" id="scope-bar-s3" style="width:0%" title="Scope 3"></div>
             </div>
-            <div class="scope-legend">
-              <div class="legend-row"><span class="legend-dot g"></span><div><b>Scope 1 · 33.7%</b><br/>Gas naturale, gasolio</div></div>
-              <div class="legend-row"><span class="legend-dot b"></span><div><b>Scope 2 · 49.6%</b><br/>Elettricità</div></div>
-              <div class="legend-row"><span class="legend-dot o"></span><div><b>Scope 3 · 16.7%</b><br/>Rifiuti + trasporti</div></div>
+            <div id="scope-empty" style="padding:14px 0 6px;color:var(--text-3);font-size:13px;text-align:center">
+              Nessun dato GHG ancora caricato
+            </div>
+            <div class="scope-legend" id="scope-legend" style="display:none">
+              <div class="legend-row"><span class="legend-dot g"></span><div id="legend-s1"><b>Scope 1</b><br/>Combustibili diretti</div></div>
+              <div class="legend-row"><span class="legend-dot b"></span><div id="legend-s2"><b>Scope 2</b><br/>Energia acquistata</div></div>
+              <div class="legend-row"><span class="legend-dot o"></span><div id="legend-s3"><b>Scope 3</b><br/>Catena del valore</div></div>
             </div>
           </div>
           <div class="acard">
             <div class="acard-title">Stato attività</div>
             <div class="status-list">
-              <div class="status-row"><span>Standard scelto</span><span class="tag tag-g">✓ <span id="dash-std-label">VSME 2023</span></span></div>
-              <div class="status-row"><span>Caricamento dati</span><span class="tag tag-g">✓ Completato</span></div>
-              <div class="status-row"><span>Calcolo GHG</span><span class="tag tag-g">✓ Completato</span></div>
-              <div class="status-row"><span>Report <span id="dash-std">VSME</span></span><span class="tag tag-g">✓ Generato</span></div>
-              <div class="status-row"><span>Timbro metodologico</span><span class="tag tag-g">✓ Applicato</span></div>
+              <div class="status-row"><span>Standard scelto</span><span id="status-std" class="tag">○ Da definire</span></div>
+              <div class="status-row"><span>Caricamento dati</span><span id="status-data" class="tag">○ In attesa</span></div>
+              <div class="status-row"><span>Calcolo GHG</span><span id="status-ghg" class="tag">○ In attesa</span></div>
+              <div class="status-row"><span>Report <span id="dash-std">—</span></span><span id="status-report" class="tag">○ In attesa</span></div>
+              <div class="status-row"><span>Timbro metodologico</span><span id="status-stamp" class="tag">○ In attesa</span></div>
               <div class="status-row" id="report-approval-row" style="display:none">
                 <span>Approvazione consulente</span>
                 <button class="btn btn-primary btn-sm" id="btn-approve-report" onclick="VERA.stamp.approveReport()" style="padding:4px 10px;font-size:11px">✅ Approva e pubblica</button>
@@ -936,9 +939,7 @@
             <table>
               <thead><tr><th>Job</th><th>File</th><th>Periodo</th><th>Standard</th><th>Righe</th><th>Status</th><th class="num">tCO<sub>2</sub>e</th></tr></thead>
               <tbody id="jobs-tbody">
-                <tr><td>#4</td><td>dati_2024_annuale.xlsx</td><td>2024</td><td><span class="tag tag-g" id="job-std">VSME</span></td><td>6</td><td><span class="tag tag-g">Completato</span></td><td class="num">37.7</td></tr>
-                <tr><td>#3</td><td>dati_2023_annuale.xlsx</td><td>2023</td><td><span class="tag tag-g">VSME</span></td><td>6</td><td><span class="tag tag-g">Completato</span></td><td class="num">38.8</td></tr>
-                <tr><td>#2</td><td>dati_2022_annuale.xlsx</td><td>2022</td><td><span class="tag tag-g">VSME</span></td><td>6</td><td><span class="tag tag-g">Completato</span></td><td class="num">42.1</td></tr>
+                <tr id="jobs-empty-row"><td colspan="7" style="text-align:center;color:var(--text-3);padding:20px 0;font-size:13px">Nessun job completato — carica i dati GHG per iniziare</td></tr>
               </tbody>
             </table>
           </div>
@@ -1373,10 +1374,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <!-- Supabase JS SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="js/vera.js?v=20260425"></script>
-<script src="js/vera-supabase.js?v=20260425"></script>
+<script src="js/vera.js?v=20260426"></script>
+<script src="js/vera-supabase.js?v=20260426"></script>
 <script src="js/vera-materiality.js?v=20260425"></script>
 <script src="js/vera-animations.js?v=20260421"></script>
 <script src="js/vera-bubbles.js?v=20260417"></script>
+<script src="js/vera-intro.js?v=20260426"></script>
 </body>
 </html>

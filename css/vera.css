@@ -157,6 +157,7 @@ img{max-width:100%;display:block}
 .tag{
   display:inline-flex;align-items:center;gap:4px;
   font-size:11.5px;font-weight:600;padding:3px 8px;border-radius:20px;
+  background:var(--border);color:var(--text-3);
 }
 .tag-g{background:var(--green-m);color:var(--green-d)}
 .tag-b{background:var(--blue-l);color:var(--blue-d)}

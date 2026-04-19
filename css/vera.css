@@ -953,37 +953,48 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:
 
 /* ══════════════════════════════════════════════════════════
    LANDING — APPLE CLEAN WHITE THEME
-   ─────────────────────────────────────────────────────────
-   bg       #ffffff  pure white everywhere
-   surface  #ffffff  cards on white — separated by border+shadow
-   subtle   #f7f7f8  only for table headers, FAQ hover, footer
-   border   #e5e5ea  hairline dividers
-   text-1   #1d1d1f  Apple near-black
-   text-2   #6e6e73  Apple secondary
-   text-3   #86868b  Apple tertiary
+   Re-maps every dark-theme token to light values inside
+   #view-landing so ALL child elements inherit correctly.
 ══════════════════════════════════════════════════════════ */
 
-/* ── CSS tokens ── */
 #view-landing {
-  --ap-bg:      #ffffff;
+  /* ── Re-map base dark tokens → light ── */
+  --bg:        #ffffff;
+  --surface:   #ffffff;
+  --white:     #f5f5f7;
+  --border:    #d2d2d7;
+  --border-2:  #e5e5ea;
+  --text:      #1d1d1f;
+  --text-2:    #6e6e73;
+  --text-3:    #86868b;
+  --text-4:    #b8b8bc;
+  --shadow:    0 1px 3px rgba(0,0,0,.07), 0 4px 14px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,.10);
+
+  /* ── Green: deeper for light bg ── */
+  --green:          #1a8a3c;
+  --green-2:        #1a7a35;
+  --green-d:        #1a8a3c;
+  --green-bg:       #f2faf5;
+  --green-m:        #e8f5ed;
+  --green-border:   #a3e6ba;
+
+  /* ── Accent chips on light ── */
+  --blue:     #2563eb;  --blue-l:  #eef4ff;  --blue-d:  #1d4ed8;
+  --orange:   #c2410c;  --orange-l:#fff3eb;
+  --purple:   #6d28d9;  --purple-l:#f4f0ff;
+
+  /* ── Apple extras ── */
   --ap-subtle:  #f7f7f8;
-  --ap-surface: #ffffff;
-  --ap-border:  #d2d2d7;
-  --ap-border2: #e5e5ea;
-  --ap-text1:   #1d1d1f;
-  --ap-text2:   #6e6e73;
-  --ap-text3:   #86868b;
-  --ap-green:   #1a8a3c;
-  --ap-green-bg:#f2faf5;
-  --ap-shadow:  0 1px 3px rgba(0,0,0,.07), 0 6px 20px rgba(0,0,0,.06);
-  --ap-shadow-h:0 4px 16px rgba(0,0,0,.10), 0 12px 36px rgba(0,0,0,.09);
+  --ap-shadow-h:0 6px 20px rgba(0,0,0,.10), 0 16px 40px rgba(0,0,0,.09);
+
+  background: #ffffff;
+  color: #1d1d1f;
 }
 
 /* ── Aurora clipped to hero zone only ── */
 #vera-bg { height: min(860px, 96vh); }
-
-/* ── Pure white base — no tint anywhere ── */
-#view-landing { background: #ffffff; }
 
 /* ── Hero + nav: keep dark ── */
 .hero { background: #0a0d14; }
@@ -996,28 +1007,28 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:
 /* ── Stats bar ── */
 .ln-stats {
   background: var(--ap-subtle) !important;
-  border-color: var(--ap-border2) !important;
+  border-color: var(--border-2) !important;
   backdrop-filter: none !important;
 }
 .ln-stats .stat-n {
-  background: linear-gradient(135deg, var(--ap-text1) 10%, var(--ap-green) 100%);
+  background: linear-gradient(135deg, #1d1d1f 10%, #1a8a3c 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
-.ln-stats .stat-l { color: var(--ap-text2); }
-.ln-stats .stat-sep { background: var(--ap-border2); }
+.ln-stats .stat-l { color: var(--text-2); }
+.ln-stats .stat-sep { background: var(--border-2); }
 
-/* ── All sections: transparent (shows white) ── */
+/* ── All sections: transparent — shows #ffffff base ── */
 .ln-section          { background: transparent !important; }
 .ln-section.bg-surface { background: transparent !important; border: none !important; }
 
-/* ── Section typography ── */
-.ln-section-label { color: var(--ap-green); }
-.ln-section-title { color: var(--ap-text1); }
+/* ── Section typography (inherits var(--text) which is now #1d1d1f) ── */
+.ln-section-label { color: var(--green); }
+.ln-section-title { color: var(--text); }
 .ln-section-title em {
-  background: linear-gradient(135deg, var(--ap-green) 0%, #3ecf6f 100%);
+  background: linear-gradient(135deg, #1a8a3c 0%, #3ecf6f 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
-.ln-section-sub { color: var(--ap-text2); }
+.ln-section-sub { color: var(--text-2); }
 
 /* ── 2×2 grids ── */
 .pain-grid       { grid-template-columns: repeat(2,1fr); gap: 14px; }
@@ -1025,21 +1036,20 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:
 .ai-feature-grid { grid-template-columns: repeat(2,1fr); gap: 14px; }
 .pricing-grid    { grid-template-columns: repeat(2,1fr); gap: 16px; }
 
-/* ── Cards: white + hairline border + shadow (pop on white bg) ── */
+/* ── Cards ── */
 .pain-card, .how-step, .ai-feat-card, .plan {
-  background:     #ffffff !important;
-  border:         1px solid var(--ap-border2) !important;
-  box-shadow:     var(--ap-shadow) !important;
+  background:      #ffffff !important;
+  border:          1px solid var(--border-2) !important;
+  box-shadow:      var(--shadow) !important;
   backdrop-filter: none !important;
+  color:           var(--text) !important;
 }
-
-/* ── Card text ── */
-.pain-card h3, .how-step h3, .ai-feat-card h4 { color: var(--ap-text1); }
-.pain-card p,  .how-step p,  .ai-feat-card p  { color: var(--ap-text2); }
+.pain-card h3, .how-step h3, .ai-feat-card h4 { color: var(--text) !important; }
+.pain-card p,  .how-step p,  .ai-feat-card p  { color: var(--text-2) !important; }
 
 /* ── Card hover ── */
 .pain-card:hover, .ai-feat-card:hover {
-  border-color: var(--ap-border) !important;
+  border-color: var(--border) !important;
   box-shadow: var(--ap-shadow-h) !important;
   transform: translateY(-3px) !important;
 }
@@ -1050,17 +1060,19 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:
 }
 
 /* ── Card icons ── */
-.card-icon-orange { background: #fff3eb !important; color: #c2410c !important; }
-.card-icon-green  { background: var(--ap-green-bg) !important; color: var(--ap-green) !important; }
-.card-icon-blue   { background: #eef4ff !important; color: #2563eb !important; }
-.card-icon-purple { background: #f4f0ff !important; color: #6d28d9 !important; }
+.card-icon-orange { background: var(--orange-l) !important; color: var(--orange) !important; }
+.card-icon-green  { background: var(--green-bg) !important; color: var(--green) !important; }
+.card-icon-blue   { background: var(--blue-l)   !important; color: var(--blue)   !important; }
+.card-icon-purple { background: var(--purple-l) !important; color: var(--purple) !important; }
 
 /* ── Pricing ── */
 .plan { border-radius: var(--radius-lg) !important; }
-.plan:hover {
-  border-color: var(--ap-border) !important;
-  box-shadow: var(--ap-shadow-h) !important;
-}
+.plan:hover { border-color: var(--border) !important; box-shadow: var(--ap-shadow-h) !important; }
+.plan-name    { color: var(--text-3) !important; }
+.plan-price   { color: var(--text)   !important; }
+.plan-cadence { color: var(--text-3) !important; }
+.plan-features li { color: var(--text-2) !important; }
+.plan-badge   { background: #1a8a3c !important; color: #fff !important; }
 .plan.featured {
   background: linear-gradient(160deg, #f2faf5, #ffffff) !important;
   border-color: #6ee99a !important;
@@ -1069,27 +1081,22 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:
 .plan.featured:hover {
   box-shadow: 0 0 0 1px rgba(110,233,154,.4), 0 16px 48px rgba(26,138,60,.16) !important;
 }
-.plan-name    { color: var(--ap-text3); }
-.plan-price   { color: var(--ap-text1); }
-.plan-cadence { color: var(--ap-text3); }
-.plan-features li { color: var(--ap-text2); }
-.plan-badge   { background: #1a8a3c !important; color: #fff !important; }
 
 /* ── Comparison table ── */
-.cmp-table th  { background: var(--ap-subtle); color: var(--ap-text3); border-color: var(--ap-border2); }
-.cmp-table td  { color: var(--ap-text1); border-color: var(--ap-border2); }
-.cmp-table tr:hover td { background: #f7f7f8; }
+.cmp-table th  { background: var(--ap-subtle) !important; color: var(--text-3); border-color: var(--border-2); }
+.cmp-table td  { color: var(--text); border-color: var(--border-2); background: #ffffff; }
+.cmp-table tr:hover td { background: var(--ap-subtle) !important; }
 .cmp-table .vera-col { background: #f2faf5 !important; }
-.cmp-table .vera-col.check { color: var(--ap-green); font-weight: 700; }
-.check { color: var(--ap-green); }
-.cross { color: var(--ap-text3); }
+.cmp-table .vera-col.check { color: var(--green); font-weight: 700; }
+.check { color: var(--green); }
+.cross { color: var(--text-3); }
 
 /* ── FAQ ── */
-.faq-item  { border-color: var(--ap-border2); background: transparent; }
-.faq-q     { color: var(--ap-text1); }
-.faq-q:hover { background: var(--ap-subtle); }
-.faq-a     { color: var(--ap-text2); }
-.faq-arr   { color: var(--ap-text3); }
+.faq-item  { border-color: var(--border-2) !important; background: transparent !important; }
+.faq-q     { color: var(--text) !important; }
+.faq-q:hover { background: var(--ap-subtle) !important; }
+.faq-a     { color: var(--text-2) !important; }
+.faq-arr   { color: var(--text-3) !important; }
 
 /* ── CTA — green-tinted ── */
 .cta-dark {
@@ -1099,17 +1106,17 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:
 }
 .cta-dark::before { background: radial-gradient(ellipse 80% 70% at 50% 115%, rgba(26,138,60,.10) 0%, transparent 65%); }
 .cta-dark::after  { background: linear-gradient(90deg, transparent, #6ee99a, transparent); }
-.cta-dark h2 { color: #14532d; }
-.cta-dark p  { color: #1a5c33; }
+.cta-dark h2 { color: #14532d !important; }
+.cta-dark p  { color: #1a5c33 !important; }
 
 /* ── Footer ── */
-.ln-footer         { background: var(--ap-subtle); border-color: var(--ap-border2); }
-.footer-copy       { color: var(--ap-text3); }
-.footer-link       { color: var(--ap-text3); }
-.footer-link:hover { color: var(--ap-text1); }
-.ln-footer .wordmark { color: var(--ap-green); }
+.ln-footer         { background: var(--ap-subtle) !important; border-color: var(--border-2) !important; }
+.footer-copy       { color: var(--text-3) !important; }
+.footer-link       { color: var(--text-3) !important; }
+.footer-link:hover { color: var(--text)   !important; }
+.ln-footer .wordmark { color: var(--green) !important; }
 
-/* ── Single column on mobile ── */
+/* ── Mobile single column ── */
 @media (max-width: 580px) {
   .pain-grid,
   .how-grid,

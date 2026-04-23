@@ -380,45 +380,78 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:
 /* ── Text column ── */
 .hero-text { flex: 1; min-width: 0; text-align: left; }
 
+/* ── Hero badge: minimal label, no pill border ── */
 .hero-badge{
-  display:inline-flex;align-items:center;gap:8px;
-  background:oklch(0.14 0.035 145 / 0.9);
-  border:1px solid oklch(0.30 0.09 145 / 0.8);
-  color:var(--green);font-size:12.5px;font-weight:600;
-  padding:6px 14px;border-radius:24px;margin-bottom:28px;letter-spacing:.01em;
-  box-shadow: 0 0 0 0 oklch(0.72 0.21 150 / 0.3);
-  animation: badge-pulse 3.5s ease-in-out infinite;
+  display:inline-flex;align-items:center;gap:10px;
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.45);
+  font-size:11px;font-weight:500;
+  padding:0;
+  border-radius:0;
+  margin-bottom:32px;
+  letter-spacing:.10em;
+  text-transform: uppercase;
+  box-shadow: none;
+  animation: none;
 }
-
+.hero-badge-dot {
+  display: block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: oklch(0.72 0.18 148);
+  box-shadow: 0 0 0 0 oklch(0.72 0.18 148 / 0.4);
+  animation: badge-pulse 3.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
 @keyframes badge-pulse {
-  0%, 100% { box-shadow: 0 0 0 0   oklch(0.72 0.21 150 / 0.25); }
-  50%       { box-shadow: 0 0 0 7px oklch(0.72 0.21 150 / 0);    }
+  0%, 100% { box-shadow: 0 0 0 0   oklch(0.72 0.18 148 / 0.4); }
+  50%       { box-shadow: 0 0 0 8px oklch(0.72 0.18 148 / 0);   }
 }
 
-.hero h1{
-  font-family:var(--font-display);
-  font-size:clamp(2.4rem, 4.8vw, 3.8rem);font-weight:700;
-  letter-spacing:-.035em;line-height:1.14;color:var(--text);margin-bottom:22px;
+/* ── Hero h1: editorial three-level hierarchy ── */
+.hero h1 {
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+  font-size: clamp(1.9rem, 3.6vw, 2.9rem);
+  font-weight: 400;
+  letter-spacing: -0.022em;
+  line-height: 1.20;
+  color: rgba(255,255,255,0.80);
+  margin-bottom: 28px;
 }
 
-.hero h1 em{
-  font-style:normal;
-  background: linear-gradient(135deg,
-    var(--green) 0%,
-    oklch(0.88 0.13 145) 60%,
-    oklch(0.80 0.18 150) 100%
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* ESG — oversized display anchor */
+.hero-kw {
+  display: block;
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+  font-size: clamp(5.2rem, 10.5vw, 8.8rem);
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  line-height: 0.88;
+  color: #ffffff;
+  margin-bottom: 0.14em;
+}
+
+/* "Per le PMI italiane." — italic green qualifier */
+.hero h1 em {
+  display: block;
+  font-style: italic;
+  font-weight: 400;
+  color: oklch(0.72 0.18 148);
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: oklch(0.72 0.18 148);
+  background-clip: unset;
+  margin-top: 0.08em;
 }
 
 .hero-text > p{
-  font-size:1.05rem;color:var(--text-2);max-width:480px;
-  margin:0 0 32px;line-height:1.75;font-weight:400;
+  font-size:1.02rem;color:rgba(255,255,255,0.52);max-width:460px;
+  margin:0 0 36px;line-height:1.78;font-weight:400;
+  font-family: 'Figtree', system-ui, sans-serif;
 }
 .hero-actions{display:flex;gap:12px;flex-wrap:wrap}
-.hero-note{margin-top:16px;font-size:12px;color:var(--text-3)}
+.hero-note{margin-top:18px;font-size:11.5px;color:rgba(255,255,255,0.28);font-family:'Figtree',system-ui,sans-serif;letter-spacing:.01em}
 
 /* Primary CTA shimmer */
 .btn-primary { position:relative; overflow:hidden; }
@@ -1022,15 +1055,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:
   letter-spacing: -0.03em !important;
   line-height: 1.10 !important;
 }
-/* Fix gradient text ban — solid color only */
-.hero h1 em {
-  font-style: italic !important;
-  background: none !important;
-  -webkit-background-clip: unset !important;
-  -webkit-text-fill-color: oklch(0.72 0.18 148) !important;
-  background-clip: unset !important;
-  color: oklch(0.72 0.18 148) !important;
-}
+/* hero h1 em: already styled in base hero block above (display:block, italic, green) */
 
 /* ── Stats bar: warm cream strip ── */
 .ln-stats {

@@ -952,168 +952,278 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:
 .footer-link:hover{color:var(--text)}
 
 /* ══════════════════════════════════════════════════════════
-   LANDING — APPLE CLEAN WHITE THEME
-   Re-maps every dark-theme token to light values inside
-   #view-landing so ALL child elements inherit correctly.
+   LANDING — CLAUDE DESIGN SYSTEM  (April 2026)
+   ─────────────────────────────────────────────────────────
+   Bricolage Grotesque (display) · Figtree (body)
+   Warm cream oklch/hue-75° · Deep forest green · No gradient text
+   Token remapping ensures every dark-theme child reads correctly
 ══════════════════════════════════════════════════════════ */
 
 #view-landing {
-  /* ── Re-map base dark tokens → light ── */
-  --bg:        #ffffff;
-  --surface:   #ffffff;
-  --white:     #f5f5f7;
-  --border:    #d2d2d7;
-  --border-2:  #e5e5ea;
-  --text:      #1d1d1f;
-  --text-2:    #6e6e73;
-  --text-3:    #86868b;
-  --text-4:    #b8b8bc;
-  --shadow:    0 1px 3px rgba(0,0,0,.07), 0 4px 14px rgba(0,0,0,.06);
-  --shadow-md: 0 4px 16px rgba(0,0,0,.08);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,.10);
+  /* ── Re-map all base dark tokens → warm-cream light ── */
+  --bg:        oklch(0.975 0.012 75);    /* warm cream — the signature */
+  --surface:   oklch(0.993 0.007 75);    /* near-white, warm */
+  --white:     oklch(0.958 0.018 75);    /* deeper cream for inset areas */
+  --border:    oklch(0.868 0.022 75);    /* warm hairline */
+  --border-2:  oklch(0.910 0.016 75);    /* softer border */
+  --text:      oklch(0.218 0.020 55);    /* warm near-black */
+  --text-2:    oklch(0.488 0.024 55);    /* warm secondary */
+  --text-3:    oklch(0.622 0.018 55);    /* warm tertiary */
+  --text-4:    oklch(0.755 0.014 55);    /* faint warm */
+  --shadow:    0 1px 2px oklch(0.22 0.02 55 / 0.06),
+               0 4px 18px oklch(0.22 0.02 55 / 0.08);
+  --shadow-md: 0 6px 24px oklch(0.22 0.02 55 / 0.10);
+  --shadow-lg: 0 12px 44px oklch(0.22 0.02 55 / 0.13);
 
-  /* ── Green: deeper for light bg ── */
-  --green:          #1a8a3c;
-  --green-2:        #1a7a35;
-  --green-d:        #1a8a3c;
-  --green-bg:       #f2faf5;
-  --green-m:        #e8f5ed;
-  --green-border:   #a3e6ba;
+  /* ── Green: deep forest, trustworthy on cream ── */
+  --green:        oklch(0.448 0.148 148);
+  --green-2:      oklch(0.392 0.132 148);
+  --green-d:      oklch(0.448 0.148 148);
+  --green-bg:     oklch(0.962 0.030 148);
+  --green-m:      oklch(0.924 0.048 148);
+  --green-border: oklch(0.822 0.082 148);
 
-  /* ── Accent chips on light ── */
-  --blue:     #2563eb;  --blue-l:  #eef4ff;  --blue-d:  #1d4ed8;
-  --orange:   #c2410c;  --orange-l:#fff3eb;
-  --purple:   #6d28d9;  --purple-l:#f4f0ff;
+  /* ── Accent chips on cream ── */
+  --blue:     oklch(0.522 0.162 252); --blue-l:   oklch(0.964 0.020 252);
+  --orange:   oklch(0.618 0.168 47);  --orange-l: oklch(0.972 0.022 47);
+  --purple:   oklch(0.522 0.168 290); --purple-l: oklch(0.964 0.022 290);
 
-  /* ── Apple extras ── */
-  --ap-subtle:  #f7f7f8;
-  --ap-shadow-h:0 6px 20px rgba(0,0,0,.10), 0 16px 40px rgba(0,0,0,.09);
+  /* ── Landing font system ── */
+  --font:         'Figtree', system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
 
-  background: #ffffff !important;
-  color: #1d1d1f;
+  /* ── Warm shadow for hover states ── */
+  --shadow-hover: 0 8px 28px oklch(0.22 0.02 55 / 0.12),
+                  0 20px 52px oklch(0.22 0.02 55 / 0.10);
+
+  background: oklch(0.975 0.012 75) !important;
+  color: oklch(0.218 0.020 55);
+  font-family: var(--font);
 }
 
 /* ── Aurora clipped to hero zone only ── */
 #vera-bg { height: min(860px, 96vh); }
 
-/* ── Hero + nav: keep dark ── */
+/* ── Hero: keep dark — aurora + doc stack live here ── */
 .hero { background: #0a0d14; }
+
+/* ── Nav: dark throughout ── */
 .ln-nav {
   background: rgba(10,13,20,0.97) !important;
   border-bottom-color: rgba(255,255,255,0.05) !important;
   backdrop-filter: blur(24px) saturate(180%) !important;
 }
 
-/* ── Stats bar ── */
+/* ── Hero typography: Bricolage Grotesque ── */
+.hero h1 {
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif !important;
+  font-size: clamp(2.6rem, 5vw, 4.0rem) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.03em !important;
+  line-height: 1.10 !important;
+}
+/* Fix gradient text ban — solid color only */
+.hero h1 em {
+  font-style: italic !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: oklch(0.72 0.18 148) !important;
+  background-clip: unset !important;
+  color: oklch(0.72 0.18 148) !important;
+}
+
+/* ── Stats bar: warm cream strip ── */
 .ln-stats {
-  background: var(--ap-subtle) !important;
-  border-color: var(--border-2) !important;
+  background: oklch(0.958 0.018 75) !important;
+  border-top-color:    oklch(0.868 0.022 75) !important;
+  border-bottom-color: oklch(0.868 0.022 75) !important;
   backdrop-filter: none !important;
 }
+/* Fix gradient text ban on stat numbers */
 .ln-stats .stat-n {
-  background: linear-gradient(135deg, #1d1d1f 10%, #1a8a3c 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: unset !important;
+  background-clip: unset !important;
+  color: oklch(0.448 0.148 148) !important;  /* forest green, solid */
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 1.55rem !important;
+  letter-spacing: -0.03em !important;
 }
-.ln-stats .stat-l { color: var(--text-2); }
-.ln-stats .stat-sep { background: var(--border-2); }
+.ln-stats .stat-l   { color: var(--text-2); font-family: var(--font); }
+.ln-stats .stat-sep { background: oklch(0.868 0.022 75); }
 
-/* ── All sections: transparent — shows #ffffff base ── */
+/* ── All sections: transparent — cream base shows through ── */
 .ln-section          { background: transparent !important; }
 .ln-section.bg-surface { background: transparent !important; border: none !important; }
 
-/* ── Section typography (inherits var(--text) which is now #1d1d1f) ── */
-.ln-section-label { color: var(--green); }
-.ln-section-title { color: var(--text); }
-.ln-section-title em {
-  background: linear-gradient(135deg, #1a8a3c 0%, #3ecf6f 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+/* ── Section typography — Bricolage for titles ── */
+.ln-section-label {
+  color: var(--green) !important;
+  font-family: var(--font) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.10em !important;
+  text-transform: uppercase !important;
 }
-.ln-section-sub { color: var(--text-2); }
+.ln-section-title {
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif !important;
+  font-weight: 700 !important;
+  color: var(--text) !important;
+  letter-spacing: -0.025em !important;
+  line-height: 1.15 !important;
+}
+/* Fix gradient text ban — solid accent, no gradient */
+.ln-section-title em {
+  font-style: italic !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: var(--green) !important;
+  background-clip: unset !important;
+  color: var(--green) !important;
+}
+.ln-section-sub {
+  color: var(--text-2) !important;
+  font-family: var(--font) !important;
+  font-size: 1.05rem !important;
+  line-height: 1.75 !important;
+}
 
 /* ── 2×2 grids ── */
-.pain-grid       { grid-template-columns: repeat(2,1fr); gap: 14px; }
-.how-grid        { grid-template-columns: repeat(2,1fr); gap: 14px; }
-.ai-feature-grid { grid-template-columns: repeat(2,1fr); gap: 14px; }
-.pricing-grid    { grid-template-columns: repeat(2,1fr); gap: 16px; }
+.pain-grid       { grid-template-columns: repeat(2,1fr); gap: 16px; }
+.how-grid        { grid-template-columns: repeat(2,1fr); gap: 16px; }
+.ai-feature-grid { grid-template-columns: repeat(2,1fr); gap: 16px; }
+.pricing-grid    { grid-template-columns: repeat(2,1fr); gap: 18px; }
 
-/* ── Cards ── */
+/* ── Cards: warm surface, warm shadow, warm border ── */
 .pain-card, .how-step, .ai-feat-card, .plan {
-  background:      #ffffff !important;
-  border:          1px solid var(--border-2) !important;
+  background:      oklch(0.993 0.007 75) !important;
+  border:          1px solid oklch(0.910 0.016 75) !important;
   box-shadow:      var(--shadow) !important;
   backdrop-filter: none !important;
   color:           var(--text) !important;
+  transition:      transform 240ms cubic-bezier(0.22,1,0.36,1),
+                   box-shadow 240ms cubic-bezier(0.22,1,0.36,1),
+                   border-color 200ms ease !important;
 }
-.pain-card h3, .how-step h3, .ai-feat-card h4 { color: var(--text) !important; }
-.pain-card p,  .how-step p,  .ai-feat-card p  { color: var(--text-2) !important; }
+.pain-card h3, .how-step h3, .ai-feat-card h4 {
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif !important;
+  font-weight: 600 !important;
+  color: var(--text) !important;
+  letter-spacing: -0.018em !important;
+}
+.pain-card p, .how-step p, .ai-feat-card p { color: var(--text-2) !important; }
 
-/* ── Card hover ── */
+/* ── Card hover: lift + warmer shadow ── */
 .pain-card:hover, .ai-feat-card:hover {
-  border-color: var(--border) !important;
-  box-shadow: var(--ap-shadow-h) !important;
-  transform: translateY(-3px) !important;
+  border-color: oklch(0.822 0.082 148) !important;
+  box-shadow:   var(--shadow-hover) !important;
+  transform:    translateY(-4px) !important;
 }
 .how-step:hover {
-  border-color: #a3e6ba !important;
-  box-shadow: var(--ap-shadow-h), 0 0 0 1px #a3e6ba !important;
-  transform: translateY(-4px) !important;
+  border-color: oklch(0.822 0.082 148) !important;
+  box-shadow:   var(--shadow-hover) !important;
+  transform:    translateY(-5px) !important;
 }
 
-/* ── Card icons ── */
+/* ── Card icons on cream ── */
 .card-icon-orange { background: var(--orange-l) !important; color: var(--orange) !important; }
-.card-icon-green  { background: var(--green-bg) !important; color: var(--green) !important; }
-.card-icon-blue   { background: var(--blue-l)   !important; color: var(--blue)   !important; }
-.card-icon-purple { background: var(--purple-l) !important; color: var(--purple) !important; }
+.card-icon-green  { background: var(--green-bg)  !important; color: var(--green)  !important; }
+.card-icon-blue   { background: var(--blue-l)    !important; color: var(--blue)   !important; }
+.card-icon-purple { background: var(--purple-l)  !important; color: var(--purple) !important; }
 
-/* ── Pricing ── */
+/* ── Buttons in landing context ── */
+#view-landing .btn-primary {
+  background: var(--green) !important;
+  box-shadow: 0 1px 3px oklch(0.448 0.148 148 / 0.25),
+              0 4px 14px oklch(0.448 0.148 148 / 0.18) !important;
+}
+#view-landing .btn-primary:hover {
+  background: var(--green-2) !important;
+  box-shadow: 0 2px 6px oklch(0.448 0.148 148 / 0.30),
+              0 8px 24px oklch(0.448 0.148 148 / 0.24) !important;
+  transform: translateY(-1px);
+}
+#view-landing .btn-outline {
+  background: oklch(0.993 0.007 75) !important;
+  color: var(--text) !important;
+  border-color: oklch(0.868 0.022 75) !important;
+}
+#view-landing .btn-outline:hover {
+  border-color: oklch(0.822 0.082 148) !important;
+  color: var(--green) !important;
+}
+#view-landing .btn-ghost {
+  color: var(--text-2) !important;
+}
+#view-landing .btn-ghost:hover {
+  color: var(--text) !important;
+  background: oklch(0.958 0.018 75) !important;
+}
+
+/* ── Pricing plans ── */
 .plan { border-radius: var(--radius-lg) !important; }
-.plan:hover { border-color: var(--border) !important; box-shadow: var(--ap-shadow-h) !important; }
-.plan-name    { color: var(--text-3) !important; }
-.plan-price   { color: var(--text)   !important; }
+.plan:hover {
+  border-color: oklch(0.868 0.022 75) !important;
+  box-shadow: var(--shadow-hover) !important;
+}
+.plan-name    { color: var(--text-3) !important; font-family: var(--font) !important; }
+.plan-price   {
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif !important;
+  font-weight: 700 !important;
+  color: var(--text) !important;
+  letter-spacing: -0.03em !important;
+}
 .plan-cadence { color: var(--text-3) !important; }
 .plan-features li { color: var(--text-2) !important; }
-.plan-badge   { background: #1a8a3c !important; color: #fff !important; }
+.plan-badge   { background: var(--green) !important; color: #fff !important; }
 .plan.featured {
-  background: linear-gradient(160deg, #f2faf5, #ffffff) !important;
-  border-color: #6ee99a !important;
-  box-shadow: 0 0 0 1px rgba(110,233,154,.25), 0 8px 32px rgba(26,138,60,.10) !important;
+  background: oklch(0.975 0.038 148) !important;  /* gentle green tint on cream */
+  border-color: oklch(0.762 0.110 148) !important;
+  box-shadow: 0 0 0 1px oklch(0.762 0.110 148 / 0.35),
+              var(--shadow-md) !important;
 }
 .plan.featured:hover {
-  box-shadow: 0 0 0 1px rgba(110,233,154,.4), 0 16px 48px rgba(26,138,60,.16) !important;
+  box-shadow: 0 0 0 1px oklch(0.762 0.110 148 / 0.5),
+              var(--shadow-hover) !important;
 }
 
 /* ── Comparison table ── */
-.cmp-table th  { background: var(--ap-subtle) !important; color: var(--text-3); border-color: var(--border-2); }
-.cmp-table td  { color: var(--text); border-color: var(--border-2); background: #ffffff; }
-.cmp-table tr:hover td { background: var(--ap-subtle) !important; }
-.cmp-table .vera-col { background: #f2faf5 !important; }
+.cmp-table th  { background: oklch(0.958 0.018 75) !important; color: var(--text-3); border-color: oklch(0.910 0.016 75); }
+.cmp-table td  { color: var(--text); border-color: oklch(0.910 0.016 75); background: oklch(0.993 0.007 75); }
+.cmp-table tr:hover td { background: oklch(0.958 0.018 75) !important; }
+.cmp-table .vera-col { background: oklch(0.972 0.035 148) !important; }
 .cmp-table .vera-col.check { color: var(--green); font-weight: 700; }
 .check { color: var(--green); }
 .cross { color: var(--text-3); }
 
 /* ── FAQ ── */
-.faq-item  { border-color: var(--border-2) !important; background: transparent !important; }
-.faq-q     { color: var(--text) !important; }
-.faq-q:hover { background: var(--ap-subtle) !important; }
-.faq-a     { color: var(--text-2) !important; }
+.faq-item  { border-color: oklch(0.910 0.016 75) !important; background: transparent !important; }
+.faq-q     { color: var(--text) !important; font-family: var(--font) !important; font-weight: 500 !important; }
+.faq-q:hover { background: oklch(0.958 0.018 75) !important; }
+.faq-a     { color: var(--text-2) !important; line-height: 1.75 !important; }
 .faq-arr   { color: var(--text-3) !important; }
 
-/* ── CTA — green-tinted ── */
+/* ── CTA: deep green-cream, no gradient ── */
 .cta-dark {
-  background: linear-gradient(150deg, #edf7f0 0%, #dff2e7 100%) !important;
-  border: 1px solid #b2dfbe !important;
+  background: oklch(0.962 0.038 148) !important;
+  border: 1px solid oklch(0.822 0.082 148) !important;
   box-shadow: none !important;
 }
-.cta-dark::before { background: radial-gradient(ellipse 80% 70% at 50% 115%, rgba(26,138,60,.10) 0%, transparent 65%); }
-.cta-dark::after  { background: linear-gradient(90deg, transparent, #6ee99a, transparent); }
-.cta-dark h2 { color: #14532d !important; }
-.cta-dark p  { color: #1a5c33 !important; }
+.cta-dark::before { background: none; }
+.cta-dark::after  { display: none; }
+.cta-dark h2 {
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif !important;
+  color: oklch(0.28 0.100 148) !important;
+}
+.cta-dark p { color: oklch(0.38 0.100 148) !important; }
 
-/* ── Footer ── */
-.ln-footer         { background: var(--ap-subtle) !important; border-color: var(--border-2) !important; }
-.footer-copy       { color: var(--text-3) !important; }
-.footer-link       { color: var(--text-3) !important; }
-.footer-link:hover { color: var(--text)   !important; }
+/* ── Footer: deeper cream ── */
+.ln-footer         { background: oklch(0.958 0.018 75) !important; border-color: oklch(0.910 0.016 75) !important; }
+.footer-copy       { color: var(--text-3) !important; font-family: var(--font) !important; }
+.footer-link       { color: var(--text-3) !important; font-family: var(--font) !important; }
+.footer-link:hover { color: var(--text) !important; }
 .ln-footer .wordmark { color: var(--green) !important; }
 
 /* ── Mobile single column ── */

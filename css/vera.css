@@ -3470,84 +3470,41 @@ tr:hover td{background:oklch(0.175 0.018 260 / 0.5) !important}
 }
 
 /* ══════════════════════════════════════════════════════════
-   HERO CTA — BORDER BEAM
-   Rotating conic-gradient border, Magic UI BorderBeam style.
-   Uses @property for smooth --beam-angle animation.
+   HERO CTA — CLEAN SOLID BUTTONS (no animation)
 ══════════════════════════════════════════════════════════ */
-@property --beam-angle {
-  syntax: '<angle>';
-  initial-value: 0deg;
-  inherits: false;
-}
 
-/* Allow the beam ring to extend 2px outside the button */
+/* Primary: solid green, no shimmer, no beam, no animation */
 .hero .btn-primary.btn-lg {
-  overflow: visible;
-  /* keep the button content itself clipped cleanly */
-  -webkit-mask: none;
-  mask: none;
+  overflow: hidden;
+  background: oklch(0.448 0.148 148) !important;
+  box-shadow: none !important;
+  animation: none !important;
+  transition: background var(--t-sm) var(--ease),
+              box-shadow  var(--t-sm) var(--ease) !important;
 }
+.hero .btn-primary.btn-lg::before,
+.hero .btn-primary.btn-lg::after { content: none !important; }
 
-/* The rotating beam ring */
-.hero .btn-primary.btn-lg::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  padding: 2px;                          /* thickness of the ring */
-  border-radius: calc(10px + 2px);       /* btn-lg radius + padding */
-  background: conic-gradient(
-    from var(--beam-angle),
-    oklch(0.448 0.148 148)  0%,
-    oklch(0.448 0.148 148) 52%,
-    oklch(0.78  0.20  148)  66%,
-    oklch(0.96  0.06  148)  76%,         /* near-white flash */
-    oklch(0.78  0.20  148)  86%,
-    oklch(0.448 0.148 148) 100%
-  );
-  /* Cut out the inner area so only the 2px ring shows */
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  animation: beam-rotate 2.6s linear infinite;
-  pointer-events: none;
-  z-index: -1;
-}
-
-/* Remove the old ::after shimmer on hero btn (already cleared globally) */
-.hero .btn-primary.btn-lg::after { content: none; }
-
-@keyframes beam-rotate {
-  to { --beam-angle: 360deg; }
-}
-
-/* Hover: button lifts slightly; beam speeds up via brightness */
 .hero .btn-primary.btn-lg:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 6px 20px oklch(0.448 0.148 148 / 0.35),
-    0 12px 40px oklch(0.448 0.148 148 / 0.20) !important;
-}
-.hero .btn-primary.btn-lg:hover::before {
-  animation-duration: 1.4s;
+  background: oklch(0.392 0.132 148) !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
-/* ── Outline button in hero — subtle border lift on hover ── */
+/* Outline: solid dark surface, no animation */
 .hero .btn-outline.btn-lg {
-  transition:
-    border-color var(--t-md) var(--ease),
-    color        var(--t-md) var(--ease),
-    box-shadow   var(--t-md) var(--ease),
-    transform    var(--t-md) var(--ease);
+  background: oklch(0.14 0.018 260) !important;
+  color: rgba(255,255,255,0.70) !important;
+  border-color: rgba(255,255,255,0.14) !important;
+  box-shadow: none !important;
+  transition: background var(--t-sm) var(--ease),
+              border-color var(--t-sm) var(--ease),
+              color        var(--t-sm) var(--ease) !important;
 }
 .hero .btn-outline.btn-lg:hover {
-  border-color: oklch(0.68 0.10 148 / 0.55) !important;
-  color: rgba(255,255,255,0.85) !important;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.25) !important;
-  transform: translateY(-1px);
+  background: oklch(0.18 0.020 260) !important;
+  border-color: rgba(255,255,255,0.24) !important;
+  color: rgba(255,255,255,0.88) !important;
   text-decoration: none;
+  transform: none !important;
 }

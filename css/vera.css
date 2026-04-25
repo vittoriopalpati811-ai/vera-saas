@@ -380,78 +380,90 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:
 /* ── Text column ── */
 .hero-text { flex: 1; min-width: 0; text-align: left; }
 
-/* ── Hero badge: minimal label, no pill border ── */
-.hero-badge{
-  display:inline-flex;align-items:center;gap:10px;
-  background: transparent;
-  border: none;
-  color: rgba(255,255,255,0.45);
-  font-size:11px;font-weight:500;
-  padding:0;
-  border-radius:0;
-  margin-bottom:32px;
-  letter-spacing:.10em;
-  text-transform: uppercase;
-  box-shadow: none;
-  animation: none;
+/* ══════════════════════════════════════════════════════════
+   HERO TYPOGRAPHY — Design System spec (type-display.html)
+   Roboto Condensed (hero kw) · Roboto (body copy)
+   Scale: 58px hero / 28px h1 / 19px sub / 13px body / 10px label
+══════════════════════════════════════════════════════════ */
+
+/* ── Badge: flat label, pulsing dot ── */
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: transparent; border: none; box-shadow: none; animation: none;
+  color: rgba(255,255,255,0.38);
+  font-family: 'Roboto', 'DM Sans', system-ui, sans-serif;
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 0; margin-bottom: 28px;
 }
 .hero-badge-dot {
-  display: block;
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: oklch(0.72 0.18 148);
-  box-shadow: 0 0 0 0 oklch(0.72 0.18 148 / 0.4);
-  animation: badge-pulse 3.2s ease-in-out infinite;
-  flex-shrink: 0;
+  display: block; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  background: oklch(0.72 0.21 150);
+  box-shadow: 0 0 0 0 oklch(0.72 0.21 150 / 0.5);
+  animation: badge-pulse 3s ease-in-out infinite;
 }
 @keyframes badge-pulse {
-  0%, 100% { box-shadow: 0 0 0 0   oklch(0.72 0.18 148 / 0.4); }
-  50%       { box-shadow: 0 0 0 8px oklch(0.72 0.18 148 / 0);   }
+  0%, 100% { box-shadow: 0 0 0 0   oklch(0.72 0.21 150 / 0.45); }
+  50%       { box-shadow: 0 0 0 7px oklch(0.72 0.21 150 / 0);    }
 }
 
-/* ── Hero h1: editorial three-level hierarchy ── */
+/* ── h1 container: sets base for "semplice." line ── */
 .hero h1 {
-  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
-  font-size: clamp(1.9rem, 3.6vw, 2.9rem);
-  font-weight: 400;
-  letter-spacing: -0.022em;
-  line-height: 1.20;
-  color: rgba(255,255,255,0.80);
-  margin-bottom: 28px;
+  font-family: 'Roboto', system-ui, sans-serif;
+  font-size: clamp(1.55rem, 2.8vw, 1.95rem);  /* ≈ 25–31px — H1 from design system */
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.22;
+  color: rgba(255,255,255,0.88);
+  margin-bottom: 24px;
 }
 
-/* ESG — oversized display anchor */
+/* ── ESG — hero keyword: Roboto Condensed, design system 58px ── */
 .hero-kw {
   display: block;
-  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
-  font-size: clamp(5.2rem, 10.5vw, 8.8rem);
-  font-weight: 800;
-  letter-spacing: -0.055em;
-  line-height: 0.88;
+  font-family: 'Roboto Condensed', 'Roboto', system-ui, sans-serif;
+  font-size: clamp(3.2rem, 6.5vw, 5rem);  /* ≈ 51–80px, centered around 58px */
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 0.92;
   color: #ffffff;
-  margin-bottom: 0.14em;
+  margin-bottom: 0.18em;
 }
 
-/* "Per le PMI italiane." — italic green qualifier */
+/* ── "Per le PMI italiane." — italic qualifier ── */
 .hero h1 em {
   display: block;
   font-style: italic;
   font-weight: 400;
-  color: oklch(0.72 0.18 148);
+  font-size: clamp(1.35rem, 2.5vw, 1.72rem); /* slightly smaller than main h1 */
+  color: oklch(0.72 0.21 150);
   background: none;
   -webkit-background-clip: unset;
-  -webkit-text-fill-color: oklch(0.72 0.18 148);
+  -webkit-text-fill-color: oklch(0.72 0.21 150);
   background-clip: unset;
-  margin-top: 0.08em;
+  margin-top: 0.14em;
+  letter-spacing: -0.015em;
 }
 
-.hero-text > p{
-  font-size:1.02rem;color:rgba(255,255,255,0.52);max-width:460px;
-  margin:0 0 36px;line-height:1.78;font-weight:400;
-  font-family: 'Figtree', system-ui, sans-serif;
+/* ── Paragraph: Roboto 300, 13–15px ── */
+.hero-text > p {
+  font-family: 'Roboto', system-ui, sans-serif;
+  font-size: clamp(13px, 1.35vw, 15px);
+  font-weight: 300;
+  line-height: 1.72;
+  color: rgba(255,255,255,0.48);
+  max-width: 440px;
+  margin: 0 0 34px;
+  letter-spacing: 0;
 }
-.hero-actions{display:flex;gap:12px;flex-wrap:wrap}
-.hero-note{margin-top:18px;font-size:11.5px;color:rgba(255,255,255,0.28);font-family:'Figtree',system-ui,sans-serif;letter-spacing:.01em}
+.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.hero-note {
+  margin-top: 16px;
+  font-family: 'Roboto', system-ui, sans-serif;
+  font-size: 11px; font-weight: 400;
+  color: rgba(255,255,255,0.24);
+  letter-spacing: 0.01em;
+}
 
 /* Primary CTA shimmer */
 .btn-primary { position:relative; overflow:hidden; }

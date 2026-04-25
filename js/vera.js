@@ -850,6 +850,13 @@ const assessment = (() => {
   }
 
   function start() {
+    // ── Skip if assessment already completed for this client ──
+    const c = currentClient();
+    if (c && c.std && c.step >= 2) {
+      _showAlreadyCompleted(c);
+      return;
+    }
+
     Object.assign(state.assessment, {
       currentQ: 0,
       answers: {},
@@ -879,8 +886,57 @@ const assessment = (() => {
     _renderQuestion(0);
   }
 
+  function _showAlreadyCompleted(c) {
+    document.getElementById('assess-intro').style.display     = 'none';
+    document.getElementById('assess-quiz').style.display      = 'none';
+    document.getElementById('assess-analyzing').style.display = 'none';
+    document.getElementById('assess-results').style.display   = 'block';
+
+    const std = c.std;
+    const isV = std === 'vsme';
+    const badge = document.getElementById('result-badge');
+    if (badge) { badge.textContent = isV ? 'VSME 2023' : 'GRI Standards'; badge.className = 'assess-result-badge' + (isV ? '' : ' gri'); }
+
+    const $ = id => document.getElementById(id);
+    if ($('result-title'))    $('result-title').textContent    = `Standard attivo: ${isV ? 'VSME 2023 (EFRAG)' : 'GRI Standards 2021'}`;
+    if ($('result-subtitle')) $('result-subtitle').textContent = 'Valutazione già completata — dati salvati in precedenza';
+    if ($('result-conf'))     $('result-conf').textContent     = '—';
+    if ($('gauge-vsme'))      $('gauge-vsme').style.width      = isV ? '70%' : '30%';
+    if ($('gauge-gri'))       $('gauge-gri').style.width       = isV ? '30%' : '70%';
+    if ($('gauge-vsme-pct'))  $('gauge-vsme-pct').textContent  = isV ? '70%' : '30%';
+    if ($('gauge-gri-pct'))   $('gauge-gri-pct').textContent   = isV ? '30%' : '70%';
+
+    if ($('assess-reasons')) $('assess-reasons').innerHTML = `
+      <div class="assess-reason"><span class="assess-reason-icon">✓</span>
+        <span>Standard <strong>${isV ? 'VSME 2023' : 'GRI Standards'}</strong> già applicato per questo cliente.</span></div>
+      <div class="assess-reason"><span class="assess-reason-icon">💡</span>
+        <span>Condizioni cambiate? Clicca <em>Ricomincia valutazione</em> qui sotto.</span></div>`;
+
+    const sectorKey = (c.sector || 'default').toLowerCase();
+    const sectorMap = { manifatturiero:'manuf', edilizia:'build', commercio:'trade', servizi:'serv' };
+    const sk = Object.entries(sectorMap).find(([k]) => sectorKey.includes(k))?.[1] || 'default';
+    const modules = isV
+      ? VSME_MODULES_ALL.map(m => `VSME ${m.code} — ${m.label}`)
+      : (GRI_BY_SECTOR[sk] || GRI_BY_SECTOR.default).map(d => `${d.code} — ${d.label}`);
+    const modCls = isV ? '' : 'gri';
+    if ($('assess-modules')) $('assess-modules').innerHTML = modules
+      .map(m => `<span class="assess-module-chip ${modCls}">${m}</span>`).join('');
+
+    _renderStandardEditor({ isVSME: isV, standard: isV ? 'VSME 2023' : 'GRI Standards' });
+  }
+
   function restart() {
     document.getElementById('assess-results').style.display = 'none';
+    // Force restart even if assessment was done
+    const c = currentClient();
+    if (c) { delete c._assessDone; }
+    // Temporarily clear std so start() doesn't short-circuit
+    const savedStd = c ? c.std : null;
+    if (c) { c.std = null; c.step = 1; }
+    Object.assign(state.assessment, { currentQ:0, answers:{}, vsmeScore:0, griScore:0, phase:'questions', recommendation:null, reasoningText:'' });
+    if (c && savedStd) { c.std = savedStd; c.step = 2; } // restore for safety — start() re-checks
+    // Reset to force past the skip check
+    if (c) { c.step = 1; c.std = null; }
     start();
   }
 
@@ -1005,6 +1061,163 @@ const assessment = (() => {
     if (window.veraAuth && window.veraAuth.saveAssessmentResult) {
       window.veraAuth.saveAssessmentResult(rec.isVSME ? 'vsme' : 'gri').catch(() => {});
     }
+
+    // ── Standard editor / configuratore ──────────────────────
+    _renderStandardEditor(rec);
+  }
+
+  /* ── Standard editor — configurazione moduli post-AI ────── */
+  function _renderStandardEditor(rec) {
+    const isVSME = rec.isVSME;
+    let el = document.getElementById('assess-std-editor');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'assess-std-editor';
+      el.style.marginTop = '24px';
+      const modulesEl = document.getElementById('assess-modules');
+      if (modulesEl && modulesEl.parentNode) {
+        modulesEl.parentNode.insertBefore(el, modulesEl.nextSibling);
+      }
+    }
+
+    const vsmeInfo = `
+      <div style="background:oklch(0.962 0.030 148/0.4);border:1px solid oklch(0.822 0.082 148);border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.6;color:var(--text)">
+        <div style="font-weight:700;color:oklch(0.392 0.132 148);margin-bottom:8px">📋 Struttura VSME — tutti i moduli B sono obbligatori</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          ${VSME_MODULES_ALL.map(m => `
+            <tr>
+              <td style="padding:5px 8px;font-weight:600;white-space:nowrap;color:oklch(0.392 0.132 148)">VSME ${m.code}</td>
+              <td style="padding:5px 8px;color:var(--text-2)">${m.label}</td>
+              <td style="padding:5px 8px;text-align:right">
+                <span style="font-size:10px;font-weight:700;letter-spacing:.06em;background:oklch(0.448 0.148 148);color:#fff;border-radius:4px;padding:2px 7px">${m.code === 'B5' ? 'OBB.*' : 'OBB.'}</span>
+              </td>
+            </tr>`).join('')}
+        </table>
+        <p style="font-size:11px;color:var(--text-3);margin:10px 0 0">
+          * B5 Rischi & Opportunità è obbligatorio ma può essere marcato "non materiale" con motivazione scritta (EFRAG VSME S1 §47).
+        </p>
+      </div>`;
+
+    const griLevels = [
+      { id:'with_ref',   label:'With Reference',   desc:'Rendiconto parziale — selezione delle disclosure GRI più rilevanti. Non richiede copertura completa.' },
+      { id:'in_accord',  label:'In Accordance',    desc:'Rendiconto completo — tutte le GRI 2 (2-1→2-30) + tutte le disclosure tematiche. Obbligatorio per claim GRI formale.' },
+    ];
+
+    const c = currentClient();
+    const sectorKey = (c && c.sector ? c.sector : 'default').toLowerCase();
+    const sectorMap = { manifatturiero:'manuf', edilizia:'build', commercio:'trade', servizi:'serv' };
+    const sk = Object.entries(sectorMap).find(([k]) => sectorKey.includes(k))?.[1] || 'default';
+    const griDisc = GRI_BY_SECTOR[sk] || GRI_BY_SECTOR.default;
+
+    const griEditor = `
+      <div style="margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);margin-bottom:10px">Livello di conformità GRI</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+          ${griLevels.map(l => `
+            <label id="gri-lbl-${l.id}" onclick="VERA.assessment.selectGriLevel('${l.id}')" style="
+              flex:1;min-width:200px;cursor:pointer;
+              border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;
+              transition:border-color .15s,background .15s;background:var(--surface)">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+                <div id="gri-radio-${l.id}" style="width:16px;height:16px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;transition:all .15s"></div>
+                <span style="font-weight:700;font-size:13px;color:var(--text)">${l.label}</span>
+              </div>
+              <p style="font-size:12px;color:var(--text-3);margin:0;line-height:1.5">${l.desc}</p>
+            </label>`).join('')}
+        </div>
+        <div style="background:oklch(0.972 0.022 47/0.35);border:1px solid oklch(0.82 0.08 47);border-radius:8px;padding:10px 14px;font-size:12px;color:oklch(0.45 0.10 47);margin-bottom:16px">
+          ⚠️ <strong>In Accordance</strong> richiede tutte le GRI 2 (30 disclosure) + tematiche. <strong>With Reference</strong> permette selezione parziale ma non il claim formale GRI.
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);margin-bottom:10px">
+          Disclosure selezionate per il tuo settore
+          <span style="font-weight:400;text-transform:none;letter-spacing:0">(clicca per rimuovere)</span>
+        </div>
+        <div id="gri-disc-chips" style="display:flex;flex-wrap:wrap;gap:6px">
+          ${griDisc.map(d => `
+            <span class="std-chip gri-chip" id="chip-${d.code.replace(/\s/g,'_')}"
+              onclick="VERA.assessment.toggleGriDisc('${d.code}')"
+              style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+                     padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;
+                     background:oklch(0.964 0.020 252);color:oklch(0.40 0.10 252);
+                     border:1px solid oklch(0.82 0.08 252);transition:all .15s">
+              ${d.code} <span style="opacity:0.6;font-size:10px">✕</span>
+            </span>`).join('')}
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--text-3)">
+          <span id="gri-disc-count">${griDisc.length} disclosure attive</span>
+        </div>
+      </div>`;
+
+    el.innerHTML = `
+      <div style="border-top:1px solid var(--border);padding-top:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-weight:700;font-size:13px;color:var(--text)">
+            ⚙️ Configurazione standard ${isVSME ? 'VSME' : 'GRI'}
+          </div>
+          <button onclick="VERA.assessment.toggleStdEditor()"
+            style="font-size:12px;font-weight:600;background:none;border:1px solid var(--border);
+                   border-radius:6px;padding:5px 12px;cursor:pointer;color:var(--text-2)">
+            Visualizza / Modifica <span id="std-editor-arrow">▼</span>
+          </button>
+        </div>
+        <div id="std-editor-body" style="display:none">
+          ${isVSME ? vsmeInfo : griEditor}
+        </div>
+      </div>`;
+
+    if (!isVSME) {
+      setTimeout(() => _selectGriLevelInternal('with_ref'), 120);
+    }
+  }
+
+  /* Stato GRI disc selezionate */
+  const _griDiscRemoved = new Set();
+
+  function _selectGriLevelInternal(levelId) {
+    ['with_ref','in_accord'].forEach(id => {
+      const lbl   = document.getElementById('gri-lbl-' + id);
+      const radio = document.getElementById('gri-radio-' + id);
+      if (!lbl || !radio) return;
+      const active = id === levelId;
+      radio.style.background     = active ? 'oklch(0.68 0.155 252)' : '';
+      radio.style.borderColor    = active ? 'oklch(0.68 0.155 252)' : 'var(--border)';
+      lbl.style.borderColor      = active ? 'oklch(0.68 0.155 252)' : 'var(--border)';
+      lbl.style.background       = active ? 'oklch(0.964 0.020 252/0.4)' : 'var(--surface)';
+    });
+  }
+
+  function selectGriLevel(levelId) { _selectGriLevelInternal(levelId); }
+
+  function toggleGriDisc(code) {
+    const chip = document.getElementById('chip-' + code.replace(/\s/g,'_'));
+    if (!chip) return;
+    if (_griDiscRemoved.has(code)) {
+      _griDiscRemoved.delete(code);
+      chip.style.opacity = '1';
+      chip.style.textDecoration = 'none';
+      chip.title = '';
+    } else {
+      _griDiscRemoved.add(code);
+      chip.style.opacity = '0.38';
+      chip.style.textDecoration = 'line-through';
+      chip.title = 'Rimossa — clicca per riattivare';
+    }
+    const countEl = document.getElementById('gri-disc-count');
+    if (countEl) {
+      const total = document.querySelectorAll('#gri-disc-chips .gri-chip').length;
+      countEl.textContent = `${total - _griDiscRemoved.size} disclosure attive (${_griDiscRemoved.size} rimosse)`;
+    }
+  }
+
+  function toggleStdEditor() {
+    const body  = document.getElementById('std-editor-body');
+    const arrow = document.getElementById('std-editor-arrow');
+    if (!body) return;
+    const open = body.style.display !== 'none';
+    body.style.display = open ? 'none' : 'block';
+    if (arrow) arrow.textContent = open ? '▼' : '▲';
   }
 
   function toggleReasoning() {
@@ -1055,7 +1268,7 @@ const assessment = (() => {
     showScreen('upload', document.getElementById('nav-upload'));
   }
 
-  return { _init, start, restart, next, prev, toggleReasoning, applyRecommendation, skipToManual, selectOption };
+  return { _init, start, restart, next, prev, toggleReasoning, applyRecommendation, skipToManual, selectOption, toggleStdEditor, selectGriLevel, toggleGriDisc };
 })();
 
 
@@ -1250,8 +1463,8 @@ const GRI_QUESTIONS = {
   'GRI 2-21': [
     { id:'ceo_pay', label:'Retribuzione annua totale del dirigente meglio remunerato (€)', type:'number', required:true },
     { id:'median_pay', label:'Retribuzione annua mediana di tutti i dipendenti (€)', type:'number', required:true },
-    { id:'pay_ratio', label:'Rapporto tra le due retribuzioni (calcolato automaticamente se entrambi compilati)', type:'number' },
-    { id:'pay_ratio_change', label:'Variazione del rapporto rispetto all\'anno precedente (%)', type:'number' },
+    // pay_ratio è calcolato automaticamente dal sistema — non richiesto come input
+    { id:'pay_ratio_change', label:'Variazione del rapporto retributivo rispetto all\'anno precedente (%)', type:'number' },
   ],
   'GRI 2-22': [
     { id:'strategy_statement', label:'Dichiarazione del principale responsabile esecutivo sulla strategia di sviluppo sostenibile', type:'textarea', required:true },
@@ -1339,12 +1552,12 @@ const VSME_QUESTIONS = {
     { id:'vsme_bio_impact',label:'Eventuali impatti noti sulla biodiversità locale (opzionale)', type:'textarea' },
   ],
   'B3-S1':[
-    { id:'vsme_emp_total', label:'Numero totale di dipendenti', type:'number', required:true },
-    { id:'vsme_emp_f_n',   label:'Di cui: donne (numero assoluto)', type:'number' },
+    { id:'vsme_emp_total', label:'Numero totale di dipendenti al 31/12', type:'number', required:true },
+    { id:'vsme_emp_f_n',   label:'Di cui: donne (numero assoluto — la % viene calcolata automaticamente)', type:'number' },
     { id:'vsme_emp_m_n',   label:'Di cui: uomini (numero assoluto)', type:'number' },
-    { id:'vsme_wage_f_avg',label:'Retribuzione media annua — donne (€ lordi)', type:'number', placeholder:'es. 28000' },
+    { id:'vsme_wage_f_avg',label:'Retribuzione media annua — donne (€ lordi — il gender pay gap viene calcolato automaticamente)', type:'number', placeholder:'es. 28000' },
     { id:'vsme_wage_m_avg',label:'Retribuzione media annua — uomini (€ lordi)', type:'number', placeholder:'es. 32000' },
-    { id:'vsme_injuries',  label:'Infortuni sul lavoro registrabili nell\'anno', type:'number' },
+    { id:'vsme_injuries',  label:'Infortuni sul lavoro registrabili nell\'anno (numero assoluto)', type:'number' },
     { id:'vsme_training',  label:'Ore medie di formazione per dipendente', type:'number' },
   ],
   'B3-S2':[
@@ -1910,7 +2123,7 @@ const typeformQuestionnaire = {
         <div class="tform-disclosure-header">
           <span class="tform-disclosure-code">${codeLabel}</span>
           <h1 class="tform-disclosure-title">${disclosure.label}</h1>
-          <p class="tform-disclosure-subtitle">Compila i campi sottostanti</p>
+          <p class="tform-disclosure-subtitle">Inserisci solo i <strong>dati primari</strong> — i valori derivati vengono calcolati automaticamente</p>
         </div>
 
         <form id="tform-form" onsubmit="return false;">
@@ -1925,12 +2138,123 @@ const typeformQuestionnaire = {
             </div>
           `).join('')}
         </form>
+
+        <!-- Derived values auto-populated here -->
+        <div id="tform-derived-${code.replace(/[^a-z0-9]/gi,'_')}"></div>
       </div>
     `;
 
     // Show/hide previous button
     const prevBtn = document.getElementById('tform-btn-prev');
     if (prevBtn) prevBtn.style.display = typeformQuestionnaireState.currentIndex > 0 ? 'block' : 'none';
+
+    // Wire up auto-calculation listeners after DOM is ready
+    setTimeout(() => this._addDerivedListeners(code), 40);
+  },
+
+  /* ── Auto-calculation listeners ──────────────────────────── */
+  _addDerivedListeners(code) {
+    const form = document.getElementById('tform-form');
+    if (!form) return;
+    const compute = () => {
+      const derived = this._computeDerived(code);
+      const el = document.getElementById('tform-derived-' + code.replace(/[^a-z0-9]/gi,'_'));
+      if (!el) return;
+      if (!derived.length) { el.innerHTML = ''; return; }
+      el.innerHTML = `
+        <div style="background:oklch(0.962 0.030 148/0.5);border:1px solid oklch(0.822 0.082 148);
+                    border-radius:10px;padding:14px 16px;margin-top:16px">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;
+                      color:oklch(0.448 0.148 148);margin-bottom:10px">
+            ✦ Calcolato automaticamente dal sistema
+          </div>
+          ${derived.map(d => `
+            <div style="display:flex;justify-content:space-between;align-items:center;
+                        padding:7px 0;border-bottom:1px solid oklch(0.822 0.082 148/0.4)">
+              <span style="font-size:13px;color:oklch(0.488 0.024 55)">${d.label}</span>
+              <strong style="font-size:14px;color:oklch(0.392 0.132 148);
+                             font-variant-numeric:tabular-nums">${d.value}</strong>
+            </div>`).join('')}
+        </div>`;
+    };
+    form.querySelectorAll('input,select,textarea').forEach(el => {
+      el.addEventListener('input', compute);
+      el.addEventListener('change', compute);
+    });
+    compute(); // initial compute for pre-filled values
+  },
+
+  /* ── Derived field computation ───────────────────────────── */
+  _computeDerived(code) {
+    const derived = [];
+    const n = (id) => {
+      const el = document.getElementById(`tform-${code}-${id}`);
+      if (!el) return null;
+      const v = parseFloat(el.value);
+      return isNaN(v) ? null : v;
+    };
+    const fmt = (v, dec=1) => v.toLocaleString('it-IT', { minimumFractionDigits:dec, maximumFractionDigits:dec });
+
+    if (code === 'GRI 2-7') {
+      const total = n('emp_total'), m = n('emp_m'), f = n('emp_f');
+      if (f !== null && total !== null && total > 0)
+        derived.push({ label:'% Donne sul totale dipendenti', value: fmt(f/total*100) + '%' });
+      if (m !== null && total !== null && total > 0)
+        derived.push({ label:'% Uomini sul totale dipendenti', value: fmt(m/total*100) + '%' });
+      const ft = n('emp_ft'), pt = n('emp_pt');
+      if (ft !== null && total !== null && total > 0)
+        derived.push({ label:'% Tempo pieno', value: fmt(ft/total*100) + '%' });
+      if (pt !== null && total !== null && total > 0)
+        derived.push({ label:'% Tempo parziale', value: fmt(pt/total*100) + '%' });
+    }
+    if (code === 'GRI 2-21') {
+      const ceo = n('ceo_pay'), med = n('median_pay');
+      if (ceo !== null && med !== null && med > 0)
+        derived.push({ label:'Rapporto retributivo (CEO ÷ mediana)', value: fmt(ceo/med, 1) + 'x' });
+    }
+    if (code === 'GRI 405-1') {
+      const total = n('board_total'), women = n('board_f');
+      if (total !== null && women !== null && total > 0)
+        derived.push({ label:'% Donne nel CdA', value: fmt(women/total*100) + '%' });
+      const u30 = n('board_u30'), mid = n('board_3050');
+      if (total !== null && u30 !== null && mid !== null && total > 0)
+        derived.push({ label:'% Componenti < 50 anni', value: fmt((u30+mid)/total*100) + '%' });
+    }
+    if (code === 'GRI 404-1') {
+      const avg = n('train_hrs'), m = n('train_m'), f = n('train_f');
+      if (m !== null && f !== null)
+        derived.push({ label:'Divario formazione uomini vs donne', value: (m >= f ? '+' : '') + fmt(m - f) + ' ore' });
+    }
+    if (code === 'B3-S1') {
+      const total = n('vsme_emp_total'), fn = n('vsme_emp_f_n'), mn = n('vsme_emp_m_n');
+      if (fn !== null && total !== null && total > 0)
+        derived.push({ label:'% Donne (calcolata)', value: fmt(fn/total*100) + '%' });
+      if (mn !== null && total !== null && total > 0)
+        derived.push({ label:'% Uomini (calcolata)', value: fmt(mn/total*100) + '%' });
+      const wf = n('vsme_wage_f_avg'), wm = n('vsme_wage_m_avg');
+      if (wf !== null && wm !== null && wm > 0) {
+        derived.push({ label:'Gender pay gap (uomini vs donne)', value: fmt((wm-wf)/wm*100) + '%' });
+        derived.push({ label:'Rapporto retributivo F/M', value: fmt(wf/wm, 2) });
+      }
+    }
+    if (code === 'B2-E2') {
+      const elec = n('vsme_elec'), gas = n('vsme_gas');
+      if (elec !== null) {
+        derived.push({ label:'Consumo totale (gas + elettricità)', value: fmt((elec + (gas||0))/1000, 1) + ' MWh' });
+        const c = currentClient();
+        const emp = c && c.employees ? parseInt(c.employees) : 0;
+        if (emp > 0)
+          derived.push({ label:'Intensità energetica', value: fmt(elec/emp, 0) + ' kWh/dip.' });
+      }
+    }
+    if (code === 'GRI 201-1') {
+      const rev = n('revenue'), cost = n('op_cost'), wages = n('wages'), tax = n('tax');
+      if (rev !== null && cost !== null)
+        derived.push({ label:'Margine operativo lordo', value: '€ ' + fmt(rev - cost, 0) });
+      if (rev !== null && wages !== null && rev > 0)
+        derived.push({ label:'% Costo del lavoro su ricavi', value: fmt(wages/rev*100) + '%' });
+    }
+    return derived;
   },
 
   _renderFieldInput(q, savedVal, code) {
@@ -2068,6 +2392,9 @@ const typeformQuestionnaire = {
       }
     }
 
+    // ── Live report update ────────────────────────────────────
+    this._liveUpdateReport();
+
     if (typeformQuestionnaireState.currentIndex < disclosures.length) {
       typeformQuestionnaireState.currentIndex++;
     }
@@ -2084,10 +2411,59 @@ const typeformQuestionnaire = {
 
   save() {
     const answered = Object.keys(typeformQuestionnaireState.answers).length;
+    this._liveUpdateReport();
     toast(`Questionario salvato — ${answered} disclosure compilate`, 'success');
     const c = currentClient();
     if (c && c.step < 3) { c.step = 3; updateWizardProgress(); }
     this.close();
+  },
+
+  /* ── Live report update — popola il report ad ogni avanzamento ── */
+  _liveUpdateReport() {
+    const c = currentClient();
+    if (!c) return;
+
+    // Flatten all typeform answers into a single map
+    const answers = {};
+    Object.values(typeformQuestionnaireState.answers).forEach(disc => Object.assign(answers, disc));
+
+    // ── Aggiorna i campi del client con i dati primari compilati ──
+    // Dipendenti
+    const empTotal = parseFloat(answers.vsme_emp_total || answers.emp_total);
+    if (!isNaN(empTotal) && empTotal > 0) c.employees = empTotal;
+
+    // Emissioni (se non già calcolate da GHG tool, usa valori typeform)
+    const s1 = parseFloat(answers.vsme_s1 || answers.scope1_co2);
+    const s2 = parseFloat(answers.vsme_s2 || answers.scope2_mb || answers.scope2_lb);
+    const s3 = parseFloat(answers.vsme_s3 || answers.scope3_total);
+    if (!c.ghg && !isNaN(s1) && !isNaN(s2)) {
+      const s3v = isNaN(s3) ? 0 : s3;
+      c.ghg = { s1: s1*1000, s2: s2*1000, s3: s3v*1000, total: (s1+s2+s3v)*1000 };
+      _updateScopeBars(c);
+      _setText('kpi-total', (c.ghg.total/1000).toFixed(1));
+      _setText('kpi-s1',    (c.ghg.s1/1000).toFixed(1));
+      _setText('kpi-s2',    (c.ghg.s2/1000).toFixed(1));
+      _setText('kpi-s3',    (c.ghg.s3/1000).toFixed(1));
+    }
+
+    // ── Genera sezioni testuali del report live ──
+    const std = typeformQuestionnaireState.std || c.std || 'vsme';
+    c.liveReportData = answers;
+    c.std = std;
+
+    // Aggiorna header report
+    const name = answers.vsme_name || answers.org_name || c.name || '—';
+    if (name !== '—') c.name = name;
+
+    // Aggiorna report screen
+    _renderReportScreen(c);
+
+    // Flash sull'icona report nella sidebar per indicare aggiornamento
+    const navReport = document.getElementById('nav-report');
+    if (navReport) {
+      navReport.style.outline = '2px solid oklch(0.72 0.21 150)';
+      setTimeout(() => { if (navReport) navReport.style.outline = ''; }, 900);
+    }
   },
 
   _checkConstraints(code, answers) {

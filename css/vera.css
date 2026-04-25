@@ -465,14 +465,9 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:
   letter-spacing: 0.01em;
 }
 
-/* Primary CTA shimmer */
+/* Primary CTA — no shimmer sweep (replaced by BorderBeam on hero) */
 .btn-primary { position:relative; overflow:hidden; }
-.btn-primary::after {
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,0.18) 50%,transparent 70%);
-  transform:translateX(-100%);transition:transform 0.6s ease;
-}
-.btn-primary:hover::after { transform:translateX(100%); }
+.btn-primary::after { content:none; }
 
 /* ── Visual column ── */
 .hero-visual {
@@ -2910,24 +2905,22 @@ select option{background:var(--surface);color:var(--text)}
 .kpi-card.b:hover{box-shadow:0 8px 24px rgba(0,0,0,.3), inset 3px 0 0 var(--blue), 0 0 24px oklch(0.68 0.155 252 / 0.18)}
 .kpi-card.o:hover{box-shadow:0 8px 24px rgba(0,0,0,.3), inset 3px 0 0 var(--orange), 0 0 24px oklch(0.72 0.175 47 / 0.18)}
 
-/* ── HERO SECTION — DRAMATIC ────────────────────────────── */
-.hero h1{
-  color:var(--text);
-  text-shadow:0 2px 40px oklch(0.72 0.21 150 / 0.15);
+/* ── HERO TYPOGRAPHY — explicit white, overrides variable remapping ─── */
+.hero h1 {
+  color: rgba(255,255,255,0.90) !important;
+  text-shadow: none !important;
 }
-.hero h1 em{
-  background:linear-gradient(135deg, var(--green) 0%, oklch(0.80 0.15 170) 50%, var(--green) 100%);
-  background-size:200% auto;
-  -webkit-background-clip:text;background-clip:text;
-  -webkit-text-fill-color:transparent;
-  animation:text-shimmer 4s linear infinite;
+/* "semplice." plain text inherits h1 white — no override needed */
+.hero h1 em {
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  -webkit-text-fill-color: oklch(0.72 0.21 150) !important;
+  color: oklch(0.72 0.21 150) !important;
+  animation: none !important;
 }
-
-/* ── HERO BADGE — ANIMATED GLOW ─────────────────────────── */
-.hero-badge{
-  animation:pulse-glow 3s ease-in-out infinite;
-  position:relative;
-}
+/* ── HERO BADGE — no glow, just the pulsing dot ─────────── */
+.hero-badge { animation: none !important; position: relative; }
 
 /* ── STAT NUMBERS — GLOW ─────────────────────────────────── */
 .stat-n{
@@ -2937,9 +2930,11 @@ select option{background:var(--surface);color:var(--text)}
 
 /* ── LANDING SECTION TITLE ──────────────────────────────── */
 .ln-section-title em{
-  background:linear-gradient(135deg, var(--green) 0%, oklch(0.80 0.15 165) 100%);
-  -webkit-background-clip:text;background-clip:text;
-  -webkit-text-fill-color:transparent;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  -webkit-text-fill-color: var(--green) !important;
+  color: var(--green) !important;
 }
 
 /* ── PAIN CARDS — ELEVATED ──────────────────────────────── */
@@ -3430,4 +3425,129 @@ tr:hover td{background:oklch(0.175 0.018 260 / 0.5) !important}
 .mat-cta-primary:hover{
   box-shadow:0 0 30px oklch(0.72 0.21 150 / 0.2),var(--shadow-md);
   border-color:var(--green);
+}
+
+/* ══════════════════════════════════════════════════════════
+   HERO — ANIMATED DOT GRID
+   Inspired by Magic UI AnimatedGridPattern — pure CSS.
+   A 30×30px dot pattern, masked to the left column,
+   slowly drifting across the hero.
+══════════════════════════════════════════════════════════ */
+.hero-dot-grid {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    radial-gradient(circle at 1px 1px, oklch(0.72 0.21 150 / 0.18) 1px, transparent 0);
+  background-size: 30px 30px;
+  /* Fade the grid toward the right so it doesn't overlap the visual */
+  mask-image:
+    radial-gradient(ellipse 68% 90% at 18% 55%,
+      white 10%, transparent 70%);
+  -webkit-mask-image:
+    radial-gradient(ellipse 68% 90% at 18% 55%,
+      white 10%, transparent 70%);
+  animation: dot-grid-drift 24s ease-in-out infinite;
+}
+@keyframes dot-grid-drift {
+  0%,100% { background-position: 0 0;     opacity: 0.55; }
+  50%      { background-position: 15px 15px; opacity: 1;    }
+}
+
+/* ══════════════════════════════════════════════════════════
+   HERO — BOTTOM CREAM FADE
+   Bridges the dark hero → warm cream landing sections.
+══════════════════════════════════════════════════════════ */
+.hero-fade {
+  position: absolute;
+  bottom: -1px; left: 0; right: 0;
+  height: 90px;
+  z-index: 4;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    oklch(0.975 0.012 75) 100%
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   HERO CTA — BORDER BEAM
+   Rotating conic-gradient border, Magic UI BorderBeam style.
+   Uses @property for smooth --beam-angle animation.
+══════════════════════════════════════════════════════════ */
+@property --beam-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* Allow the beam ring to extend 2px outside the button */
+.hero .btn-primary.btn-lg {
+  overflow: visible;
+  /* keep the button content itself clipped cleanly */
+  -webkit-mask: none;
+  mask: none;
+}
+
+/* The rotating beam ring */
+.hero .btn-primary.btn-lg::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  padding: 2px;                          /* thickness of the ring */
+  border-radius: calc(10px + 2px);       /* btn-lg radius + padding */
+  background: conic-gradient(
+    from var(--beam-angle),
+    oklch(0.448 0.148 148)  0%,
+    oklch(0.448 0.148 148) 52%,
+    oklch(0.78  0.20  148)  66%,
+    oklch(0.96  0.06  148)  76%,         /* near-white flash */
+    oklch(0.78  0.20  148)  86%,
+    oklch(0.448 0.148 148) 100%
+  );
+  /* Cut out the inner area so only the 2px ring shows */
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: beam-rotate 2.6s linear infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Remove the old ::after shimmer on hero btn (already cleared globally) */
+.hero .btn-primary.btn-lg::after { content: none; }
+
+@keyframes beam-rotate {
+  to { --beam-angle: 360deg; }
+}
+
+/* Hover: button lifts slightly; beam speeds up via brightness */
+.hero .btn-primary.btn-lg:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 20px oklch(0.448 0.148 148 / 0.35),
+    0 12px 40px oklch(0.448 0.148 148 / 0.20) !important;
+}
+.hero .btn-primary.btn-lg:hover::before {
+  animation-duration: 1.4s;
+}
+
+/* ── Outline button in hero — subtle border lift on hover ── */
+.hero .btn-outline.btn-lg {
+  transition:
+    border-color var(--t-md) var(--ease),
+    color        var(--t-md) var(--ease),
+    box-shadow   var(--t-md) var(--ease),
+    transform    var(--t-md) var(--ease);
+}
+.hero .btn-outline.btn-lg:hover {
+  border-color: oklch(0.68 0.10 148 / 0.55) !important;
+  color: rgba(255,255,255,0.85) !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25) !important;
+  transform: translateY(-1px);
+  text-decoration: none;
 }

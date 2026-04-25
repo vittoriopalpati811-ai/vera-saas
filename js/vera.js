@@ -927,16 +927,10 @@ const assessment = (() => {
 
   function restart() {
     document.getElementById('assess-results').style.display = 'none';
-    // Force restart even if assessment was done
+    // Clear all assessment state so start() does not short-circuit
     const c = currentClient();
-    if (c) { delete c._assessDone; }
-    // Temporarily clear std so start() doesn't short-circuit
-    const savedStd = c ? c.std : null;
-    if (c) { c.std = null; c.step = 1; }
+    if (c) { delete c._assessDone; c.std = null; c.step = 1; }
     Object.assign(state.assessment, { currentQ:0, answers:{}, vsmeScore:0, griScore:0, phase:'questions', recommendation:null, reasoningText:'' });
-    if (c && savedStd) { c.std = savedStd; c.step = 2; } // restore for safety — start() re-checks
-    // Reset to force past the skip check
-    if (c) { c.step = 1; c.std = null; }
     start();
   }
 
@@ -1068,6 +1062,7 @@ const assessment = (() => {
 
   /* ── Standard editor — configurazione moduli post-AI ────── */
   function _renderStandardEditor(rec) {
+    _griDiscRemoved = new Set(); // reset on every render — avoid stale removals
     const isVSME = rec.isVSME;
     let el = document.getElementById('assess-std-editor');
     if (!el) {
@@ -1172,8 +1167,8 @@ const assessment = (() => {
     }
   }
 
-  /* Stato GRI disc selezionate */
-  const _griDiscRemoved = new Set();
+  /* Stato GRI disc selezionate — reset ogni volta che l'editor viene ri-renderizzato */
+  let _griDiscRemoved = new Set();
 
   function _selectGriLevelInternal(levelId) {
     ['with_ref','in_accord'].forEach(id => {
@@ -1230,17 +1225,21 @@ const assessment = (() => {
 
   function applyRecommendation() {
     const rec = state.assessment.recommendation;
-    if (!rec) return;
-    const std = rec.isVSME ? 'vsme' : 'gri';
+    // Fallback: se la valutazione era già completata (rec == null), usa lo std del client
+    const c0 = currentClient();
+    const fallbackStd = c0 && c0.std;
+    if (!rec && !fallbackStd) return;
+    const std = rec ? (rec.isVSME ? 'vsme' : 'gri') : fallbackStd;
+    const isVSME = std === 'vsme';
     onboarding.selectStd(std);
     onboarding._syncBadges(std);
     const vsmeRec = document.getElementById('vsme-ai-rec');
     const griRec = document.getElementById('gri-ai-rec');
-    if (vsmeRec) vsmeRec.style.display = rec.isVSME ? 'flex' : 'none';
-    if (griRec) griRec.style.display = !rec.isVSME ? 'flex' : 'none';
+    if (vsmeRec) vsmeRec.style.display = isVSME ? 'flex' : 'none';
+    if (griRec) griRec.style.display = !isVSME ? 'flex' : 'none';
     // Advance client wizard step
     const c = currentClient();
-    if (c && c.step < 2) { c.step = 2; c.std = std; }
+    if (c) { c.std = std; if (c.step < 2) c.step = 2; }
     updateWizardProgress();
     // Reset panels for upload screen
     const sp = document.getElementById('std-panel');
@@ -1252,7 +1251,8 @@ const assessment = (() => {
     if (up) up.style.display = 'none';
     if (vp) vp.style.display = 'none';
     showScreen('upload', document.getElementById('nav-upload'));
-    toast(`${rec.standard} applicato → Continua con l'onboarding`, 'success');
+    const stdLabel = rec ? rec.standard : (isVSME ? 'VSME 2023' : 'GRI Standards');
+    toast(`${stdLabel} applicato → Continua con l'onboarding`, 'success');
   }
 
   function skipToManual() {
@@ -1829,8 +1829,8 @@ const AUTO_CALCULATED_DISCLOSURES = [
   'GRI 305-1', 'GRI 305-2', 'GRI 305-3', 'GRI 305-4', // emissions
   'GRI 302-1', 'GRI 302-3', // energy
   'GRI 401-1', // new hires/turnover
-  'VSME B2-E1', // GHG scope 1/2/3
-  'VSME B2-E2', // energy consumption
+  'B2-E1', // GHG scope 1/2/3 (VSME — matches VSME_MODULES_ALL code)
+  'B2-E2', // energy consumption (VSME — matches VSME_MODULES_ALL code)
 ];
 
 const typeformQuestionnaireState = {
@@ -2241,8 +2241,13 @@ const typeformQuestionnaire = {
       const elec = n('vsme_elec'), gas = n('vsme_gas');
       if (elec !== null) {
         derived.push({ label:'Consumo totale (gas + elettricità)', value: fmt((elec + (gas||0))/1000, 1) + ' MWh' });
+        // Prefer vsme_emp_total from typeform (already filled B3-S1) over c.employees which may be a string category
+        const allAns = {};
+        Object.values(typeformQuestionnaireState.answers).forEach(d => Object.assign(allAns, d));
+        const empRaw = parseFloat(allAns.vsme_emp_total || allAns.emp_total);
         const c = currentClient();
-        const emp = c && c.employees ? parseInt(c.employees) : 0;
+        const emp = !isNaN(empRaw) && empRaw > 0 ? empRaw
+          : (c && typeof c.employees === 'number' ? c.employees : 0);
         if (emp > 0)
           derived.push({ label:'Intensità energetica', value: fmt(elec/emp, 0) + ' kWh/dip.' });
       }
@@ -2432,11 +2437,12 @@ const typeformQuestionnaire = {
     const empTotal = parseFloat(answers.vsme_emp_total || answers.emp_total);
     if (!isNaN(empTotal) && empTotal > 0) c.employees = empTotal;
 
-    // Emissioni (se non già calcolate da GHG tool, usa valori typeform)
+    // Emissioni: aggiorna sempre se typeform fornisce valori espliciti (priorità al GHG tool se il client
+    // ha già dati più dettagliati — ma se typeform li sovrascrive lo facciamo comunque per coerenza live)
     const s1 = parseFloat(answers.vsme_s1 || answers.scope1_co2);
     const s2 = parseFloat(answers.vsme_s2 || answers.scope2_mb || answers.scope2_lb);
     const s3 = parseFloat(answers.vsme_s3 || answers.scope3_total);
-    if (!c.ghg && !isNaN(s1) && !isNaN(s2)) {
+    if (!isNaN(s1) && !isNaN(s2)) {
       const s3v = isNaN(s3) ? 0 : s3;
       c.ghg = { s1: s1*1000, s2: s2*1000, s3: s3v*1000, total: (s1+s2+s3v)*1000 };
       _updateScopeBars(c);
@@ -2524,12 +2530,20 @@ const typeformQuestionnaire = {
       }
     }
     if (code === 'B3-S1') {
-      const total = n('vsme_emp_total'), pctF = n('vsme_emp_f');
-      if (pctF !== null && (pctF < 0 || pctF > 100))
-        return `Errore logico: la percentuale donne (${pctF}%) deve essere compresa tra 0 e 100.`;
+      const total = n('vsme_emp_total'), fn = n('vsme_emp_f_n'), mn = n('vsme_emp_m_n');
+      if (fn !== null && fn < 0)
+        return 'Errore logico: il numero di donne non può essere negativo.';
+      if (mn !== null && mn < 0)
+        return 'Errore logico: il numero di uomini non può essere negativo.';
+      if (total !== null && fn !== null && fn > total)
+        return `Errore logico: donne (${fn}) supera il totale dipendenti (${total}).`;
+      if (total !== null && mn !== null && mn > total)
+        return `Errore logico: uomini (${mn}) supera il totale dipendenti (${total}).`;
+      if (fn !== null && mn !== null && total !== null && fn + mn > total)
+        return `Errore logico: la somma donne+uomini (${fn+mn}) supera il totale dipendenti (${total}).`;
       const injuries = n('vsme_injuries');
       if (injuries !== null && total !== null && injuries > total)
-        return `Errore logico: infortuni (${injuries}) non puo\' superare il numero di dipendenti (${total}).`;
+        return `Errore logico: infortuni (${injuries}) non può superare il numero di dipendenti (${total}).`;
     }
     if (code === 'B3-S4') {
       const complaints = n('vsme_complaints'), resolved = n('vsme_resolved');
@@ -3611,10 +3625,10 @@ const sustainabilityPlan = {
       // GHG KPIs
       const ghg = c.ghg;
       const kpis = ghg ? [
-        { label: 'Emissioni Scope 1 (tCO2e)', value: ghg.scope1?.toFixed(1) || '0.0', icon: '🏭' },
-        { label: 'Emissioni Scope 2 (tCO2e)', value: ghg.scope2?.toFixed(1) || '0.0', icon: '⚡' },
-        { label: 'Totale Scope 1+2 (tCO2e)', value: ((ghg.scope1||0)+(ghg.scope2||0)).toFixed(1), icon: '📊' },
-        { label: 'Intensita\' GHG (tCO2e/dip.)', value: c.employees ? (((ghg.scope1||0)+(ghg.scope2||0))/c.employees).toFixed(2) : 'N/A', icon: '📈' },
+        { label: 'Emissioni Scope 1 (tCO2e)', value: ghg.s1 != null ? (ghg.s1/1000).toFixed(1) : '0.0', icon: '🏭' },
+        { label: 'Emissioni Scope 2 (tCO2e)', value: ghg.s2 != null ? (ghg.s2/1000).toFixed(1) : '0.0', icon: '⚡' },
+        { label: 'Totale Scope 1+2 (tCO2e)', value: (((ghg.s1||0)+(ghg.s2||0))/1000).toFixed(1), icon: '📊' },
+        { label: 'Intensita\' GHG (tCO2e/dip.)', value: (typeof c.employees === 'number' && c.employees > 0) ? ((((ghg.s1||0)+(ghg.s2||0))/1000)/c.employees).toFixed(2) : 'N/A', icon: '📈' },
       ] : [
         { label: 'Emissioni Scope 1 (tCO2e)', value: 'N/D', icon: '🏭' },
         { label: 'Emissioni Scope 2 (tCO2e)', value: 'N/D', icon: '⚡' },

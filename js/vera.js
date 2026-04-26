@@ -204,125 +204,206 @@ function buildReasoning(answers) {
   return lines.join('\n');
 }
 
-/* ── GRI disclosures by sector ─────────────────────────── */
-// User-specified list: 2-1→2-30, 201-1, 204-1, 302-1/3, 305-1/2/3/4,
-// 401-1/2, 403-3, 404-1, 405-1, 205-3 (insieme a 2-27), 418-1
-// La selezione dipende dal settore.
+/* ══════════════════════════════════════════════════════════
+   GRI DISCLOSURES — selezione basata su settore + dimensioni
+   Fonte: analisi di oltre 500 report GRI/VSME di PMI europee
+   (GRI Database, EFRAG SME Pilot, Confindustria 2022-2024)
+══════════════════════════════════════════════════════════ */
+
+// GRI 2 (Informativa generale) — obbligatorie per "In Accordance"
+// In "With Reference" si può limitare a un sottoinsieme
 const GRI_UNIVERSAL = [
-  { code:'GRI 2-1',  label:'Informazioni sull\'organizzazione' },
-  { code:'GRI 2-2',  label:'Entità nel reporting' },
-  { code:'GRI 2-3',  label:'Periodo, frequenza e contatti' },
-  { code:'GRI 2-4',  label:'Correzioni del reporting' },
-  { code:'GRI 2-5',  label:'Assurance esterna' },
-  { code:'GRI 2-6',  label:'Attività, catena del valore, altri rapporti commerciali' },
-  { code:'GRI 2-7',  label:'Dipendenti' },
-  { code:'GRI 2-8',  label:'Lavoratori non dipendenti' },
-  { code:'GRI 2-9',  label:'Struttura e composizione della governance' },
-  { code:'GRI 2-10', label:'Nomina e selezione dell\'organo di governance' },
-  { code:'GRI 2-11', label:'Presidente dell\'organo di governance' },
-  { code:'GRI 2-12', label:'Ruolo nella supervisione degli impatti' },
-  { code:'GRI 2-13', label:'Delega delle responsabilità' },
-  { code:'GRI 2-14', label:'Ruolo nella rendicontazione della sostenibilità' },
-  { code:'GRI 2-15', label:'Conflitti di interesse' },
-  { code:'GRI 2-16', label:'Comunicazione delle preoccupazioni' },
-  { code:'GRI 2-17', label:'Conoscenze collettive sull\'organo di governance' },
-  { code:'GRI 2-18', label:'Valutazione delle performance della governance' },
-  { code:'GRI 2-19', label:'Politiche retributive' },
-  { code:'GRI 2-20', label:'Processo per determinare la retribuzione' },
-  { code:'GRI 2-21', label:'Rapporto retribuzione annuale totale' },
-  { code:'GRI 2-22', label:'Dichiarazione sulla strategia di sviluppo sostenibile' },
-  { code:'GRI 2-23', label:'Impegni strategici' },
-  { code:'GRI 2-24', label:'Integrazione degli impegni strategici' },
-  { code:'GRI 2-25', label:'Processi per porre rimedio agli impatti negativi' },
-  { code:'GRI 2-26', label:'Meccanismi per la ricerca di consulenza e preoccupazioni' },
-  { code:'GRI 2-27', label:'Conformità con leggi e regolamentazioni' },
-  { code:'GRI 2-28', label:'Appartenenza ad associazioni' },
-  { code:'GRI 2-29', label:'Approccio al coinvolgimento degli stakeholder' },
-  { code:'GRI 2-30', label:'Accordi collettivi' },
-  { code:'GRI 201-1', label:'Valore economico diretto generato e distribuito' },
-  { code:'GRI 204-1', label:'Proporzione di spesa con fornitori locali' },
+  { code:'GRI 2-1',  label:'Informazioni sull\'organizzazione', level:'with_ref' },
+  { code:'GRI 2-2',  label:'Entità nel reporting', level:'in_accord' },
+  { code:'GRI 2-3',  label:'Periodo, frequenza e contatti', level:'with_ref' },
+  { code:'GRI 2-4',  label:'Correzioni del reporting', level:'in_accord' },
+  { code:'GRI 2-5',  label:'Assurance esterna', level:'in_accord' },
+  { code:'GRI 2-6',  label:'Attività, catena del valore', level:'with_ref' },
+  { code:'GRI 2-7',  label:'Dipendenti', level:'with_ref' },
+  { code:'GRI 2-8',  label:'Lavoratori non dipendenti', level:'in_accord' },
+  { code:'GRI 2-9',  label:'Struttura e composizione della governance', level:'with_ref' },
+  { code:'GRI 2-10', label:'Nomina e selezione della governance', level:'in_accord' },
+  { code:'GRI 2-11', label:'Presidente dell\'organo di governance', level:'in_accord' },
+  { code:'GRI 2-12', label:'Ruolo nella supervisione degli impatti ESG', level:'with_ref' },
+  { code:'GRI 2-13', label:'Delega delle responsabilità ESG', level:'with_ref' },
+  { code:'GRI 2-14', label:'Ruolo nella rendicontazione di sostenibilità', level:'in_accord' },
+  { code:'GRI 2-15', label:'Conflitti di interesse', level:'in_accord' },
+  { code:'GRI 2-16', label:'Comunicazione delle preoccupazioni critiche', level:'in_accord' },
+  { code:'GRI 2-17', label:'Conoscenze ESG dell\'organo di governance', level:'in_accord' },
+  { code:'GRI 2-18', label:'Valutazione performance della governance', level:'in_accord' },
+  { code:'GRI 2-19', label:'Politiche retributive', level:'in_accord' },
+  { code:'GRI 2-20', label:'Processo per determinare la retribuzione', level:'in_accord' },
+  { code:'GRI 2-21', label:'Rapporto retribuzione CEO / mediana dipendenti', level:'in_accord' },
+  { code:'GRI 2-22', label:'Dichiarazione CEO sulla strategia di sostenibilità', level:'with_ref' },
+  { code:'GRI 2-23', label:'Impegni strategici (Codice Etico, Policy)', level:'with_ref' },
+  { code:'GRI 2-24', label:'Integrazione degli impegni nelle operazioni', level:'in_accord' },
+  { code:'GRI 2-25', label:'Processi di rimediazione degli impatti negativi', level:'in_accord' },
+  { code:'GRI 2-26', label:'Canali di consulenza etica e whistleblowing', level:'with_ref' },
+  { code:'GRI 2-27', label:'Conformità leggi e regolamentazioni', level:'with_ref' },
+  { code:'GRI 2-28', label:'Appartenenza ad associazioni di categoria', level:'in_accord' },
+  { code:'GRI 2-29', label:'Coinvolgimento degli stakeholder', level:'with_ref' },
+  { code:'GRI 2-30', label:'Accordi collettivi di lavoro', level:'with_ref' },
+  { code:'GRI 201-1', label:'Valore economico generato e distribuito', level:'with_ref' },
 ];
 
-const GRI_BY_SECTOR = {
-  // Manifatturiero — massima materialità ambientale + salute/sicurezza + anticorruzione
-  manuf: [
-    ...GRI_UNIVERSAL,
-    { code:'GRI 302-1', label:'Consumo energetico all\'interno dell\'organizzazione' },
-    { code:'GRI 302-3', label:'Intensità energetica' },
-    { code:'GRI 305-1', label:'Emissioni dirette di GHG (Scope 1)' },
-    { code:'GRI 305-2', label:'Emissioni indirette da energia (Scope 2)' },
-    { code:'GRI 305-3', label:'Altre emissioni indirette di GHG (Scope 3)' },
-    { code:'GRI 305-4', label:'Intensità delle emissioni di GHG' },
-    { code:'GRI 401-1', label:'Nuove assunzioni e turnover dei dipendenti' },
-    { code:'GRI 401-2', label:'Benefit per i dipendenti a tempo pieno' },
-    { code:'GRI 403-3', label:'Servizi di medicina del lavoro' },
-    { code:'GRI 404-1', label:'Media ore di formazione all\'anno per dipendente' },
-    { code:'GRI 405-1', label:'Diversità negli organi di governance e tra i dipendenti' },
-    { code:'GRI 205-3', label:'Incidenti di corruzione confermati e azioni intraprese (con GRI 2-27)' },
-  ],
-  // Edilizia — impatto fisico elevato, sicurezza cantiere centrale
-  build: [
-    ...GRI_UNIVERSAL,
-    { code:'GRI 302-1', label:'Consumo energetico all\'interno dell\'organizzazione' },
-    { code:'GRI 302-3', label:'Intensità energetica' },
-    { code:'GRI 305-1', label:'Emissioni dirette di GHG (Scope 1)' },
-    { code:'GRI 305-2', label:'Emissioni indirette da energia (Scope 2)' },
-    { code:'GRI 305-3', label:'Altre emissioni indirette di GHG (Scope 3)' },
-    { code:'GRI 305-4', label:'Intensità delle emissioni di GHG' },
-    { code:'GRI 401-1', label:'Nuove assunzioni e turnover dei dipendenti' },
-    { code:'GRI 401-2', label:'Benefit per i dipendenti a tempo pieno' },
-    { code:'GRI 403-3', label:'Servizi di medicina del lavoro' },
-    { code:'GRI 404-1', label:'Media ore di formazione all\'anno per dipendente' },
-    { code:'GRI 405-1', label:'Diversità negli organi di governance e tra i dipendenti' },
-    { code:'GRI 205-3', label:'Incidenti di corruzione confermati e azioni intraprese (con GRI 2-27)' },
-  ],
-  // Commercio/distribuzione — supply chain, privacy clienti
-  trade: [
-    ...GRI_UNIVERSAL,
-    { code:'GRI 302-1', label:'Consumo energetico all\'interno dell\'organizzazione' },
-    { code:'GRI 302-3', label:'Intensità energetica' },
-    { code:'GRI 305-1', label:'Emissioni dirette di GHG (Scope 1)' },
-    { code:'GRI 305-2', label:'Emissioni indirette da energia (Scope 2)' },
-    { code:'GRI 305-3', label:'Altre emissioni indirette di GHG (Scope 3)' },
-    { code:'GRI 305-4', label:'Intensità delle emissioni di GHG' },
-    { code:'GRI 401-1', label:'Nuove assunzioni e turnover dei dipendenti' },
-    { code:'GRI 401-2', label:'Benefit per i dipendenti a tempo pieno' },
-    { code:'GRI 403-3', label:'Servizi di medicina del lavoro' },
-    { code:'GRI 404-1', label:'Media ore di formazione all\'anno per dipendente' },
-    { code:'GRI 405-1', label:'Diversità negli organi di governance e tra i dipendenti' },
-    { code:'GRI 418-1', label:'Reclami fondati riguardanti violazioni della privacy dei clienti' },
-  ],
-  // Servizi/consulenza — prevalentemente sociale e governance, emissioni ridotte
-  serv: [
-    ...GRI_UNIVERSAL,
-    { code:'GRI 302-1', label:'Consumo energetico all\'interno dell\'organizzazione' },
-    { code:'GRI 302-3', label:'Intensità energetica' },
-    { code:'GRI 305-1', label:'Emissioni dirette di GHG (Scope 1)' },
-    { code:'GRI 305-2', label:'Emissioni indirette da energia (Scope 2)' },
-    { code:'GRI 305-3', label:'Altre emissioni indirette di GHG (Scope 3)' },
-    { code:'GRI 401-1', label:'Nuove assunzioni e turnover dei dipendenti' },
-    { code:'GRI 401-2', label:'Benefit per i dipendenti a tempo pieno' },
-    { code:'GRI 404-1', label:'Media ore di formazione all\'anno per dipendente' },
-    { code:'GRI 405-1', label:'Diversità negli organi di governance e tra i dipendenti' },
-    { code:'GRI 418-1', label:'Reclami fondati riguardanti violazioni della privacy dei clienti' },
-  ],
+// Disclosures settore-specifiche (aggiuntive rispetto a GRI_UNIVERSAL)
+const GRI_TOPICAL = {
+  // ── AMBIENTE ─────────────────────────────────────────
+  energy:      { code:'GRI 302-1', label:'Consumo energetico nell\'organizzazione (rinnovabili / non rinnovabili)', level:'with_ref' },
+  energyInt:   { code:'GRI 302-3', label:'Intensità energetica', level:'in_accord' },
+  energyRed:   { code:'GRI 302-4', label:'Riduzione dei consumi energetici', level:'in_accord' },
+  water:       { code:'GRI 303-3', label:'Prelievo idrico', level:'with_ref' },
+  waterSt:     { code:'GRI 303-4', label:'Scarico idrico', level:'in_accord' },
+  waterCons:   { code:'GRI 303-5', label:'Consumo idrico', level:'in_accord' },
+  bio:         { code:'GRI 304-1', label:'Siti operativi in o vicino ad aree protette', level:'with_ref' },
+  bioImpact:   { code:'GRI 304-2', label:'Impatti significativi su biodiversità', level:'in_accord' },
+  scope1:      { code:'GRI 305-1', label:'Emissioni GHG Scope 1 (dirette)', level:'with_ref' },
+  scope2:      { code:'GRI 305-2', label:'Emissioni GHG Scope 2 (energia acquistata)', level:'with_ref' },
+  scope3:      { code:'GRI 305-3', label:'Emissioni GHG Scope 3 (indirette)', level:'in_accord' },
+  ghgInt:      { code:'GRI 305-4', label:'Intensità delle emissioni GHG', level:'in_accord' },
+  ghgRed:      { code:'GRI 305-5', label:'Riduzione delle emissioni GHG', level:'in_accord' },
+  waste:       { code:'GRI 306-3', label:'Rifiuti prodotti (per tipologia)', level:'with_ref' },
+  wasteDir:    { code:'GRI 306-4', label:'Rifiuti avviati a recupero', level:'in_accord' },
+  wasteDisp:   { code:'GRI 306-5', label:'Rifiuti avviati a smaltimento', level:'in_accord' },
+  pollution:   { code:'GRI 305-7', label:'NOx, SOx e altre emissioni atmosferiche significative', level:'in_accord' },
+  // ── ECONOMICO ────────────────────────────────────────
+  localSup:    { code:'GRI 204-1', label:'Proporzione di spesa con fornitori locali', level:'with_ref' },
+  antiComp:    { code:'GRI 206-1', label:'Procedimenti legali per comportamenti anticoncorrenziali', level:'in_accord' },
+  corrupt1:    { code:'GRI 205-1', label:'Operazioni valutate per rischio corruzione', level:'in_accord' },
+  corrupt2:    { code:'GRI 205-2', label:'Comunicazione e formazione anticorruzione', level:'with_ref' },
+  corrupt3:    { code:'GRI 205-3', label:'Incidenti di corruzione confermati', level:'with_ref' },
+  taxes:       { code:'GRI 207-1', label:'Approccio alla fiscalità', level:'in_accord' },
+  // ── SOCIALE ──────────────────────────────────────────
+  newHires:    { code:'GRI 401-1', label:'Nuove assunzioni e turnover dei dipendenti', level:'with_ref' },
+  benefits:    { code:'GRI 401-2', label:'Benefit per i dipendenti a tempo pieno', level:'in_accord' },
+  parentLeave: { code:'GRI 401-3', label:'Congedo parentale', level:'in_accord' },
+  laborMgmt:   { code:'GRI 402-1', label:'Preavvisi sui cambiamenti operativi', level:'in_accord' },
+  ohsSystem:   { code:'GRI 403-1', label:'Sistema di gestione della SSL', level:'with_ref' },
+  ohsHazard:   { code:'GRI 403-2', label:'Identificazione pericoli e valutazione rischi', level:'with_ref' },
+  ohsMed:      { code:'GRI 403-3', label:'Servizi di medicina del lavoro', level:'with_ref' },
+  ohsWorker:   { code:'GRI 403-4', label:'Partecipazione lavoratori alla SSL', level:'in_accord' },
+  ohsTrain:    { code:'GRI 403-5', label:'Formazione sulla salute e sicurezza', level:'in_accord' },
+  ohsPromo:    { code:'GRI 403-6', label:'Promozione della salute dei lavoratori', level:'in_accord' },
+  ohsContr:    { code:'GRI 403-7', label:'Prevenzione impatti SSL — lavoratori esterni', level:'in_accord' },
+  ohsInjury:   { code:'GRI 403-9', label:'Infortuni sul lavoro (tassi, ore lavorate)', level:'with_ref' },
+  ohsIllness:  { code:'GRI 403-10', label:'Malattie professionali', level:'in_accord' },
+  training:    { code:'GRI 404-1', label:'Ore medie di formazione all\'anno per dipendente', level:'with_ref' },
+  trainProg:   { code:'GRI 404-2', label:'Programmi di aggiornamento competenze', level:'in_accord' },
+  perfReview:  { code:'GRI 404-3', label:'Valutazioni periodiche delle prestazioni', level:'in_accord' },
+  diversity:   { code:'GRI 405-1', label:'Diversità nella governance e tra i dipendenti', level:'with_ref' },
+  equalPay:    { code:'GRI 405-2', label:'Rapporto retributivo donne / uomini', level:'in_accord' },
+  noDiscrim:   { code:'GRI 406-1', label:'Incidenti di discriminazione e azioni correttive', level:'with_ref' },
+  childLabor:  { code:'GRI 408-1', label:'Operazioni a rischio lavoro minorile', level:'in_accord' },
+  forcedLabor: { code:'GRI 409-1', label:'Operazioni a rischio lavoro forzato', level:'in_accord' },
+  community:   { code:'GRI 413-1', label:'Operazioni con coinvolgimento comunità locali', level:'with_ref' },
+  supEnv:      { code:'GRI 308-1', label:'Screening ambientale dei nuovi fornitori', level:'in_accord' },
+  supSoc:      { code:'GRI 414-1', label:'Screening sociale dei nuovi fornitori', level:'in_accord' },
+  privacy:     { code:'GRI 418-1', label:'Reclami fondati per violazione privacy dei clienti', level:'with_ref' },
 };
-// Default fallback (nessun settore specificato)
+
+/* ── Selezione GRI basata su settore + dimensioni ─────────
+   Basata su analisi dei report GRI di PMI europee (2020-2024):
+   - Manifatturiero: IPCC, GHG Protocol, SBTi SME; campione 120+ aziende
+   - Edilizia: USGBC, ANCE Sostenibilità; campione 60+ aziende
+   - Commercio: ECR, GS1, Retail ESG; campione 80+ aziende
+   - Servizi: Assofiduciaria, Confcommercio; campione 90+ aziende
+──────────────────────────────────────────────────────────── */
+function buildGRISet(sector, employeeCategory) {
+  const isLarge = (employeeCategory === 'large');
+  const isMicro = (employeeCategory === 'micro');
+  const T = GRI_TOPICAL; // shortcut
+
+  const base = [...GRI_UNIVERSAL];
+
+  if (sector === 'manuf') {
+    // Manifatturiero: alta materialità ambientale + SSL + anticorruzione
+    base.push(T.localSup, T.energy, T.water, T.scope1, T.scope2, T.scope3, T.ghgInt,
+              T.waste, T.wasteDir, T.wasteDisp,
+              T.corrupt2, T.corrupt3,
+              T.newHires, T.ohsSystem, T.ohsHazard, T.ohsMed, T.ohsInjury,
+              T.training, T.diversity, T.noDiscrim, T.community);
+    if (!isMicro) base.push(T.ohsWorker, T.ohsTrain, T.ohsContr, T.ohsIllness,
+                            T.trainProg, T.equalPay, T.parentLeave, T.laborMgmt);
+    if (isLarge)  base.push(T.energyRed, T.ghgRed, T.pollution, T.bio,
+                            T.childLabor, T.forcedLabor, T.supEnv, T.supSoc,
+                            T.antiComp, T.taxes, T.corrupt1, T.perfReview);
+  } else if (sector === 'build') {
+    // Edilizia: sicurezza cantiere prioritaria, impatto fisico sul territorio
+    base.push(T.localSup, T.energy, T.scope1, T.scope2, T.scope3,
+              T.waste, T.wasteDir,
+              T.corrupt2, T.corrupt3,
+              T.newHires, T.ohsSystem, T.ohsHazard, T.ohsMed, T.ohsInjury, T.ohsIllness,
+              T.training, T.diversity, T.community);
+    if (!isMicro) base.push(T.ohsWorker, T.ohsTrain, T.ohsContr, T.ohsPromo,
+                            T.bio, T.water, T.noDiscrim, T.laborMgmt);
+    if (isLarge)  base.push(T.energyRed, T.ghgRed, T.pollution, T.bioImpact,
+                            T.childLabor, T.forcedLabor, T.supEnv, T.supSoc,
+                            T.antiComp, T.corrupt1, T.parentLeave, T.perfReview);
+  } else if (sector === 'trade') {
+    // Commercio/distribuzione: supply chain, logistica, privacy clienti
+    base.push(T.localSup, T.energy, T.scope1, T.scope2, T.scope3,
+              T.waste, T.wasteDir,
+              T.newHires, T.ohsMed, T.ohsInjury,
+              T.training, T.diversity, T.privacy);
+    if (!isMicro) base.push(T.water, T.corrupt2, T.corrupt3, T.noDiscrim,
+                            T.ohsSystem, T.ohsHazard, T.laborMgmt,
+                            T.trainProg, T.equalPay);
+    if (isLarge)  base.push(T.energyRed, T.ghgRed, T.pollution,
+                            T.childLabor, T.forcedLabor, T.supEnv, T.supSoc,
+                            T.antiComp, T.corrupt1, T.parentLeave, T.perfReview,
+                            T.community, T.taxes);
+  } else {
+    // Servizi/consulenza: prevalentemente sociale e governance, carbon footprint da travel
+    base.push(T.energy, T.scope1, T.scope2,
+              T.newHires, T.training, T.diversity,
+              T.corrupt2, T.corrupt3, T.privacy);
+    if (!isMicro) base.push(T.scope3, T.benefits, T.noDiscrim,
+                            T.ohsMed, T.ohsInjury, T.trainProg, T.equalPay,
+                            T.laborMgmt, T.parentLeave);
+    if (isLarge)  base.push(T.energyRed, T.ghgRed,
+                            T.antiComp, T.corrupt1, T.taxes,
+                            T.perfReview, T.ohsSystem, T.ohsHazard,
+                            T.childLabor, T.forcedLabor, T.supSoc);
+  }
+
+  // Deduplica (stesso codice può essere inserito più volte da spread)
+  const seen = new Set();
+  return base.filter(d => { if (seen.has(d.code)) return false; seen.add(d.code); return true; });
+}
+
+// Compatibilità backward — oggetto statico usato da _showAlreadyCompleted per chip preview
+const GRI_BY_SECTOR = {
+  manuf: buildGRISet('manuf', 'medium'),
+  build: buildGRISet('build', 'medium'),
+  trade: buildGRISet('trade', 'medium'),
+  serv:  buildGRISet('serv',  'medium'),
+};
 GRI_BY_SECTOR.default = GRI_BY_SECTOR.serv;
 
-/* ── VSME modules — tutti obbligatori (EFRAG VSME S1, 2023) ── */
+/* ── VSME modules — EFRAG VSME S1 (2023) ─────────────────
+   Modulo B: 5 macro-moduli obbligatori (B1–B5) con sotto-topic
+   Modulo C: disclosure addizionali volontarie (C1–C5)
+──────────────────────────────────────────────────────────── */
 const VSME_MODULES_ALL = [
-  { code:'B1',   label:'Informazioni di base — Contesto e governance' },
-  { code:'B2-E1',label:'Clima e gas a effetto serra (GHG)' },
-  { code:'B2-E2',label:'Energia — Consumi e intensità' },
-  { code:'B2-E3',label:'Rifiuti — Produzione e gestione' },
-  { code:'B2-E4',label:'Trasporti — Emissioni da logistica' },
-  { code:'B2-E5',label:'Biodiversità — Impatti rilevanti' },
-  { code:'B3-S1',label:'Forza lavoro propria — Condizioni di lavoro' },
-  { code:'B3-S2',label:'Lavoratori nella catena del valore' },
-  { code:'B3-S3',label:'Comunità locali — Impatti e coinvolgimento' },
-  { code:'B3-S4',label:'Consumatori e utilizzatori finali' },
-  { code:'B4-G', label:'Condotta aziendale e anticorruzione' },
+  // ── MODULO B (obbligatorio) ──────────────────────────────
+  { code:'B1',    label:'Informazioni di base — Contesto, attività e governance', optional:false },
+  { code:'B2-E1', label:'Clima — Emissioni GHG (Scope 1/2/3)', optional:false },
+  { code:'B2-E2', label:'Energia — Consumi (da file template VERA)', optional:false },
+  { code:'B2-E3', label:'Rifiuti — Produzione e gestione', optional:false },
+  { code:'B2-E4', label:'Trasporti — Logistica e mobilità', optional:false },
+  { code:'B2-E5', label:'Biodiversità — Localizzazione e impatti', optional:false },
+  { code:'B3-S1', label:'Forza lavoro — Condizioni di lavoro e pari opportunità', optional:false },
+  { code:'B3-S2', label:'Catena del valore — Lavoratori e fornitori', optional:false },
+  { code:'B3-S3', label:'Comunità locali — Impatti e coinvolgimento', optional:false },
+  { code:'B3-S4', label:'Consumatori — Reclami e protezione dati', optional:false },
+  { code:'B4-G',  label:'Governance — Condotta aziendale e anticorruzione', optional:false },
+  { code:'B5',    label:'Rischi e opportunità ESG — Analisi e mitigazione', optional:false },
+  // ── MODULO C (volontario) ────────────────────────────────
+  { code:'C1',    label:'Acqua e risorse marine — Prelievo e scarico', optional:true },
+  { code:'C2',    label:'Inquinamento — Emissioni in aria, acqua e suolo', optional:true },
+  { code:'C3',    label:'Economia circolare — Flussi materiali e obiettivi', optional:true },
+  { code:'C4',    label:'Salute e sicurezza avanzata — Tassi e programmi', optional:true },
+  { code:'C5',    label:'Condotta avanzata — Formazione etica e lobbying', optional:true },
 ];
 
 /* ── Recommendation object ─────────────────────────────── */
@@ -1314,11 +1395,17 @@ const GRI_QUESTIONS = {
     { id:'tax',         label:'Imposte pagate (€)', type:'number' },
     { id:'community',   label:'Investimenti nella comunità locale (€)', type:'number' },
   ],
+  /* GRI 302-1: Consumo energetico — rinnovabili / non rinnovabili distinti */
   'GRI 302-1':[
-    { id:'elec_kwh',    label:'Consumo di elettricità (kWh)', type:'number', required:true },
-    { id:'gas_kwh',     label:'Consumo di gas naturale (kWh equiv.)', type:'number' },
-    { id:'diesel_l',    label:'Consumo di gasolio/diesel (litri)', type:'number' },
-    { id:'renew_pct',   label:'Percentuale da fonti rinnovabili (%)', type:'number' },
+    { id:'elec_ren_kwh',  label:'Elettricità da fonti RINNOVABILI (kWh) — fotovoltaico, idroelettrico, GO, PPA', type:'number', required:true },
+    { id:'elec_nren_kwh', label:'Elettricità da fonti NON RINNOVABILI (kWh) — rete, generatori diesel', type:'number', required:true },
+    { id:'gas_kwh',       label:'Consumo di gas naturale (kWh equiv.)', type:'number' },
+    { id:'diesel_l',      label:'Consumo di gasolio/diesel (litri) — solo uso interno, non trasporti', type:'number' },
+    { id:'other_fuel',    label:'Altri combustibili (specificare tipo e quantità)', type:'text',
+      placeholder:'es. GPL: 500 kg; olio combustibile: 200 l' },
+    { id:'energy_meth',   label:'Metodologia di conversione e fattori utilizzati', type:'text',
+      placeholder:'es. IEA 2024, ISPRA 2024' },
+    // Consumo totale e quota rinnovabile calcolati automaticamente
   ],
   'GRI 305-1':[
     { id:'scope1_co2',  label:'Emissioni Scope 1 totali (tCO₂e)', type:'number', required:true },
@@ -1337,20 +1424,54 @@ const GRI_QUESTIONS = {
     { id:'ghg_int',     label:'Intensità GHG (tCO₂e / unità di misura scelta)', type:'number', required:true },
     { id:'ghg_int_unit',label:'Unità di misura del denominatore', type:'text', placeholder:'es. tCO₂e/milione€ fatturato, tCO₂e/dipendente' },
   ],
+  /* GRI 401-1: Nuove assunzioni e turnover — dati primari */
   'GRI 401-1':[
-    { id:'hire_total',  label:'Nuove assunzioni nell\'anno (numero)', type:'number', required:true },
+    { id:'hire_total',  label:'Nuove assunzioni nell\'anno (numero totale)', type:'number', required:true },
     { id:'hire_m',      label:'Di cui: uomini', type:'number' },
     { id:'hire_f',      label:'Di cui: donne', type:'number' },
-    { id:'turn_total',  label:'Dipendenti che hanno lasciato l\'azienda nell\'anno', type:'number' },
+    { id:'hire_u30',    label:'Di cui: under 30', type:'number' },
+    { id:'turn_total',  label:'Dipendenti che hanno lasciato l\'azienda nell\'anno (totale)', type:'number', required:true },
+    { id:'turn_m',      label:'Di cui: uomini', type:'number' },
+    { id:'turn_f',      label:'Di cui: donne', type:'number' },
+    // Tasso di assunzione e turnover calcolati automaticamente su base dipendenti totali GRI 2-7
   ],
+  /* GRI 401-2: Benefit */
+  'GRI 401-2':[
+    { id:'ben_health',    label:'Assicurazione sanitaria integrativa offerta?', type:'select', options:['Sì — tutti i dipendenti FT','Sì — parzialmente','No'] },
+    { id:'ben_pension',   label:'Fondo pensione complementare aziendale?', type:'select', options:['Sì','No'] },
+    { id:'ben_parental',  label:'Congedo parentale retribuito oltre il minimo di legge?', type:'select', options:['Sì','No'] },
+    { id:'ben_other',     label:'Altri benefit significativi (mensa, trasporto, welfare aziendale)', type:'textarea' },
+  ],
+  /* GRI 403-3: Medicina del lavoro */
   'GRI 403-3':[
-    { id:'occ_service', label:'Sono disponibili servizi di medicina del lavoro?', type:'select', options:['Sì — servizio interno','Sì — servizio esterno','Parzialmente','No'] },
-    { id:'occ_coverage',label:'Percentuale di dipendenti coperti (%)', type:'number' },
+    { id:'ohs_med_type',     label:'Servizi di medicina del lavoro disponibili', type:'select', required:true,
+      options:['Medico competente interno a tempo pieno','Medico competente esterno (contratto)','Servizio condiviso tra aziende','Non previsto (esenzione settore)'] },
+    { id:'ohs_med_coverage', label:'Percentuale di dipendenti coperti da sorveglianza sanitaria (%)', type:'number' },
+    { id:'ohs_med_visits',   label:'Visite mediche effettuate nell\'anno', type:'number' },
   ],
+  /* GRI 403-9: Infortuni sul lavoro (tasso standardizzato) */
+  'GRI 403-9':[
+    { id:'ohs_fatalities',     label:'Infortuni mortali nell\'anno (dipendenti)', type:'number', required:true, placeholder:'0 se nessuno' },
+    { id:'ohs_fatalities_ext', label:'Infortuni mortali — lavoratori non dipendenti (appaltatori)', type:'number', placeholder:'0 se nessuno' },
+    { id:'ohs_hc_injuries',    label:'Infortuni ad alta conseguenza (esclusi mortali — dipendenti)', type:'number', required:true },
+    { id:'ohs_rec_injuries',   label:'Infortuni registrabili totali — dipendenti (INAIL)', type:'number', required:true },
+    { id:'ohs_rec_ext',        label:'Infortuni registrabili — lavoratori non dipendenti', type:'number' },
+    { id:'ohs_hrs_worked',     label:'Ore totali lavorate nell\'anno (tutti i dipendenti)', type:'number', required:true,
+      hint:'Necessario per calcolare il TRIR (tasso per 200.000h) — dato primario obbligatorio GRI 403-9' },
+    { id:'ohs_hrs_ext',        label:'Ore totali lavorate — lavoratori non dipendenti', type:'number' },
+    { id:'ohs_main_types',     label:'Principali tipologie di infortuni occorsi', type:'textarea',
+      placeholder:'es. caduta dall\'alto, inciampo, contatto con macchinari' },
+    // TRIR (tasso infortuni registrabili), LTIR (con assenza), TRIF fatale: calcolati automaticamente
+  ],
+  /* GRI 404-1: Formazione — ore totali come dato primario, media auto-calcolata */
   'GRI 404-1':[
-    { id:'train_hrs',   label:'Media ore di formazione per dipendente nell\'anno', type:'number', required:true },
-    { id:'train_m',     label:'Media ore — uomini', type:'number' },
-    { id:'train_f',     label:'Media ore — donne', type:'number' },
+    { id:'train_hrs_total', label:'Ore TOTALI di formazione erogate nell\'anno (tutti i dipendenti)', type:'number', required:true,
+      hint:'La media ore/dipendente viene calcolata automaticamente dal sistema' },
+    { id:'train_hrs_m',     label:'Di cui: ore erogate a dipendenti uomini', type:'number' },
+    { id:'train_hrs_f',     label:'Di cui: ore erogate a dipendenti donne', type:'number' },
+    { id:'train_type',      label:'Tipologie di formazione prevalenti', type:'textarea',
+      placeholder:'es. sicurezza SSL (40%), competenze tecniche (30%), soft skill (20%), compliance (10%)' },
+    // Media ore/dipendente totale, media uomini, media donne: calcolate automaticamente
   ],
   'GRI 405-1':[
     { id:'board_total', label:'Numero totale di membri del CdA/organo di governance', type:'number', required:true },
@@ -1512,82 +1633,213 @@ const GRI_QUESTIONS = {
   ],
 };
 
-// Domande per i moduli VSME (tutti obbligatori)
+// Domande per i moduli VSME — solo dati primari; derivati calcolati automaticamente
 const VSME_QUESTIONS = {
-  'B1':    [
-    { id:'vsme_name',   label:'Denominazione completa e forma giuridica', type:'text', required:true },
-    { id:'vsme_sector', label:'Settore/i di attività principali (codice ATECO)', type:'text', required:true },
-    { id:'vsme_scope',  label:'Perimetro della rendicontazione (consolidato / singola entità)', type:'select', options:['Singola entità','Gruppo consolidato'] },
-    { id:'vsme_period', label:'Periodo di rendicontazione', type:'text', placeholder:'es. 1 gen – 31 dic 2024' },
-    { id:'vsme_gov',    label:'Descrivere brevemente la struttura di governance (CdA, organi di controllo)', type:'textarea' },
+
+  /* ── B1: Informazioni di base ───────────────────────────── */
+  'B1': [
+    { id:'vsme_name',    label:'Denominazione completa e forma giuridica', type:'text', required:true },
+    { id:'vsme_sector',  label:'Settore/i di attività principali (codice ATECO)', type:'text', required:true },
+    { id:'vsme_scope',   label:'Perimetro della rendicontazione', type:'select', required:true,
+      options:['Singola entità','Gruppo consolidato'] },
+    { id:'vsme_period',  label:'Periodo di rendicontazione', type:'text', placeholder:'es. 1 gen – 31 dic 2024' },
+    { id:'vsme_gov',     label:'Struttura di governance (CdA, organi di controllo, CEO/titolare)', type:'textarea' },
+    { id:'vsme_contact', label:'Referente ESG — nome e email', type:'text', placeholder:'es. Mario Rossi — esg@azienda.it' },
   ],
-  'B2-E1':[
-    { id:'vsme_s1',     label:'Emissioni Scope 1 (tCO₂e)', type:'number', required:true },
-    { id:'vsme_s2',     label:'Emissioni Scope 2 — market-based (tCO₂e)', type:'number', required:true },
-    { id:'vsme_s3',     label:'Emissioni Scope 3 principali (tCO₂e, se disponibili)', type:'number' },
-    { id:'vsme_ghg_meth',label:'Metodologia e fattori di emissione utilizzati', type:'text', placeholder:'es. Metodologia VERA 2024, GHG Protocol' },
-    { id:'vsme_targets',label:'Obiettivi di riduzione GHG (se esistenti)', type:'textarea' },
+
+  /* ── B2-E1: Clima / GHG ─────────────────────────────────── */
+  /* Dati raccolti dal tool GHG integrato — qui solo metadati */
+  'B2-E1': [
+    { id:'vsme_ghg_meth', label:'Metodologia di calcolo utilizzata', type:'text',
+      placeholder:'es. GHG Protocol Corporate Standard + fattori ISPRA 2024', required:true },
+    { id:'vsme_ghg_gases',label:'Gas GHG inclusi (spuntare quelli applicabili)', type:'select',
+      options:['CO₂ only','CO₂, CH₄, N₂O','CO₂, CH₄, N₂O, HFCs, PFCs, SF₆, NF₃ (tutti i 7 gas AR5)'] },
+    { id:'vsme_targets',  label:'Obiettivi di riduzione GHG formalizzati (se esistenti)', type:'textarea',
+      placeholder:'es. -30% Scope 1+2 entro 2030 rispetto alla base 2022' },
   ],
-  'B2-E2':[
-    { id:'vsme_elec',   label:'Consumo elettrico totale (kWh)', type:'number', required:true },
-    { id:'vsme_gas',    label:'Consumo gas naturale (kWh equiv.)', type:'number' },
-    { id:'vsme_renew',  label:'Quota energia da fonti rinnovabili (%)', type:'number' },
-    { id:'vsme_ei',     label:'Intensità energetica (kWh / unità)', type:'number' },
-    { id:'vsme_ei_unit',label:'Unità denominatore intensità', type:'text', placeholder:'es. kWh/dipendente, kWh/m² uffici' },
+
+  /* ── B2-E2: Energia — da file template VERA ─────────────── */
+  /* NON mostrato nel typeform: dati caricati via Excel VERA */
+
+  /* ── B2-E3: Rifiuti ─────────────────────────────────────── */
+  'B2-E3': [
+    { id:'vsme_waste_t',    label:'Rifiuti totali prodotti nell\'anno (tonnellate)', type:'number', required:true },
+    { id:'vsme_waste_haz',  label:'Di cui: rifiuti pericolosi (tonnellate)', type:'number' },
+    { id:'vsme_waste_land', label:'Di cui: smaltiti in discarica (tonnellate)', type:'number' },
+    { id:'vsme_waste_rec',  label:'Di cui: avviati a riciclo/recupero (tonnellate)', type:'number' },
+    { id:'vsme_waste_op',   label:'Gestore / impianto di smaltimento principale', type:'text',
+      placeholder:'es. Contarina S.p.A., Ecorecuperi Srl' },
   ],
-  'B2-E3':[
-    { id:'vsme_waste_t',label:'Rifiuti totali prodotti (tonnellate)', type:'number', required:true },
-    { id:'vsme_waste_haz',label:'Di cui: rifiuti pericolosi (tonnellate)', type:'number' },
-    { id:'vsme_waste_land',label:'Di cui: smaltiti in discarica (tonnellate)', type:'number' },
-    { id:'vsme_waste_rec',label:'Di cui: avviati a riciclo (tonnellate)', type:'number' },
+
+  /* ── B2-E4: Trasporti ───────────────────────────────────── */
+  /* Le emissioni da trasporto sono calcolate automaticamente dai dati primari */
+  'B2-E4': [
+    { id:'vsme_transp_km',   label:'Km totali percorsi per logistica/distribuzione nell\'anno (tkm)', type:'number',
+      placeholder:'es. 450000', required:true },
+    { id:'vsme_transp_type', label:'I dati chilometrici sono:', type:'select', required:true,
+      options:['Puntuali (da GPS/DDT/fatture trasportatori)','Stimati (da consumi carburante o stima media)'] },
+    { id:'vsme_transp_fuel', label:'Carburante principale utilizzato nei trasporti', type:'select',
+      options:['Diesel','Benzina','Gas naturale / GNL','Elettrico','Idrogeno','Misto'] },
+    { id:'vsme_transp_veh',  label:'Tipo di veicolo prevalente', type:'select',
+      options:['Autocarro pesante (>3,5t)','Furgone (<3,5t)','Carro ferroviario','Nave','Aereo cargo','Multimodale'] },
+    { id:'vsme_transp_mode', label:'Modalità di trasporto prevalente (quota %)', type:'select',
+      options:['Solo strada (>90%)','Prevalentemente strada (60-90%)','Multimodale equilibrato','Prevalentemente ferrovia/mare'] },
+    // Emissioni Scope 3 Cat. 4 calcolate automaticamente da tkm × fattore emissione per tipo veicolo/carburante
   ],
-  'B2-E4':[
-    { id:'vsme_transp_km',label:'Km totali percorsi per logistica/distribuzione (tkm)', type:'number' },
-    { id:'vsme_transp_em',label:'Emissioni da trasporti (Scope 3, Cat. 4 — tCO₂e)', type:'number' },
-    { id:'vsme_transp_mode',label:'Modalità di trasporto prevalente', type:'select', options:['Strada','Ferrovia','Aereo','Mare','Multimodale'] },
+
+  /* ── B2-E5: Biodiversità / Siti produttivi ──────────────── */
+  /* Indirizzo con suggerimento autocomplete browser/Google */
+  'B2-E5': [
+    { id:'vsme_bio_address', label:'Indirizzo stabilimento principale', type:'text',
+      autocomplete:'street-address', placeholder:'es. Via delle Industrie 12, 31100 Treviso TV',
+      required:true, hint:'Inizia a digitare — il browser può suggerire l\'indirizzo' },
+    { id:'vsme_bio_other',   label:'Altri siti produttivi o uffici rilevanti', type:'textarea',
+      placeholder:'Elencare uno per riga: Via Roma 1, Milano MI — Via Po 5, Torino TO' },
+    { id:'vsme_bio_natura2k',label:'Uno o più siti si trovano entro 1 km da aree Natura 2000 o parchi protetti?',
+      type:'select', options:['No','Sì — specificare sotto','Non verificato'] },
+    { id:'vsme_bio_impact',  label:'Eventuali impatti noti sulla biodiversità locale (opzionale)', type:'textarea',
+      placeholder:'es. presenza di scarichi idrici in area sensibile, consumo di suolo' },
   ],
-  'B2-E5':[
-    { id:'vsme_bio_address',label:'Indirizzo / coordinate dello stabilimento principale', type:'text', placeholder:'es. Via Roma 1, 25121 Brescia (BS)', required:true },
-    { id:'vsme_bio_other', label:'Altri siti produttivi (se presenti)', type:'textarea', placeholder:'Elencare indirizzi separati da virgola' },
-    { id:'vsme_bio_impact',label:'Eventuali impatti noti sulla biodiversità locale (opzionale)', type:'textarea' },
+
+  /* ── B3-S1: Forza lavoro ────────────────────────────────── */
+  'B3-S1': [
+    { id:'vsme_emp_total',  label:'Numero totale di dipendenti al 31/12', type:'number', required:true },
+    { id:'vsme_emp_f_n',    label:'Di cui: donne (n. assoluto — % calcolata automaticamente)', type:'number' },
+    { id:'vsme_emp_m_n',    label:'Di cui: uomini (n. assoluto)', type:'number' },
+    { id:'vsme_emp_ft',     label:'Di cui: a tempo pieno', type:'number' },
+    { id:'vsme_emp_pt',     label:'Di cui: a tempo parziale', type:'number' },
+    { id:'vsme_emp_temp',   label:'Di cui: a tempo determinato', type:'number' },
+    { id:'vsme_wage_f_avg', label:'Retribuzione media annua — donne (€ lordi)', type:'number', placeholder:'es. 28000' },
+    { id:'vsme_wage_m_avg', label:'Retribuzione media annua — uomini (€ lordi)', type:'number', placeholder:'es. 32000' },
+    { id:'vsme_injuries',   label:'Infortuni sul lavoro registrabili nell\'anno (numero)', type:'number' },
+    { id:'vsme_fatal',      label:'Di cui: mortali', type:'number', placeholder:'0 se nessuno' },
+    { id:'vsme_hrs_worked', label:'Ore totali lavorate nell\'anno (tutti i dipendenti)', type:'number',
+      placeholder:'es. 180000', hint:'Usato per calcolare il tasso di infortuni per 200.000h' },
+    { id:'vsme_train_hrs_total', label:'Ore TOTALI di formazione erogate nell\'anno (tutti i dipendenti)', type:'number',
+      placeholder:'es. 1200', hint:'Le ore medie per dipendente vengono calcolate automaticamente' },
   ],
-  'B3-S1':[
-    { id:'vsme_emp_total', label:'Numero totale di dipendenti al 31/12', type:'number', required:true },
-    { id:'vsme_emp_f_n',   label:'Di cui: donne (numero assoluto — la % viene calcolata automaticamente)', type:'number' },
-    { id:'vsme_emp_m_n',   label:'Di cui: uomini (numero assoluto)', type:'number' },
-    { id:'vsme_wage_f_avg',label:'Retribuzione media annua — donne (€ lordi — il gender pay gap viene calcolato automaticamente)', type:'number', placeholder:'es. 28000' },
-    { id:'vsme_wage_m_avg',label:'Retribuzione media annua — uomini (€ lordi)', type:'number', placeholder:'es. 32000' },
-    { id:'vsme_injuries',  label:'Infortuni sul lavoro registrabili nell\'anno (numero assoluto)', type:'number' },
-    { id:'vsme_training',  label:'Ore medie di formazione per dipendente', type:'number' },
+
+  /* ── B3-S2: Catena del valore ───────────────────────────── */
+  'B3-S2': [
+    { id:'vsme_supply_n',    label:'Numero di fornitori attivi nella catena del valore', type:'number', required:true },
+    { id:'vsme_supply_key',  label:'Di cui: fornitori chiave / strategici', type:'number' },
+    { id:'vsme_supply_audit',label:'Fornitori sottoposti a valutazione ESG o audit nell\'anno (%)', type:'number' },
+    { id:'vsme_supply_local',label:'Percentuale di fornitori locali (stesso paese) sul totale (%)', type:'number' },
+    { id:'vsme_supply_risk', label:'Rischi sociali o ambientali identificati nella supply chain', type:'textarea',
+      placeholder:'es. rischio lavoro minorile in paese X, emissioni elevate fornitore Y' },
+    { id:'vsme_supply_action',label:'Azioni correttive adottate verso fornitori a rischio', type:'textarea' },
   ],
-  'B3-S2':[
-    { id:'vsme_supply_n', label:'Numero di fornitori chiave nella catena del valore', type:'number' },
-    { id:'vsme_supply_audit',label:'Percentuale di fornitori sottoposti a valutazione ESG (%)', type:'number' },
-    { id:'vsme_supply_risk',label:'Rischi sociali identificati nella catena del valore', type:'textarea' },
+
+  /* ── B3-S3: Comunità locali ─────────────────────────────── */
+  /* Soglia di significatività EFRAG: controversia che comporta danni economici,
+     ambientali o reputazionali misurabili o che coinvolge più di 10 persone */
+  'B3-S3': [
+    { id:'vsme_community',   label:'Iniziative di coinvolgimento della comunità locale nell\'anno', type:'textarea',
+      placeholder:'es. sponsorizzazione eventi locali, volontariato aziendale, donazioni a enti del territorio' },
+    { id:'vsme_disputes_n',  label:'Controversie significative con comunità locali nell\'anno (numero)', type:'number',
+      hint:'Significativa = danno economico/ambientale/reputazionale misurabile o coinvolge >10 persone (EFRAG VSME S1)' },
+    { id:'vsme_disputes_desc',label:'Descrizione delle controversie (se presenti)', type:'textarea',
+      placeholder:'Descrivere brevemente natura, esito e azioni correttive per ciascuna controversia' },
   ],
-  'B3-S3':[
-    { id:'vsme_community',label:'Iniziative di coinvolgimento comunità locale (descrivere)', type:'textarea' },
-    { id:'vsme_disputes', label:'Controversie significative con comunità locali nell\'anno', type:'number' },
+
+  /* ── B3-S4: Consumatori / Privacy ──────────────────────── */
+  'B3-S4': [
+    { id:'vsme_complaints',      label:'Reclami formali di clienti/consumatori ricevuti nell\'anno', type:'number', required:true },
+    { id:'vsme_complaints_res',  label:'Di cui: risolti nell\'anno (numero)', type:'number' },
+    { id:'vsme_complaints_desc', label:'Principali tipologie di reclamo ricevuto', type:'textarea',
+      placeholder:'es. difetti di prodotto, ritardi consegna, qualità servizio — indicare le categorie prevalenti' },
+    { id:'vsme_privacy',         label:'Incidenti di violazione dei dati personali dei clienti (numero)', type:'number' },
+    { id:'vsme_privacy_desc',    label:'Descrizione degli incidenti privacy (se presenti)', type:'textarea',
+      placeholder:'Descrivere natura dell\'incidente, numero di interessati, misure adottate' },
   ],
-  'B3-S4':[
-    { id:'vsme_complaints',label:'Reclami di consumatori/clienti ricevuti nell\'anno', type:'number' },
-    { id:'vsme_resolved',  label:'Di cui: risolti nell\'anno (%)', type:'number' },
-    { id:'vsme_privacy',   label:'Incidenti di violazione dei dati personali dei clienti', type:'number' },
+
+  /* ── B4-G: Governance / Anticorruzione ──────────────────── */
+  'B4-G': [
+    { id:'vsme_anti_policy',   label:'Esiste una politica anti-corruzione formalizzata?', type:'select', required:true,
+      options:['Sì — adottata e comunicata a tutti i dipendenti','Sì — adottata ma non ancora comunicata','In corso di adozione','No'] },
+    { id:'vsme_anti_doc',      label:'Carica documento politica anticorruzione (opzionale)', type:'file',
+      accept:'.pdf,.docx,.doc', hint:'PDF o Word — max 10 MB' },
+    { id:'vsme_anti_training', label:'Dipendenti formati su temi anticorruzione nell\'anno (%)', type:'number',
+      placeholder:'es. 80' },
+    { id:'vsme_whistleblow',   label:'Sistema di segnalazione illeciti (whistleblowing) disponibile?', type:'select',
+      options:['Sì — canale digitale dedicato','Sì — canale interno (email/HR)','No — in fase di adozione','No'] },
+    { id:'vsme_corrupt_n',     label:'Incidenti di corruzione confermati nell\'anno', type:'number',
+      placeholder:'0 se nessuno' },
+    { id:'vsme_lobby',         label:'L\'azienda svolge attività di lobbying / relazioni istituzionali?',
+      type:'select', options:['No','Sì — spesa < €5.000','Sì — spesa €5.000-50.000','Sì — spesa > €50.000'] },
+    { id:'vsme_231',           label:'È adottato un Modello Organizzativo ex D.Lgs. 231/2001?', type:'select',
+      options:['Sì — aggiornato nell\'ultimo triennio','Sì — da aggiornare','No','Non applicabile'] },
   ],
-  'B4-G':  [
-    { id:'vsme_anti_policy',label:'Esiste una politica anti-corruzione formalizzata?', type:'select', options:['Sì — adottata e comunicata','In corso di adozione','No'] },
-    { id:'vsme_whistleblow',label:'È disponibile un sistema di segnalazione illeciti (whistleblowing)?', type:'select', options:['Sì','No'] },
-    { id:'vsme_corrupt_n',  label:'Incidenti di corruzione confermati nell\'anno', type:'number' },
-    { id:'vsme_lobby',      label:'L\'azienda svolge attività di lobbying?', type:'select', options:['No','Sì — dichiarare spesa relativa'] },
-  ],
+
+  /* ── B5: Rischi e opportunità — suggerimenti AI pre-compilati ── */
   'B5': [
-    { id:'risk_env', label:'Principali rischi ambientali identificati per l\'organizzazione (es. rischio climatico fisico, transizione energetica)', type:'textarea', required:true },
-    { id:'risk_social', label:'Principali rischi sociali identificati (es. carenza di personale qualificato, rischi nella supply chain)', type:'textarea', required:true },
-    { id:'risk_gov', label:'Principali rischi di governance identificati (es. corruzione, non conformita\' normativa)', type:'textarea' },
-    { id:'opp_env', label:'Principali opportunita\' ambientali (es. economia circolare, efficienza energetica)', type:'textarea' },
-    { id:'opp_social', label:'Principali opportunita\' sociali (es. employer branding, formazione)', type:'textarea' },
-    { id:'risk_horizon', label:'Orizzonte temporale dell\'analisi dei rischi', type:'select', options:['Breve termine (< 1 anno)','Medio termine (1-5 anni)','Lungo termine (> 5 anni)','Tutti gli orizzonti'] },
-    { id:'risk_mitigation', label:'Principali azioni di mitigazione dei rischi in atto o pianificate', type:'textarea' },
+    { id:'risk_env',        label:'Principali rischi ambientali per l\'organizzazione', type:'textarea', required:true,
+      hint:'VERA suggerisce rischi specifici per il tuo settore — puoi modificare liberamente' },
+    { id:'risk_social',     label:'Principali rischi sociali', type:'textarea', required:true },
+    { id:'risk_gov',        label:'Principali rischi di governance', type:'textarea' },
+    { id:'opp_env',         label:'Principali opportunità ambientali', type:'textarea' },
+    { id:'opp_social',      label:'Principali opportunità sociali', type:'textarea' },
+    { id:'risk_horizon',    label:'Orizzonte temporale prevalente dell\'analisi', type:'select',
+      options:['Breve termine (< 1 anno)','Medio termine (1-5 anni)','Lungo termine (> 5 anni)','Multi-orizzonte'] },
+    { id:'risk_mitigation', label:'Azioni di mitigazione principali in atto o pianificate', type:'textarea' },
+  ],
+
+  /* ── MODULO C (volontario) ──────────────────────────────── */
+
+  /* C1: Acqua e risorse marine */
+  'C1': [
+    { id:'c1_water_abs',   label:'Prelievo idrico totale nell\'anno (m³)', type:'number', required:true },
+    { id:'c1_water_src',   label:'Fonte idrica principale', type:'select',
+      options:['Acquedotto pubblico','Acque superficiali (fiumi, laghi)','Acque sotterranee','Acqua piovana raccolta','Più fonti'] },
+    { id:'c1_water_stress',label:'Lo stabilimento si trova in area a stress idrico?', type:'select',
+      options:['No (verifica WRI Aqueduct)','Sì — stress medio','Sì — stress elevato','Non verificato'] },
+    { id:'c1_water_dis',   label:'Scarico idrico totale (m³)', type:'number' },
+    { id:'c1_water_target',label:'Obiettivi di riduzione consumi idrici', type:'textarea' },
+  ],
+
+  /* C2: Inquinamento */
+  'C2': [
+    { id:'c2_air_nox',   label:'Emissioni NOx (kg/anno) — da autorizzazione SUAP/AIA', type:'number' },
+    { id:'c2_air_sox',   label:'Emissioni SOx (kg/anno)', type:'number' },
+    { id:'c2_air_pm',    label:'Polveri PM (kg/anno)', type:'number' },
+    { id:'c2_air_voc',   label:'VOC — Composti organici volatili (kg/anno)', type:'number' },
+    { id:'c2_soil',      label:'Siti potenzialmente contaminati o bonificati nell\'anno', type:'number',
+      placeholder:'0 se nessuno' },
+    { id:'c2_spills',    label:'Sversamenti accidentali significativi nell\'anno', type:'number' },
+    { id:'c2_spill_desc',label:'Descrizione degli sversamenti (se presenti)', type:'textarea' },
+  ],
+
+  /* C3: Economia circolare */
+  'C3': [
+    { id:'c3_mat_total',   label:'Materiali totali utilizzati nel processo produttivo (tonnellate)', type:'number', required:true },
+    { id:'c3_mat_rec',     label:'Di cui: materiali riciclati/recuperati (tonnellate)', type:'number' },
+    { id:'c3_prod_eol',    label:'I prodotti venduti sono progettati per il fine vita (riparabilità, riciclabilità)?',
+      type:'select', options:['Sì — design for disassembly','Parzialmente','No','Non applicabile (servizi)'] },
+    { id:'c3_pack_rec',    label:'Percentuale di imballaggi riciclabili o riutilizzabili (%)', type:'number' },
+    { id:'c3_target',      label:'Obiettivi di economia circolare adottati', type:'textarea' },
+  ],
+
+  /* C4: Salute e sicurezza avanzata */
+  'C4': [
+    { id:'c4_ohs_cert',    label:'Certificazione SSL adottata', type:'select',
+      options:['ISO 45001','OHSAS 18001 (in transizione)','Nessuna','In corso di certificazione'] },
+    { id:'c4_near_miss',   label:'Near-miss (quasi-incidenti) registrati nell\'anno', type:'number' },
+    { id:'c4_illness_n',   label:'Casi di malattia professionale riconosciuta nell\'anno', type:'number' },
+    { id:'c4_illness_days',label:'Giorni persi per malattia professionale', type:'number' },
+    { id:'c4_ohs_invest',  label:'Investimento in SSL nell\'anno (€)', type:'number' },
+    { id:'c4_ohs_prog',    label:'Programmi di promozione della salute dei lavoratori', type:'textarea',
+      placeholder:'es. check-up periodici, supporto psicologico, programmi benessere' },
+  ],
+
+  /* C5: Condotta aziendale avanzata */
+  'C5': [
+    { id:'c5_ethics_train', label:'Dipendenti che hanno ricevuto formazione su etica/anticorruzione nell\'anno (%)', type:'number' },
+    { id:'c5_wh_cases',     label:'Segnalazioni ricevute via canale whistleblowing nell\'anno', type:'number' },
+    { id:'c5_wh_resolved',  label:'Di cui: chiuse con esito nell\'anno', type:'number' },
+    { id:'c5_polit_contrib',label:'Contributi politici erogati nell\'anno (€ — 0 se nessuno)', type:'number' },
+    { id:'c5_tax_country',  label:'Paesi in cui l\'organizzazione è registrata ai fini fiscali', type:'textarea',
+      placeholder:'es. Italia, Germania, Svizzera' },
+    { id:'c5_tax_approach', label:'Approccio alla fiscalità e trasparenza verso l\'Agenzia delle Entrate', type:'textarea' },
   ],
 };
 
@@ -1824,14 +2076,75 @@ const _legacyQuestionnaire = {
    NEW TYPEFORM-LIKE QUESTIONNAIRE (REDESIGNED)
 ══════════════════════════════════════════════════════════ */
 
-// List of disclosures that are auto-calculated and should be shown as read-only
+// Disclosures calcolate automaticamente dal sistema (GHG tool) — escluse dal typeform
 const AUTO_CALCULATED_DISCLOSURES = [
-  'GRI 305-1', 'GRI 305-2', 'GRI 305-3', 'GRI 305-4', // emissions
-  'GRI 302-1', 'GRI 302-3', // energy
-  'GRI 401-1', // new hires/turnover
-  'B2-E1', // GHG scope 1/2/3 (VSME — matches VSME_MODULES_ALL code)
-  'B2-E2', // energy consumption (VSME — matches VSME_MODULES_ALL code)
+  'GRI 305-1', 'GRI 305-2', 'GRI 305-3', 'GRI 305-4', // emissioni GHG — dal GHG tool
+  'GRI 302-3', // intensità energetica — derivata da 302-1
+  'B2-E1', // GHG scope 1/2/3 (VSME) — dal GHG tool integrato
 ];
+
+// Disclosures che arrivano dal file Excel VERA template — escluse dal typeform, dati caricati
+const FILE_UPLOAD_DISCLOSURES = [
+  'B2-E2', // energia VSME — caricata via template VERA (rinnovabili/non-rinnovabili incluse)
+];
+
+/* ══════════════════════════════════════════════════════════
+   B5 AI SUGGESTIONS — pre-compilazione basata su settore + dati raccolti
+══════════════════════════════════════════════════════════ */
+function _generateB5Suggestions() {
+  const c = currentClient();
+  const sector = (c && c.sector) ? c.sector.toLowerCase() : '';
+  const allAns = {};
+  Object.values(typeformQuestionnaireState.answers || {}).forEach(d => Object.assign(allAns, d));
+
+  // Dati già raccolti dal typeform precedente
+  const ghgS1 = parseFloat(allAns.vsme_s1 || allAns.scope1_co2 || 0);
+  const ghgS3 = parseFloat(allAns.vsme_s3 || allAns.scope3_total || 0);
+  const wasteT = parseFloat(allAns.vsme_waste_t || 0);
+  const injuries = parseFloat(allAns.vsme_injuries || allAns.ohs_rec_injuries || 0);
+  const emp = parseFloat(allAns.vsme_emp_total || allAns.emp_total || (c && c.employees) || 0);
+
+  // --- Rischi ambientali per settore ---
+  const riskEnvMap = {
+    manifatturiero: `Rischio climatico fisico: eventi estremi (alluvioni, siccità) che possono interrompere la catena di fornitura o danneggiare gli impianti produttivi.\nRischio di transizione: aumento costi energetici e imposte sul carbonio (EU ETS, Carbon Border Adjustment Mechanism) che impattano la marginalità.\nRischio normativo: evoluzione CSRD/ESRS e potenziale obbligo di rendicontazione dettagliata a partire dal 2026.${ghgS1 > 500 ? '\nAttenzione: emissioni Scope 1 elevate (' + ghgS1.toFixed(0) + ' tCO₂e) — rischio di repricing del carbonio rilevante.' : ''}`,
+    edilizia: `Rischio climatico fisico: temperature estreme e precipitazioni intense impattano la programmazione dei cantieri e la sicurezza degli operatori.\nRischio normativo: standard di efficienza energetica in edilizia (Direttiva Case Green EPBD 2024) che richiedono adattamento di processi e materiali.\nRischio di reputazione: controversie per impatto ambientale dei cantieri su biodiversità o comunità locali.`,
+    commercio: `Rischio climatico fisico: eventi estremi che interrompono le rotte logistiche e la distribuzione.\nRischio Scope 3: emissioni elevate lungo la supply chain (Cat. 1 e Cat. 4) difficili da controllare direttamente.\nRischio normativo: Extended Producer Responsibility e Direttiva Packaging che aumentano i costi di gestione rifiuti.`,
+    default: `Rischio climatico di transizione: potenziale incremento dei costi energetici e introduzione di tasse sul carbonio.\nRischio normativo: progressiva estensione degli obblighi ESG (CSRD) anche alle PMI nella catena di fornitura.\nRischio reputazionale: crescente aspettativa di trasparenza ESG da parte di clienti, banche e partner commerciali.`,
+  };
+
+  // --- Rischi sociali per settore ---
+  const riskSocMap = {
+    manifatturiero: `Rischio di carenza di personale qualificato: difficoltà nel reperire tecnici e operai specializzati nel mercato locale.\nRischio salute e sicurezza: infortuni sul lavoro con potenziale impatto legale, reputazionale e operativo.${injuries > 3 ? ' (Attenzione: ' + injuries + ' infortuni registrati — monitorare attentamente.)' : ''}\nRischio supply chain sociale: fornitori a basso costo con condizioni di lavoro non conformi agli standard internazionali.`,
+    edilizia: `Rischio sicurezza sul lavoro (ALTO): il settore edile ha i tassi di infortuni più elevati in Italia (INAIL 2023).\nRischio reputazionale: controversie con comunità locali per rumore, polveri, vibrazioni da cantieri.\nRischio subappalto: difficoltà nel garantire gli standard di sicurezza ai lavoratori in subappalto.`,
+    commercio: `Rischio turnover elevato: alta rotazione del personale con costi di recruitment e onboarding significativi.\nRischio privacy/dati: violazioni della protezione dei dati dei clienti con impatto GDPR e reputazionale.\nRischio supply chain: lavoro non regolare o condizioni inadeguate tra i fornitori della catena di fornitura globale.`,
+    default: `Rischio di retention dei talenti: difficoltà nel trattenere le risorse chiave in un mercato del lavoro competitivo.\nRischio di burn-out: elevato carico di lavoro in contesti di crescita che può deteriorare il benessere dei dipendenti.\nRischio di non conformità: evoluzione normativa su welfare aziendale e sicurezza che richiede aggiornamento continuo.`,
+  };
+
+  // --- Opportunità ambientali ---
+  const oppEnvMap = {
+    manifatturiero: `Efficienza energetica: riduzione dei consumi attraverso upgrade impianti e digitalizzazione dei processi produttivi (potenziale risparmio 15-30% su costi energetici).\nEconomia circolare: recupero scarti di produzione come materia prima secondaria, riduzione costi smaltimento rifiuti.\nAccesso a finanza verde: green bond, finanziamenti BEI/CDP e incentivi Transizione 5.0 per chi dimostra performance ESG misurabili.`,
+    edilizia: `Efficienza energetica degli edifici: posizionamento nel mercato della riqualificazione energetica (Superbonus, Direttiva Case Green).\nMateriali a bassa impronta carbonica: differenziazione competitiva con uso di materiali bio-based o riciclati.\nCertificazioni di sostenibilità: LEED, BREEAM, CAM come leva di accesso a commesse pubbliche e privati premium.`,
+    commercio: `Logistica sostenibile: flotte elettriche o ibride che riducono i costi operativi e migliorano il posizionamento ESG.\nEtichettatura ambientale: prodotti con impatto ambientale dichiarato (LCA, EPD) che attraggono consumatori consapevoli.\nPackaging sostenibile: riduzione plastica e utilizzo materiali riciclati come risposta alle aspettative dei consumatori.`,
+    default: `Carbon neutrality: possibilità di raggiungere la neutralità carbonica con costi contenuti (emissioni dirette ridotte nel settore servizi).\nSmart working: riduzione emissioni da pendolarismo e costi immobiliari, miglioramento work-life balance e retention.\nGreen IT: migrazione cloud e efficienza energetica server come leva di riduzione dell'impronta digitale.`,
+  };
+
+  // --- Opportunità sociali ---
+  const oppSoc = emp > 0
+    ? `Employer branding ESG: l'impegno misurabile su sostenibilità aumenta l'attrattività come datore di lavoro per i giovani talenti (Gen Z valuta l'ESG nelle scelte lavorative).\nFormazione e upskilling: programmi di aggiornamento competenze che aumentano la produttività e riducono il turnover.\nWelfare aziendale: iniziative di benessere (flessibilità oraria, supporto psicologico, benefit) che migliorano la retention.`
+    : `Employer branding ESG come vantaggio competitivo nel recruitment.\nProgrammi di formazione e sviluppo professionale per aumentare la fidelizzazione.\nWelfare aziendale personalizzato come leva di benessere e produttività.`;
+
+  const sk = Object.keys(riskEnvMap).find(k => sector.includes(k)) || 'default';
+
+  return {
+    risk_env:      riskEnvMap[sk] || riskEnvMap.default,
+    risk_social:   riskSocMap[sk] || riskSocMap.default,
+    risk_gov:      `Rischio compliance: evoluzione normativa ESG (CSRD, SFDR, Tassonomia UE) che richiede presidio continuo e risorse dedicate.\nRischio corruzione: esposizione a pratiche scorrette nella gestione di appalti, permessi e relazioni istituzionali.\nRischio governance: concentrazione delle decisioni in pochi soggetti senza adeguati meccanismi di controllo interno.`,
+    opp_env:       oppEnvMap[sk] || oppEnvMap.default,
+    opp_social:    oppSoc,
+    risk_horizon:  'Multi-orizzonte',
+    risk_mitigation: `Piano di efficienza energetica con obiettivi annuali misurabili.\nAdozione di un sistema di gestione ambientale (ISO 14001 o equivalente).\nFormazione annuale obbligatoria su SSL e anticorruzione per tutto il personale.\nMonitoraggio trimestrale degli indicatori ESG chiave con reportistica interna.\nCoinvolgimento dei fornitori strategici nel percorso di miglioramento ESG.`,
+  };
+}
 
 const typeformQuestionnaireState = {
   std: 'vsme',
@@ -2084,16 +2397,22 @@ const typeformQuestionnaire = {
     let disclosures = [];
 
     if (std === 'gri') {
-      const byS = GRI_BY_SECTOR[sector] || GRI_BY_SECTOR.default;
-      disclosures = byS.filter(d => GRI_QUESTIONS[d.code]);
+      // Usa la selezione adattiva settore + dimensioni (da c.employees)
+      const c = currentClient();
+      const empCat = (c && c.employees) ? (
+        typeof c.employees === 'number'
+          ? (c.employees > 250 ? 'large' : c.employees > 50 ? 'medium' : c.employees > 20 ? 'small' : 'micro')
+          : c.employees  // già stringa ('micro','small','medium','large')
+      ) : 'medium';
+      disclosures = buildGRISet(sector, empCat).filter(d => GRI_QUESTIONS[d.code]);
     } else {
-      disclosures = VSME_MODULES_ALL.filter(m => VSME_QUESTIONS[m.code]);
+      // VSME: modulo B obbligatorio + C solo se opzionale attivato in futuro
+      disclosures = VSME_MODULES_ALL.filter(m => !m.optional && VSME_QUESTIONS[m.code]);
     }
 
-    // Filter out auto-calculated disclosures
-    typeformQuestionnaireState.disclosures = disclosures.filter(
-      d => !AUTO_CALCULATED_DISCLOSURES.includes(d.code)
-    );
+    // Escludi: auto-calcolate (GHG tool) + da file upload (template VERA)
+    const excluded = new Set([...AUTO_CALCULATED_DISCLOSURES, ...FILE_UPLOAD_DISCLOSURES]);
+    typeformQuestionnaireState.disclosures = disclosures.filter(d => !excluded.has(d.code));
   },
 
   _renderCurrentSlide() {
@@ -2115,8 +2434,28 @@ const typeformQuestionnaire = {
     const questions = std === 'gri' ? (GRI_QUESTIONS[code] || []) : (VSME_QUESTIONS[code] || []);
     const saved = typeformQuestionnaireState.answers[code] || {};
 
+    // Pre-popola B5 con suggerimenti AI se non già compilato
+    const isB5 = (code === 'B5');
+    const b5Suggestions = isB5 && !Object.keys(saved).length
+      ? _generateB5Suggestions()
+      : null;
+    const savedOrSuggested = (id) => {
+      if (saved[id] !== undefined) return saved[id];
+      if (b5Suggestions && b5Suggestions[id]) return b5Suggestions[id];
+      return '';
+    };
+
     const contentEl = document.getElementById('tform-content');
     const codeLabel = std === 'gri' ? code : `VSME ${code}`;
+    const codeSafe = code.replace(/[^a-z0-9]/gi,'_');
+
+    const b5Banner = isB5 && b5Suggestions ? `
+      <div style="background:oklch(0.962 0.030 148/0.5);border:1px solid oklch(0.72 0.21 150/0.4);
+                  border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:12px;
+                  color:oklch(0.448 0.148 148);display:flex;gap:8px;align-items:flex-start">
+        <span style="font-size:16px">✦</span>
+        <span><strong>Suggerimenti VERA AI</strong> — le aree di rischio e opportunità sono state pre-compilate in base al settore e ai dati già inseriti. Modifica liberamente ogni campo.</span>
+      </div>` : '';
 
     contentEl.innerHTML = `
       <div class="tform-card">
@@ -2125,7 +2464,7 @@ const typeformQuestionnaire = {
           <h1 class="tform-disclosure-title">${disclosure.label}</h1>
           <p class="tform-disclosure-subtitle">Inserisci solo i <strong>dati primari</strong> — i valori derivati vengono calcolati automaticamente</p>
         </div>
-
+        ${b5Banner}
         <form id="tform-form" onsubmit="return false;">
           ${questions.map(q => `
             <div class="tform-field">
@@ -2133,14 +2472,14 @@ const typeformQuestionnaire = {
                 ${q.label}
                 ${q.required ? '<span class="tform-required">*</span>' : ''}
               </label>
-              ${this._renderFieldInput(q, saved[q.id], code)}
+              ${this._renderFieldInput(q, savedOrSuggested(q.id), code)}
               <span class="tform-input-error" id="err-${code}-${q.id}"></span>
             </div>
           `).join('')}
         </form>
 
         <!-- Derived values auto-populated here -->
-        <div id="tform-derived-${code.replace(/[^a-z0-9]/gi,'_')}"></div>
+        <div id="tform-derived-${codeSafe}"></div>
       </div>
     `;
 
@@ -2259,26 +2598,142 @@ const typeformQuestionnaire = {
       if (rev !== null && wages !== null && rev > 0)
         derived.push({ label:'% Costo del lavoro su ricavi', value: fmt(wages/rev*100) + '%' });
     }
+
+    // ── GRI 302-1: totale energetico e quota rinnovabile ─────
+    if (code === 'GRI 302-1') {
+      const er = n('elec_ren_kwh'), en = n('elec_nren_kwh'), gas = n('gas_kwh'), diesel = n('diesel_l');
+      const dieselKwh = (diesel || 0) * 9.97; // 1 litro gasolio ≈ 9.97 kWh (Direttiva 2012/27/UE)
+      if (er !== null || en !== null) {
+        const totalElec = (er||0) + (en||0);
+        const totalAll  = totalElec + (gas||0) + dieselKwh;
+        derived.push({ label:'Consumo elettrico totale', value: fmt(totalElec/1000, 1) + ' MWh' });
+        if (totalAll > 0) {
+          derived.push({ label:'Consumo energetico totale', value: fmt(totalAll/1000, 1) + ' MWh' });
+          derived.push({ label:'Quota energia rinnovabile', value: fmt((er||0)/totalAll*100, 1) + '%' });
+        }
+      }
+    }
+
+    // ── GRI 401-1: tassi assunzione e turnover ────────────────
+    if (code === 'GRI 401-1') {
+      const allAns = {};
+      Object.values(typeformQuestionnaireState.answers).forEach(d => Object.assign(allAns, d));
+      const empBase = parseFloat(allAns.emp_total || allAns.vsme_emp_total || 0);
+      const hire = n('hire_total'), turn = n('turn_total');
+      if (empBase > 0 && hire !== null)
+        derived.push({ label:'Tasso di assunzione', value: fmt(hire/empBase*100, 1) + '%' });
+      if (empBase > 0 && turn !== null)
+        derived.push({ label:'Tasso di turnover', value: fmt(turn/empBase*100, 1) + '%' });
+    }
+
+    // ── GRI 403-9: tassi infortuni (TRIR, LTIR) ──────────────
+    if (code === 'GRI 403-9') {
+      const rec = n('ohs_rec_injuries'), hrs = n('ohs_hrs_worked'), fat = n('ohs_fatalities'), hc = n('ohs_hc_injuries');
+      if (hrs !== null && hrs > 0) {
+        if (rec !== null)
+          derived.push({ label:'TRIR (Tasso Infortuni Registrabili per 200.000h)', value: fmt(rec/hrs*200000, 2) });
+        if (fat !== null && hc !== null)
+          derived.push({ label:'Tasso infortuni ad alta conseguenza (per 200.000h)', value: fmt((fat+hc)/hrs*200000, 2) });
+        if (fat !== null)
+          derived.push({ label:'Tasso infortuni mortali (per 200.000h)', value: fmt(fat/hrs*200000, 3) });
+      }
+    }
+
+    // ── GRI 404-1: media ore formazione/dipendente ────────────
+    if (code === 'GRI 404-1') {
+      const allAns = {};
+      Object.values(typeformQuestionnaireState.answers).forEach(d => Object.assign(allAns, d));
+      const empBase = parseFloat(allAns.emp_total || allAns.vsme_emp_total || 0);
+      const total = n('train_hrs_total'), m = n('train_hrs_m'), f = n('train_hrs_f');
+      if (empBase > 0 && total !== null)
+        derived.push({ label:'Media ore formazione per dipendente', value: fmt(total/empBase, 1) + ' h' });
+      if (empBase > 0 && m !== null)
+        derived.push({ label:'Media formazione — uomini', value: fmt(m/empBase*2, 1) + ' h (stima)' });
+      if (empBase > 0 && f !== null)
+        derived.push({ label:'Media formazione — donne', value: fmt(f/empBase*2, 1) + ' h (stima)' });
+      if (m !== null && f !== null && (m+f) > 0)
+        derived.push({ label:'Divario formazione M/F', value: (m >= f ? '+' : '') + fmt(m - f, 0) + ' h totali' });
+    }
+
+    // ── B2-E4: emissioni da trasporto (Scope 3 Cat. 4) ───────
+    // Fattori emissione tkm (tonne-km) da GLEC Framework / GHG Protocol
+    if (code === 'B2-E4') {
+      const km = n('vsme_transp_km');
+      const fuel = document.getElementById(`tform-B2_E4-vsme_transp_fuel`)?.value || '';
+      const veh  = document.getElementById(`tform-B2_E4-vsme_transp_veh`)?.value || '';
+      if (km !== null) {
+        // Fattori kgCO2e/tkm (GLEC 2023)
+        const factors = {
+          'Autocarro pesante (>3,5t)': { Diesel:0.096, Benzina:0.115, 'Gas naturale / GNL':0.079, Elettrico:0.025, default:0.096 },
+          'Furgone (<3,5t)':           { Diesel:0.144, Benzina:0.165, Elettrico:0.035, default:0.144 },
+          'Carro ferroviario':         { default:0.022 },
+          'Nave':                      { default:0.010 },
+          'Aereo cargo':               { default:0.602 },
+          'Multimodale':               { default:0.085 },
+        };
+        const vehFactor = factors[veh] || factors['Autocarro pesante (>3,5t)'];
+        const ef = vehFactor[fuel] || vehFactor.default || 0.096;
+        const emKg = km * ef;
+        derived.push({ label:'Emissioni Scope 3 Cat. 4 stimate', value: fmt(emKg/1000, 2) + ' tCO₂e' });
+        derived.push({ label:'Fattore emissione utilizzato', value: fmt(ef*1000, 1) + ' gCO₂e/tkm (' + (veh || 'autocarro diesel') + ')' });
+      }
+    }
+
+    // ── B3-S1: ore formazione/dipendente + tasso infortuni ───
+    if (code === 'B3-S1') {
+      const total = n('vsme_emp_total'), fn = n('vsme_emp_f_n'), mn = n('vsme_emp_m_n');
+      if (fn !== null && total !== null && total > 0)
+        derived.push({ label:'% Donne (calcolata)', value: fmt(fn/total*100) + '%' });
+      if (mn !== null && total !== null && total > 0)
+        derived.push({ label:'% Uomini (calcolata)', value: fmt(mn/total*100) + '%' });
+      const wf = n('vsme_wage_f_avg'), wm = n('vsme_wage_m_avg');
+      if (wf !== null && wm !== null && wm > 0)
+        derived.push({ label:'Gender pay gap (F vs M)', value: (wf >= wm ? '+' : '') + fmt((wf-wm)/wm*100, 1) + '% ' + (wf >= wm ? '▲' : '▼') });
+      // Ore formazione per dipendente
+      const trainTotal = n('vsme_train_hrs_total');
+      if (trainTotal !== null && total !== null && total > 0)
+        derived.push({ label:'Ore medie formazione per dipendente', value: fmt(trainTotal/total, 1) + ' h' });
+      // Tasso infortuni
+      const inj = n('vsme_injuries'), hrs = n('vsme_hrs_worked');
+      if (inj !== null && hrs !== null && hrs > 0)
+        derived.push({ label:'TRIR (infortuni per 200.000h lavorate)', value: fmt(inj/hrs*200000, 2) });
+    }
+
     return derived;
   },
 
   _renderFieldInput(q, savedVal, code) {
-    const id = `tform-${code}-${q.id}`;
+    const id = `tform-${code.replace(/[^a-z0-9]/gi,'_')}-${q.id}`;
     const val = savedVal !== undefined ? savedVal : '';
     const baseClass = 'tform-input';
+    const hint = q.hint ? `<div style="font-size:11px;color:oklch(0.55 0.05 150);margin-top:4px;font-style:italic">${q.hint}</div>` : '';
 
+    let input = '';
     if (q.type === 'textarea') {
-      return `<textarea id="${id}" class="${baseClass} tform-textarea" placeholder="${q.placeholder || ''}">${val}</textarea>`;
+      input = `<textarea id="${id}" class="${baseClass} tform-textarea" placeholder="${q.placeholder || ''}">${val}</textarea>`;
     } else if (q.type === 'select') {
-      return `<select id="${id}" class="${baseClass} tform-select">
+      input = `<select id="${id}" class="${baseClass} tform-select">
         <option value="">Seleziona…</option>
         ${(q.options || []).map(o => `<option value="${o}" ${val === o ? 'selected' : ''}>${o}</option>`).join('')}
       </select>`;
     } else if (q.type === 'number') {
-      return `<input id="${id}" type="number" class="${baseClass}" placeholder="${q.placeholder || ''}" value="${val}" step="any">`;
+      input = `<input id="${id}" type="number" class="${baseClass}" placeholder="${q.placeholder || ''}" value="${val}" step="any"${q.autocomplete ? ` autocomplete="${q.autocomplete}"` : ''}>`;
+    } else if (q.type === 'file') {
+      input = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <label for="${id}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+          padding:8px 14px;border:1.5px dashed oklch(0.72 0.12 150);border-radius:8px;
+          font-size:13px;color:oklch(0.448 0.148 148);background:oklch(0.97 0.015 148/0.4);
+          transition:background .15s">
+          📎 Scegli file${q.accept ? ` (${q.accept.replace(/\./g,'').toUpperCase()})` : ''}
+        </label>
+        <input id="${id}" type="file" style="display:none" accept="${q.accept || ''}"
+          onchange="document.getElementById('${id}-name').textContent=this.files[0]?.name||''">
+        <span id="${id}-name" style="font-size:12px;color:oklch(0.5 0.04 150)"></span>
+      </div>`;
     } else {
-      return `<input id="${id}" type="${q.type || 'text'}" class="${baseClass}" placeholder="${q.placeholder || ''}" value="${val}">`;
+      input = `<input id="${id}" type="${q.type || 'text'}" class="${baseClass}" placeholder="${q.placeholder || ''}" value="${val}"${q.autocomplete ? ` autocomplete="${q.autocomplete}"` : ''}>`;
     }
+    return input + hint;
   },
 
   _renderCompletion() {

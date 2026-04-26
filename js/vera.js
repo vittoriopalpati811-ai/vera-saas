@@ -2157,112 +2157,130 @@ const typeformQuestionnaireState = {
 };
 
 const typeformQuestionnaire = {
+  /* ── Metadati moduli per colore / icon / capitolo ───────── */
+  _meta: {
+    'B1':    { ch:'Informazioni di base', color:'oklch(0.50 0.12 262)', bg:'oklch(0.97 0.015 262)', icon:'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', tip:'Descrivi la tua azienda — ci vorrà solo un minuto' },
+    'B2-E1': { ch:'Ambiente — Clima',     color:'oklch(0.44 0.15 148)', bg:'oklch(0.97 0.025 148)', icon:'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064', tip:'I dati GHG arrivano dal calcolatore VERA — qui solo metadati' },
+    'B2-E2': { ch:'Ambiente — Energia',   color:'oklch(0.55 0.15 70)',  bg:'oklch(0.97 0.020 70)',  icon:'M13 10V3L4 14h7v7l9-11h-7z', tip:'Caricato dal file template VERA' },
+    'B2-E3': { ch:'Ambiente — Rifiuti',   color:'oklch(0.44 0.15 148)', bg:'oklch(0.97 0.025 148)', icon:'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16', tip:'Dati da DDT, MUD o sistema di pesatura aziendale' },
+    'B2-E4': { ch:'Ambiente — Trasporti', color:'oklch(0.44 0.15 148)', bg:'oklch(0.97 0.025 148)', icon:'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4', tip:'Le emissioni Scope 3 Cat. 4 sono calcolate automaticamente' },
+    'B2-E5': { ch:'Ambiente — Biodiversità', color:'oklch(0.44 0.15 148)', bg:'oklch(0.97 0.025 148)', icon:'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z', tip:'Localizzazione e prossimità a aree naturali protette' },
+    'B3-S1': { ch:'Sociale — Forza lavoro', color:'oklch(0.46 0.12 225)', bg:'oklch(0.97 0.015 225)', icon:'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z', tip:'% donne, gender pay gap e ore formazione/dipendente sono auto-calcolate' },
+    'B3-S2': { ch:'Sociale — Fornitori',   color:'oklch(0.46 0.12 225)', bg:'oklch(0.97 0.015 225)', icon:'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1', tip:'Supply chain e rischi nella catena del valore' },
+    'B3-S3': { ch:'Sociale — Comunità',    color:'oklch(0.46 0.12 225)', bg:'oklch(0.97 0.015 225)', icon:'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', tip:'Controversie significative = danno misurabile o coinvolge >10 persone' },
+    'B3-S4': { ch:'Sociale — Consumatori', color:'oklch(0.46 0.12 225)', bg:'oklch(0.97 0.015 225)', icon:'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z', tip:'Reclami e protezione dei dati dei clienti' },
+    'B4-G':  { ch:'Governance',            color:'oklch(0.55 0.13 42)',  bg:'oklch(0.97 0.020 42)',  icon:'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', tip:'Anticorruzione, whistleblowing e D.Lgs. 231/2001' },
+    'B5':    { ch:'Rischi e opportunità',  color:'oklch(0.50 0.12 188)', bg:'oklch(0.97 0.018 188)', icon:'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', tip:'VERA AI ha pre-compilato i suggerimenti — modificali liberamente' },
+    'C1':    { ch:'Opzionale — Acqua',     color:'oklch(0.48 0.12 205)', bg:'oklch(0.97 0.015 205)', icon:'M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707', tip:'Modulo C volontario — migliora la qualità del report' },
+    'C2':    { ch:'Opzionale — Inquinamento', color:'oklch(0.48 0.12 205)', bg:'oklch(0.97 0.015 205)', icon:'M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z', tip:'Emissioni in aria, acqua e suolo' },
+    'C3':    { ch:'Opzionale — Circolarità', color:'oklch(0.48 0.12 205)', bg:'oklch(0.97 0.015 205)', icon:'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15', tip:'Flussi materiali e obiettivi di economia circolare' },
+    'C4':    { ch:'Opzionale — SSL avanzata', color:'oklch(0.48 0.12 205)', bg:'oklch(0.97 0.015 205)', icon:'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z', tip:'Near-miss, malattie professionali e investimenti in sicurezza' },
+    'C5':    { ch:'Opzionale — Condotta avanzata', color:'oklch(0.48 0.12 205)', bg:'oklch(0.97 0.015 205)', icon:'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', tip:'Segnalazioni whistleblowing e contributi politici' },
+  },
+
+  _getMeta(code) {
+    if (this._meta[code]) return this._meta[code];
+    // GRI fallback per categoria
+    if (/^GRI 2-/.test(code))   return { ch:'GRI — Informativa generale', color:'oklch(0.50 0.10 270)', bg:'oklch(0.97 0.012 270)', icon:'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', tip:'GRI 2: informativa generale obbligatoria per entrambi i livelli' };
+    if (/^GRI 20[0-9]/.test(code)) return { ch:'GRI — Performance economica', color:'oklch(0.56 0.13 45)', bg:'oklch(0.97 0.018 45)', icon:'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 13v-1m0 0c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', tip:'Valore economico generato e distribuito agli stakeholder' };
+    if (/^GRI 30[0-9]/.test(code)) return { ch:'GRI — Ambiente',           color:'oklch(0.44 0.15 148)', bg:'oklch(0.97 0.025 148)', icon:'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064', tip:'Energia, acqua, biodiversità, emissioni GHG e rifiuti' };
+    if (/^GRI 4[0-9]{2}/.test(code)) return { ch:'GRI — Sociale',          color:'oklch(0.46 0.12 225)', bg:'oklch(0.97 0.015 225)', icon:'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z', tip:'Occupazione, SSL, formazione, diversità, privacy' };
+    return { ch:'GRI', color:'oklch(0.50 0.10 270)', bg:'oklch(0.97 0.012 270)', icon:'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', tip:'' };
+  },
+
   open(std, sectorKey) {
     typeformQuestionnaireState.std = std;
     typeformQuestionnaireState.sector = sectorKey || 'manuf';
     typeformQuestionnaireState.answers = {};
     typeformQuestionnaireState.omissions = {};
     typeformQuestionnaireState.currentIndex = 0;
+    typeformQuestionnaireState.direction = 'next';
     typeformQuestionnaireState.active = true;
+    typeformQuestionnaireState.startTime = Date.now();
+    typeformQuestionnaireState.milestonesShown = new Set();
 
-    // Build disclosures list, filtering out auto-calculated ones
     this._buildDisclosures();
 
     const panel = document.getElementById('typeform-panel');
     if (!panel) { this._injectPanel(); }
     this._renderCurrentSlide();
     document.getElementById('typeform-panel').style.display = 'flex';
+
+    // Keyboard: Enter = avanti, Esc = chiudi
+    this._keyHandler = (e) => {
+      if (!typeformQuestionnaireState.active) return;
+      if (e.key === 'Escape') { this.close(); return; }
+      if (e.key === 'Enter' && !e.shiftKey) {
+        const tag = document.activeElement?.tagName?.toLowerCase();
+        if (tag !== 'textarea' && tag !== 'select') {
+          e.preventDefault();
+          this.next();
+        }
+      }
+    };
+    document.addEventListener('keydown', this._keyHandler);
   },
 
   close() {
     typeformQuestionnaireState.active = false;
     const p = document.getElementById('typeform-panel');
-    if (p) p.style.display = 'none';
+    if (p) {
+      p.style.transition = 'opacity 0.2s ease';
+      p.style.opacity = '0';
+      setTimeout(() => { p.style.display = 'none'; p.style.opacity = ''; }, 220);
+    }
+    if (this._keyHandler) {
+      document.removeEventListener('keydown', this._keyHandler);
+      this._keyHandler = null;
+    }
   },
 
   _injectPanel() {
     const panel = document.createElement('div');
     panel.id = 'typeform-panel';
     panel.innerHTML = `
-      <div id="typeform-wrapper" style="
-        position:fixed; top:0; left:0; right:0; bottom:0;
-        background:#f8fafc;
-        display:flex;
-        flex-direction:column;
-        z-index:9999;
-        overflow:hidden;
-      ">
+      <div id="typeform-wrapper">
         <!-- Topbar -->
-        <div style="
-          background:#111; color:#fff;
-          padding:16px 32px;
-          display:flex; justify-content:space-between; align-items:center;
-          border-bottom:1px solid #e5e7eb;
-          flex-shrink:0;
-        ">
-          <div style="display:flex; align-items:center; gap:12px; font-weight:600; font-size:15px">
-            <span style="width:8px; height:8px; background:#16a34a; border-radius:50%; display:inline-block"></span>
-            VERA ESG · <span id="tform-title-std">Questionario</span>
+        <div id="tform-topbar">
+          <div id="tform-topbar-left">
+            <div id="tform-module-dot"></div>
+            <div>
+              <div id="tform-chapter-label">VERA ESG</div>
+              <div id="tform-module-name">Questionario</div>
+            </div>
           </div>
-          <div style="display:flex; gap:12px; align-items:center">
-            <span id="tform-progress-text" style="font-size:13px; color:#9ca3af"></span>
-            <button onclick="typeformQuestionnaire.close()" style="
-              background:none; border:none; color:#fff;
-              cursor:pointer; font-size:20px; padding:0; width:24px; height:24px;
-              display:flex; align-items:center; justify-content:center;
-            ">✕</button>
+          <div id="tform-topbar-right">
+            <span id="tform-milestone-badge"></span>
+            <span id="tform-progress-text"></span>
+            <button onclick="typeformQuestionnaire.close()" id="tform-close-btn" title="Chiudi (Esc)">
+              <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+            </button>
           </div>
         </div>
 
-        <!-- Main content area -->
-        <div style="
-          flex:1; overflow-y:auto; overflow-x:hidden;
-          display:flex; align-items:center; justify-content:center;
-          padding:48px 32px;
-        ">
-          <div id="tform-content" style="
-            width:100%; max-width:640px;
-            perspective:1000px;
-          "></div>
+        <!-- Progress rail -->
+        <div id="tform-progress-rail">
+          <div id="tform-progress-fill"></div>
         </div>
 
-        <!-- Progress bar & buttons -->
-        <div style="
-          background:#fff; padding:16px 32px;
-          border-top:1px solid #e5e7eb;
-          display:flex; justify-content:space-between; align-items:center;
-          flex-shrink:0;
-        ">
-          <div style="flex:1; margin-right:32px">
-            <div id="tform-progress-bar" style="
-              width:100%; height:6px; background:#e5e7eb;
-              border-radius:3px; overflow:hidden;
-            ">
-              <div id="tform-progress-fill" style="
-                height:100%; background:#16a34a; width:0%;
-                transition:width 0.3s ease;
-              "></div>
-            </div>
-            <div style="
-              font-size:12px; color:#6b7280; margin-top:6px;
-              text-align:right;
-            ">
-              <span id="tform-step-counter">0 / 0</span>
-            </div>
-          </div>
-          <div id="tform-logic-error" style="display:none;color:#dc2626;font-size:13px;font-weight:600;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;margin-bottom:8px;max-width:600px;text-align:left"></div>
-          <div style="display:flex; gap:8px; flex-shrink:0">
-            <button id="tform-btn-prev" onclick="typeformQuestionnaire.prev()" style="
-              padding:8px 16px; border:1px solid #e5e7eb;
-              border-radius:8px; background:#fff; color:#111;
-              cursor:pointer; font-size:14px; font-weight:600;
-              display:none;
-            ">← Indietro</button>
-            <button id="tform-btn-next" onclick="typeformQuestionnaire.next()" style="
-              padding:8px 16px; border:none;
-              border-radius:8px; background:#111; color:#fff;
-              cursor:pointer; font-size:14px; font-weight:600;
-            ">Avanti →</button>
+        <!-- Main scroll area -->
+        <div id="tform-scroll-area">
+          <div id="tform-content"></div>
+        </div>
+
+        <!-- Bottom bar -->
+        <div id="tform-bottom-bar">
+          <div id="tform-logic-error" style="display:none"></div>
+          <div id="tform-step-label"></div>
+          <div id="tform-nav-btns">
+            <button id="tform-btn-prev" class="tform-btn-secondary" onclick="typeformQuestionnaire.prev()" style="display:none">
+              <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Indietro
+            </button>
+            <button id="tform-btn-next" class="tform-btn-primary" onclick="typeformQuestionnaire.next()">
+              Avanti
+              <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+            </button>
           </div>
         </div>
       </div>
@@ -2276,120 +2294,344 @@ const typeformQuestionnaire = {
     const style = document.createElement('style');
     style.id = 'typeform-styles';
     style.textContent = `
+      /* ── Layout ──────────────────────────────────────────── */
+      #typeform-panel {
+        position:fixed; inset:0; z-index:9999;
+        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      }
+      #typeform-wrapper {
+        display:flex; flex-direction:column; height:100%;
+        background:oklch(0.975 0.012 75);
+        overflow:hidden;
+      }
+
+      /* ── Topbar ──────────────────────────────────────────── */
+      #tform-topbar {
+        display:flex; align-items:center; justify-content:space-between;
+        padding:14px 28px;
+        background:oklch(0.975 0.012 75);
+        border-bottom:1px solid oklch(0.92 0.015 75);
+        flex-shrink:0;
+        gap:16px;
+      }
+      #tform-topbar-left {
+        display:flex; align-items:center; gap:12px; min-width:0;
+      }
+      #tform-module-dot {
+        width:10px; height:10px; border-radius:50%; flex-shrink:0;
+        background:oklch(0.44 0.15 148);
+        transition:background 0.3s ease;
+        box-shadow:0 0 0 3px oklch(0.44 0.15 148 / 0.15);
+      }
+      #tform-chapter-label {
+        font-size:10px; font-weight:700; letter-spacing:.10em;
+        text-transform:uppercase; color:oklch(0.60 0.05 75);
+        line-height:1;
+      }
+      #tform-module-name {
+        font-size:13px; font-weight:700; color:oklch(0.25 0.04 75);
+        line-height:1.2; margin-top:2px;
+        white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+        max-width:280px;
+      }
+      #tform-topbar-right {
+        display:flex; align-items:center; gap:12px; flex-shrink:0;
+      }
+      #tform-progress-text {
+        font-size:12px; font-weight:600; color:oklch(0.60 0.04 75);
+        white-space:nowrap;
+      }
+      #tform-milestone-badge {
+        display:none;
+        padding:4px 10px; border-radius:20px;
+        font-size:11px; font-weight:700; letter-spacing:.04em;
+        background:oklch(0.55 0.15 70); color:white;
+        animation:badgePop 0.3s cubic-bezier(.34,1.56,.64,1);
+      }
+      @keyframes badgePop {
+        from { transform:scale(0.6); opacity:0; }
+        to   { transform:scale(1);   opacity:1; }
+      }
+      #tform-close-btn {
+        background:none; border:none; cursor:pointer;
+        color:oklch(0.55 0.04 75); padding:6px;
+        border-radius:6px; display:flex; align-items:center;
+        transition:background .15s, color .15s;
+      }
+      #tform-close-btn:hover {
+        background:oklch(0.92 0.015 75); color:oklch(0.25 0.04 75);
+      }
+
+      /* ── Progress rail ───────────────────────────────────── */
+      #tform-progress-rail {
+        height:3px; background:oklch(0.92 0.015 75); flex-shrink:0;
+      }
+      #tform-progress-fill {
+        height:100%; width:0%;
+        background:var(--tform-color, oklch(0.44 0.15 148));
+        transition:width 0.4s cubic-bezier(.4,0,.2,1), background 0.3s ease;
+        border-radius:0 2px 2px 0;
+      }
+
+      /* ── Scroll area ─────────────────────────────────────── */
+      #tform-scroll-area {
+        flex:1; overflow-y:auto; overflow-x:hidden;
+        display:flex; align-items:flex-start; justify-content:center;
+        padding:48px 24px 32px;
+        scroll-behavior:smooth;
+      }
+      #tform-content {
+        width:100%; max-width:680px;
+        will-change:opacity,transform;
+      }
+
+      /* ── Bottom bar ──────────────────────────────────────── */
+      #tform-bottom-bar {
+        background:oklch(0.975 0.012 75);
+        border-top:1px solid oklch(0.92 0.015 75);
+        padding:14px 28px;
+        display:flex; justify-content:space-between; align-items:center;
+        flex-shrink:0; gap:16px;
+        flex-wrap:wrap;
+      }
+      #tform-step-label {
+        font-size:12px; font-weight:600; color:oklch(0.60 0.04 75);
+      }
+      #tform-logic-error {
+        color:oklch(0.42 0.18 25); font-size:13px; font-weight:600;
+        background:oklch(0.97 0.025 25); border:1px solid oklch(0.85 0.10 25);
+        border-radius:8px; padding:10px 14px;
+        width:100%; order:-1;
+      }
+      #tform-nav-btns {
+        display:flex; gap:8px; flex-shrink:0; margin-left:auto;
+      }
+      .tform-btn-secondary {
+        display:inline-flex; align-items:center; gap:6px;
+        padding:10px 18px; border:1.5px solid oklch(0.85 0.015 75);
+        border-radius:10px; background:oklch(0.975 0.012 75);
+        color:oklch(0.35 0.04 75); cursor:pointer;
+        font-size:13px; font-weight:600; font-family:inherit;
+        transition:background .15s, border-color .15s;
+      }
+      .tform-btn-secondary:hover {
+        background:oklch(0.96 0.015 75); border-color:oklch(0.78 0.02 75);
+      }
+      .tform-btn-primary {
+        display:inline-flex; align-items:center; gap:6px;
+        padding:10px 20px; border:none;
+        border-radius:10px;
+        background:var(--tform-color, oklch(0.44 0.15 148));
+        color:white; cursor:pointer;
+        font-size:13px; font-weight:700; font-family:inherit;
+        transition:filter .15s, background .3s;
+        box-shadow:0 2px 8px var(--tform-color, oklch(0.44 0.15 148 / 0.30));
+      }
+      .tform-btn-primary:hover { filter:brightness(1.08); }
+      .tform-btn-primary:active { filter:brightness(0.96); transform:scale(0.98); }
+
+      /* ── Card ────────────────────────────────────────────── */
       .tform-card {
         background:white;
-        border-radius:16px;
-        box-shadow:0 4px 24px rgba(0,0,0,0.08);
-        padding:32px;
-        animation:slideInRight 0.4s ease-out;
+        border-radius:20px;
+        box-shadow:0 2px 12px oklch(0.25 0.04 75 / 0.06), 0 8px 32px oklch(0.25 0.04 75 / 0.06);
+        padding:36px 40px;
+        border-left:4px solid var(--tform-color, oklch(0.44 0.15 148));
+        margin-bottom:16px;
       }
 
-      @keyframes slideInRight {
-        from { opacity:0; transform:translateX(40px); }
-        to { opacity:1; transform:translateX(0); }
-      }
-
-      .tform-field { margin-bottom:24px; }
-      .tform-label {
-        display:block;
-        font-size:14px;
-        font-weight:600;
-        color:#374151;
-        margin-bottom:8px;
-      }
-      .tform-required { color:#dc2626; }
-
-      .tform-input {
-        width:100%;
-        padding:12px 14px;
-        border:1px solid #e5e7eb;
-        border-radius:8px;
-        font-size:14px;
-        color:#111;
-        box-sizing:border-box;
-        font-family:inherit;
-        transition:border-color 0.2s;
-      }
-
-      .tform-input:focus {
-        outline:none;
-        border-color:#16a34a;
-        box-shadow:0 0 0 3px rgba(22, 163, 74, 0.1);
-      }
-
-      .tform-input.error { border-color:#dc2626; }
-      .tform-input.error:focus { box-shadow:0 0 0 3px rgba(220, 38, 38, 0.1); }
-
-      .tform-input-error {
-        display:block;
-        color:#dc2626;
-        font-size:13px;
-        margin-top:4px;
-      }
-
-      .tform-textarea { min-height:100px; resize:vertical; }
-
-      .tform-select {
-        appearance:none;
-        background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8"><path fill="%23374151" d="M1 1l5 5 5-5"/></svg>');
-        background-repeat:no-repeat;
-        background-position:right 12px center;
-        padding-right:36px;
-      }
-
-      .tform-auto-card {
-        background:#f0fdf4;
-        border:1px solid #bbf7d0;
-        border-left:4px solid #16a34a;
-        border-radius:12px;
-        padding:20px;
-      }
-
-      .tform-auto-badge {
-        display:inline-block;
-        background:#16a34a;
-        color:white;
+      /* ── Disclosure header ───────────────────────────────── */
+      .tform-disclosure-header { margin-bottom:28px; }
+      .tform-chapter-chip {
+        display:inline-flex; align-items:center; gap:6px;
         padding:4px 10px;
-        border-radius:4px;
-        font-size:12px;
-        font-weight:600;
+        border-radius:20px;
+        font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+        background:var(--tform-bg, oklch(0.97 0.025 148));
+        color:var(--tform-color, oklch(0.44 0.15 148));
         margin-bottom:12px;
       }
-
-      .tform-auto-card h3 { margin:0 0 8px 0; font-size:16px; color:#111; }
-      .tform-auto-card p { margin:0 0 12px 0; color:#6b7280; font-size:13px; }
-
-      .tform-auto-value {
-        background:white;
-        padding:12px;
-        border-radius:8px;
-        font-family:monospace;
-        font-size:14px;
-        color:#111;
-        font-weight:600;
-        margin-bottom:8px;
+      .tform-chapter-icon {
+        width:14px; height:14px; flex-shrink:0;
       }
-
-      .tform-auto-card small { display:block; color:#9ca3af; font-size:12px; }
-
-      .tform-disclosure-header { margin-bottom:24px; }
       .tform-disclosure-code {
         display:inline-block;
-        padding:4px 10px;
-        background:#f3f4f6;
+        padding:3px 8px;
+        background:oklch(0.95 0.01 75);
         border-radius:6px;
-        font-size:12px;
-        font-weight:600;
-        color:#6b7280;
-        margin-bottom:8px;
+        font-size:11px; font-weight:700;
+        color:oklch(0.55 0.04 75);
+        margin-bottom:10px; margin-left:6px;
+        vertical-align:middle;
+      }
+      .tform-disclosure-title {
+        font-size:22px; font-weight:800; color:oklch(0.18 0.04 75);
+        margin:0 0 6px 0; line-height:1.3; letter-spacing:-.01em;
+      }
+      .tform-disclosure-subtitle { color:oklch(0.55 0.04 75); font-size:13px; line-height:1.5; }
+      .tform-module-tip {
+        display:flex; align-items:flex-start; gap:8px;
+        background:var(--tform-bg, oklch(0.97 0.025 148));
+        border-radius:8px; padding:10px 14px;
+        margin-top:10px; font-size:12px;
+        color:var(--tform-color, oklch(0.44 0.15 148));
+        line-height:1.5;
+      }
+      .tform-module-tip svg { flex-shrink:0; margin-top:1px; }
+
+      /* ── Fields ──────────────────────────────────────────── */
+      .tform-field {
+        margin-bottom:20px;
+        opacity:0; transform:translateY(10px);
+        animation:fieldIn 0.28s ease forwards;
+        animation-delay:var(--delay, 0ms);
+      }
+      @keyframes fieldIn {
+        to { opacity:1; transform:translateY(0); }
+      }
+      .tform-label {
+        display:block; font-size:13px; font-weight:600;
+        color:oklch(0.30 0.04 75); margin-bottom:6px;
+        line-height:1.4;
+      }
+      .tform-required { color:oklch(0.52 0.20 25); }
+      .tform-input {
+        width:100%; padding:11px 14px;
+        border:1.5px solid oklch(0.88 0.015 75);
+        border-radius:10px;
+        font-size:14px; color:oklch(0.18 0.04 75);
+        box-sizing:border-box; font-family:inherit;
+        background:oklch(0.99 0.005 75);
+        transition:border-color 0.18s, box-shadow 0.18s, background 0.18s;
+      }
+      .tform-input:focus {
+        outline:none;
+        border-color:var(--tform-color, oklch(0.44 0.15 148));
+        box-shadow:0 0 0 3px var(--tform-color, oklch(0.44 0.15 148 / 0.12));
+        background:white;
+      }
+      .tform-input::placeholder { color:oklch(0.72 0.02 75); }
+      .tform-input.error { border-color:oklch(0.52 0.20 25); }
+      .tform-input.error:focus { box-shadow:0 0 0 3px oklch(0.52 0.20 25 / 0.12); }
+      .tform-input-error {
+        display:block; color:oklch(0.50 0.18 25);
+        font-size:12px; margin-top:4px; font-weight:500;
+      }
+      .tform-textarea { min-height:96px; resize:vertical; line-height:1.5; }
+      .tform-select {
+        appearance:none; cursor:pointer;
+        background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8"><path stroke="%23888" stroke-width="1.5" fill="none" stroke-linecap="round" d="M1 1.5l5 5 5-5"/></svg>');
+        background-repeat:no-repeat; background-position:right 13px center;
+        padding-right:38px;
+      }
+      .tform-hint {
+        font-size:11px; color:oklch(0.60 0.04 75);
+        margin-top:5px; font-style:italic; line-height:1.4;
+      }
+      input[type="number"].tform-input { text-align:right; }
+      .tform-char-counter {
+        font-size:11px; color:oklch(0.65 0.03 75); text-align:right; margin-top:3px;
       }
 
-      .tform-disclosure-title { font-size:24px; font-weight:700; color:#111; margin:0 0 8px 0; }
-      .tform-disclosure-subtitle { color:#6b7280; font-size:14px; }
+      /* ── Section divider inside card ─────────────────────── */
+      .tform-section-divider {
+        font-size:10px; font-weight:700; letter-spacing:.10em; text-transform:uppercase;
+        color:oklch(0.60 0.04 75);
+        border-top:1px solid oklch(0.92 0.015 75);
+        padding-top:16px; margin:8px 0 12px 0;
+      }
 
-      input[type="number"].tform-input { text-align:right; }
+      /* ── Auto-calc panel ─────────────────────────────────── */
+      .tform-auto-panel {
+        background:var(--tform-bg, oklch(0.97 0.025 148));
+        border:1px solid oklch(0.88 0.06 148 / 0.5);
+        border-radius:12px; padding:16px;
+        margin-top:20px;
+      }
+      .tform-auto-label {
+        font-size:10px; font-weight:700; letter-spacing:.10em; text-transform:uppercase;
+        color:var(--tform-color, oklch(0.44 0.15 148));
+        margin-bottom:10px; display:flex; align-items:center; gap:6px;
+      }
+
+      /* ── B5 AI banner ────────────────────────────────────── */
+      .tform-ai-banner {
+        background:oklch(0.97 0.02 188); border:1px solid oklch(0.82 0.08 188);
+        border-radius:10px; padding:12px 16px; margin-bottom:20px;
+        font-size:12px; color:oklch(0.40 0.10 188);
+        display:flex; gap:8px; align-items:flex-start; line-height:1.5;
+      }
+
+      /* ── Completion screen ───────────────────────────────── */
+      .tform-completion {
+        text-align:center; padding:12px 0;
+      }
+      .tform-completion-icon {
+        width:72px; height:72px; margin:0 auto 20px;
+        background:oklch(0.96 0.05 148); border-radius:50%;
+        display:flex; align-items:center; justify-content:center;
+        animation:completionPop 0.5s cubic-bezier(.34,1.56,.64,1) forwards;
+      }
+      @keyframes completionPop {
+        from { transform:scale(0); opacity:0; }
+        to   { transform:scale(1); opacity:1; }
+      }
+      .tform-completion h2 {
+        font-size:26px; font-weight:800; color:oklch(0.18 0.04 75);
+        margin:0 0 8px 0; letter-spacing:-.02em;
+      }
+      .tform-completion p {
+        color:oklch(0.55 0.04 75); font-size:14px; margin:0 0 24px 0; line-height:1.5;
+      }
+      .tform-completion-stats {
+        display:flex; justify-content:center; gap:24px; margin-bottom:28px; flex-wrap:wrap;
+      }
+      .tform-stat {
+        background:oklch(0.97 0.015 75); border-radius:12px; padding:14px 20px;
+        text-align:center; min-width:90px;
+      }
+      .tform-stat-num {
+        font-size:22px; font-weight:800; color:oklch(0.44 0.15 148); display:block;
+      }
+      .tform-stat-label {
+        font-size:11px; color:oklch(0.60 0.04 75); text-transform:uppercase;
+        letter-spacing:.06em; font-weight:600; margin-top:2px; display:block;
+      }
+      .tform-save-btn {
+        display:inline-flex; align-items:center; gap:8px;
+        padding:14px 32px; border:none; border-radius:12px;
+        background:oklch(0.44 0.15 148); color:white;
+        font-size:15px; font-weight:700; font-family:inherit; cursor:pointer;
+        box-shadow:0 4px 16px oklch(0.44 0.15 148 / 0.30);
+        transition:filter .15s, transform .15s;
+        width:100%; justify-content:center;
+      }
+      .tform-save-btn:hover { filter:brightness(1.08); }
+      .tform-save-btn:active { filter:brightness(0.96); transform:scale(0.99); }
+
+      /* ── Keyboard hint ───────────────────────────────────── */
+      .tform-kbd-hint {
+        font-size:11px; color:oklch(0.65 0.03 75);
+        display:inline-flex; align-items:center; gap:4px; margin-left:8px;
+      }
+      .tform-kbd {
+        display:inline-block; background:oklch(0.93 0.01 75);
+        border:1px solid oklch(0.84 0.01 75); border-radius:4px;
+        padding:1px 5px; font-size:10px; font-family:monospace; font-weight:700;
+      }
+
+      @media (max-width:600px) {
+        .tform-card { padding:24px 20px; }
+        #tform-scroll-area { padding:24px 12px; }
+        #tform-topbar, #tform-bottom-bar { padding:12px 16px; }
+        .tform-disclosure-title { font-size:18px; }
+        .tform-completion-stats { gap:12px; }
+      }
     `;
     document.head.appendChild(style);
+    // Inject CSS custom property at root level so buttons and progress update together
+    document.documentElement.style.setProperty('--tform-color', 'oklch(0.44 0.15 148)');
+    document.documentElement.style.setProperty('--tform-bg', 'oklch(0.97 0.025 148)');
   },
 
   _buildDisclosures() {
@@ -2433,12 +2675,15 @@ const typeformQuestionnaire = {
     const code = disclosure.code;
     const questions = std === 'gri' ? (GRI_QUESTIONS[code] || []) : (VSME_QUESTIONS[code] || []);
     const saved = typeformQuestionnaireState.answers[code] || {};
+    const meta = this._getMeta(code);
+
+    // Update CSS custom properties for this module's color
+    document.documentElement.style.setProperty('--tform-color', meta.color);
+    document.documentElement.style.setProperty('--tform-bg', meta.bg);
 
     // Pre-popola B5 con suggerimenti AI se non già compilato
     const isB5 = (code === 'B5');
-    const b5Suggestions = isB5 && !Object.keys(saved).length
-      ? _generateB5Suggestions()
-      : null;
+    const b5Suggestions = isB5 && !Object.keys(saved).length ? _generateB5Suggestions() : null;
     const savedOrSuggested = (id) => {
       if (saved[id] !== undefined) return saved[id];
       if (b5Suggestions && b5Suggestions[id]) return b5Suggestions[id];
@@ -2449,46 +2694,80 @@ const typeformQuestionnaire = {
     const codeLabel = std === 'gri' ? code : `VSME ${code}`;
     const codeSafe = code.replace(/[^a-z0-9]/gi,'_');
 
+    // Chapter chip with module icon (SVG path from _meta)
+    const chapterChip = `
+      <div class="tform-chapter-chip" style="background:${meta.bg};color:${meta.color}">
+        <svg class="tform-chapter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="${meta.icon}"/>
+        </svg>
+        ${meta.ch}
+        <span class="tform-disclosure-code" style="background:${meta.bg};color:${meta.color};margin-left:4px;opacity:0.8">${codeLabel}</span>
+      </div>`;
+
+    // Tip row (only if tip is non-empty)
+    const tipRow = meta.tip ? `
+      <div class="tform-module-tip" style="background:${meta.bg};color:${meta.color}">
+        <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" style="margin-top:1px;flex-shrink:0">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+        </svg>
+        ${meta.tip}
+      </div>` : '';
+
+    // B5 AI banner
     const b5Banner = isB5 && b5Suggestions ? `
-      <div style="background:oklch(0.962 0.030 148/0.5);border:1px solid oklch(0.72 0.21 150/0.4);
-                  border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:12px;
-                  color:oklch(0.448 0.148 148);display:flex;gap:8px;align-items:flex-start">
-        <span style="font-size:16px">✦</span>
-        <span><strong>Suggerimenti VERA AI</strong> — le aree di rischio e opportunità sono state pre-compilate in base al settore e ai dati già inseriti. Modifica liberamente ogni campo.</span>
+      <div class="tform-ai-banner">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" style="flex-shrink:0;margin-top:1px">
+          <path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/>
+        </svg>
+        <span><strong>Suggerimenti VERA AI</strong> — aree di rischio e opportunità pre-compilate in base al settore e ai dati già inseriti. Modifica liberamente ogni campo.</span>
       </div>` : '';
 
     contentEl.innerHTML = `
-      <div class="tform-card">
+      <div class="tform-card" style="border-left-color:${meta.color}">
         <div class="tform-disclosure-header">
-          <span class="tform-disclosure-code">${codeLabel}</span>
+          ${chapterChip}
           <h1 class="tform-disclosure-title">${disclosure.label}</h1>
           <p class="tform-disclosure-subtitle">Inserisci solo i <strong>dati primari</strong> — i valori derivati vengono calcolati automaticamente</p>
+          ${tipRow}
         </div>
         ${b5Banner}
         <form id="tform-form" onsubmit="return false;">
-          ${questions.map(q => `
-            <div class="tform-field">
-              <label class="tform-label">
+          ${questions.map((q, i) => `
+            <div class="tform-field" style="--delay:${60 + i * 40}ms">
+              <label class="tform-label" for="tform-${codeSafe}-${q.id}">
                 ${q.label}
                 ${q.required ? '<span class="tform-required">*</span>' : ''}
               </label>
               ${this._renderFieldInput(q, savedOrSuggested(q.id), code)}
-              <span class="tform-input-error" id="err-${code}-${q.id}"></span>
+              <span class="tform-input-error" id="err-${code}-${q.id}" style="display:none"></span>
             </div>
           `).join('')}
         </form>
-
-        <!-- Derived values auto-populated here -->
         <div id="tform-derived-${codeSafe}"></div>
+      </div>
+      <div class="tform-kbd-hint">
+        Premi <kbd class="tform-kbd">↵ Enter</kbd> per avanzare
       </div>
     `;
 
-    // Show/hide previous button
+    // Show/hide prev button
     const prevBtn = document.getElementById('tform-btn-prev');
-    if (prevBtn) prevBtn.style.display = typeformQuestionnaireState.currentIndex > 0 ? 'block' : 'none';
+    if (prevBtn) prevBtn.style.display = typeformQuestionnaireState.currentIndex > 0 ? 'inline-flex' : 'none';
 
-    // Wire up auto-calculation listeners after DOM is ready
-    setTimeout(() => this._addDerivedListeners(code), 40);
+    // Auto-focus first input
+    setTimeout(() => {
+      const firstInput = document.querySelector('#tform-form input:not([type="file"]), #tform-form select, #tform-form textarea');
+      if (firstInput) firstInput.focus({ preventScroll: true });
+      this._addDerivedListeners(code);
+      // Wire textarea char counters
+      document.querySelectorAll('#tform-form textarea[data-maxlen]').forEach(ta => {
+        const update = () => {
+          const counter = document.getElementById(ta.id + '-counter');
+          if (counter) counter.textContent = ta.value.length + ' / ' + ta.dataset.maxlen;
+        };
+        ta.addEventListener('input', update); update();
+      });
+    }, 60);
   },
 
   /* ── Auto-calculation listeners ──────────────────────────── */
@@ -2501,18 +2780,19 @@ const typeformQuestionnaire = {
       if (!el) return;
       if (!derived.length) { el.innerHTML = ''; return; }
       el.innerHTML = `
-        <div style="background:oklch(0.962 0.030 148/0.5);border:1px solid oklch(0.822 0.082 148);
-                    border-radius:10px;padding:14px 16px;margin-top:16px">
-          <div style="font-size:10px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;
-                      color:oklch(0.448 0.148 148);margin-bottom:10px">
-            ✦ Calcolato automaticamente dal sistema
+        <div class="tform-auto-panel">
+          <div class="tform-auto-label">
+            <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/>
+            </svg>
+            Calcolato automaticamente
           </div>
           ${derived.map(d => `
-            <div style="display:flex;justify-content:space-between;align-items:center;
-                        padding:7px 0;border-bottom:1px solid oklch(0.822 0.082 148/0.4)">
-              <span style="font-size:13px;color:oklch(0.488 0.024 55)">${d.label}</span>
-              <strong style="font-size:14px;color:oklch(0.392 0.132 148);
-                             font-variant-numeric:tabular-nums">${d.value}</strong>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;
+                        padding:7px 0;border-bottom:1px solid var(--tform-color, oklch(0.44 0.15 148) / 0.15)">
+              <span style="font-size:13px;color:oklch(0.45 0.04 75)">${d.label}</span>
+              <strong style="font-size:14px;color:var(--tform-color, oklch(0.44 0.15 148));
+                             font-variant-numeric:tabular-nums;margin-left:12px">${d.value}</strong>
             </div>`).join('')}
         </div>`;
     };
@@ -2526,8 +2806,9 @@ const typeformQuestionnaire = {
   /* ── Derived field computation ───────────────────────────── */
   _computeDerived(code) {
     const derived = [];
+    const codeSafe = code.replace(/[^a-z0-9]/gi, '_');
     const n = (id) => {
-      const el = document.getElementById(`tform-${code}-${id}`);
+      const el = document.getElementById(`tform-${codeSafe}-${id}`);
       if (!el) return null;
       const v = parseFloat(el.value);
       return isNaN(v) ? null : v;
@@ -2659,8 +2940,8 @@ const typeformQuestionnaire = {
     // Fattori emissione tkm (tonne-km) da GLEC Framework / GHG Protocol
     if (code === 'B2-E4') {
       const km = n('vsme_transp_km');
-      const fuel = document.getElementById(`tform-B2_E4-vsme_transp_fuel`)?.value || '';
-      const veh  = document.getElementById(`tform-B2_E4-vsme_transp_veh`)?.value || '';
+      const fuel = document.getElementById(`tform-${codeSafe}-vsme_transp_fuel`)?.value || '';
+      const veh  = document.getElementById(`tform-${codeSafe}-vsme_transp_veh`)?.value || '';
       if (km !== null) {
         // Fattori kgCO2e/tkm (GLEC 2023)
         const factors = {
@@ -2740,25 +3021,60 @@ const typeformQuestionnaire = {
     const contentEl = document.getElementById('tform-content');
     const { disclosures } = typeformQuestionnaireState;
     const answered = Object.keys(typeformQuestionnaireState.answers).length;
+    const total = disclosures.length;
+
+    // Elapsed time
+    const elapsedMs = typeformQuestionnaireState.startTime ? Date.now() - typeformQuestionnaireState.startTime : 0;
+    const elapsedMin = Math.max(1, Math.round(elapsedMs / 60000));
+    const timeLabel = elapsedMin === 1 ? '1 minuto' : `${elapsedMin} minuti`;
+
+    // Reset module color to green for celebration
+    document.documentElement.style.setProperty('--tform-color', 'oklch(0.44 0.15 148)');
+    document.documentElement.style.setProperty('--tform-bg', 'oklch(0.97 0.025 148)');
+    if (document.getElementById('tform-progress-fill'))
+      document.getElementById('tform-progress-fill').style.width = '100%';
+
+    // Update topbar
+    const chLabel = document.getElementById('tform-chapter-label');
+    const mName   = document.getElementById('tform-module-name');
+    const mDot    = document.getElementById('tform-module-dot');
+    if (chLabel) chLabel.textContent = 'VERA ESG';
+    if (mName)   mName.textContent   = 'Questionario completato';
+    if (mDot)    mDot.style.background = 'oklch(0.44 0.15 148)';
 
     contentEl.innerHTML = `
-      <div class="tform-card" style="text-align:center">
-        <div style="font-size:48px; margin-bottom:16px">✓</div>
-        <h2 style="font-size:24px; font-weight:700; color:#111; margin:0 0 8px 0">Questionario completato!</h2>
-        <p style="color:#6b7280; font-size:14px; margin:0 0 24px 0">
-          Hai compilato ${answered} disclosure. I dati verranno salvati e utilizzati per la reportistica ESG.
+      <div class="tform-card tform-completion" style="border-left-color:oklch(0.44 0.15 148)">
+        <div class="tform-completion-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="oklch(0.44 0.15 148)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+        </div>
+        <h2>Ottimo lavoro!</h2>
+        <p>Hai compilato tutte le disclosure richieste.<br>I dati verranno elaborati per generare il report ESG.</p>
+        <div class="tform-completion-stats">
+          <div class="tform-stat">
+            <span class="tform-stat-num">${answered}</span>
+            <span class="tform-stat-label">Disclosure</span>
+          </div>
+          <div class="tform-stat">
+            <span class="tform-stat-num">${total > 0 ? Math.round(answered/total*100) : 100}%</span>
+            <span class="tform-stat-label">Completamento</span>
+          </div>
+          <div class="tform-stat">
+            <span class="tform-stat-num">${timeLabel}</span>
+            <span class="tform-stat-label">Tempo impiegato</span>
+          </div>
+        </div>
+        <button onclick="typeformQuestionnaire.save()" class="tform-save-btn">
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6a1 1 0 10-2 0v5.586l-1.293-1.293z"/>
+            <path d="M5 5a2 2 0 012-2h6a2 2 0 012 2v3a1 1 0 11-2 0V5H7v3a1 1 0 11-2 0V5z"/>
+          </svg>
+          Salva e genera report
+        </button>
+        <p style="font-size:11px;color:oklch(0.65 0.03 75);margin-top:14px;margin-bottom:0">
+          Il report ESG verrà aggiornato con i dati appena inseriti
         </p>
-        <button onclick="typeformQuestionnaire.save()" style="
-          padding:12px 24px;
-          background:#16a34a;
-          color:white;
-          border:none;
-          border-radius:8px;
-          font-size:14px;
-          font-weight:600;
-          cursor:pointer;
-          width:100%;
-        ">Salva e concludi</button>
       </div>
     `;
 
@@ -2766,6 +3082,8 @@ const typeformQuestionnaire = {
     const prevBtn = document.getElementById('tform-btn-prev');
     if (nextBtn) nextBtn.style.display = 'none';
     if (prevBtn) prevBtn.style.display = 'none';
+    const stepLabel = document.getElementById('tform-step-label');
+    if (stepLabel) stepLabel.textContent = 'Tutte le disclosure completate ✓';
   },
 
   _validateCurrentSlide() {
@@ -2775,11 +3093,13 @@ const typeformQuestionnaire = {
     const disclosure = disclosures[currentIndex];
     const std = typeformQuestionnaireState.std;
     const code = disclosure.code;
+    const codeSafe = code.replace(/[^a-z0-9]/gi, '_');
     const questions = std === 'gri' ? (GRI_QUESTIONS[code] || []) : (VSME_QUESTIONS[code] || []);
 
     let isValid = true;
+    let firstError = null;
     questions.forEach(q => {
-      const el = document.getElementById(`tform-${code}-${q.id}`);
+      const el = document.getElementById(`tform-${codeSafe}-${q.id}`);
       if (!el) return;
 
       const isEmpty = !el.value || el.value.trim() === '';
@@ -2792,12 +3112,15 @@ const typeformQuestionnaire = {
           errEl.textContent = 'Campo obbligatorio';
           errEl.style.display = 'block';
         }
+        if (!firstError) firstError = el;
       } else {
         el.classList.remove('error');
         if (errEl) errEl.style.display = 'none';
       }
     });
 
+    // Auto-focus the first invalid field
+    if (firstError) firstError.focus({ preventScroll: false });
     return isValid;
   },
 
@@ -2808,11 +3131,12 @@ const typeformQuestionnaire = {
     const disclosure = disclosures[currentIndex];
     const std = typeformQuestionnaireState.std;
     const code = disclosure.code;
+    const codeSafe = code.replace(/[^a-z0-9]/gi, '_');
     const questions = std === 'gri' ? (GRI_QUESTIONS[code] || []) : (VSME_QUESTIONS[code] || []);
 
     const vals = {};
     questions.forEach(q => {
-      const el = document.getElementById(`tform-${code}-${q.id}`);
+      const el = document.getElementById(`tform-${codeSafe}-${q.id}`);
       if (el) vals[q.id] = el.value;
     });
     typeformQuestionnaireState.answers[code] = vals;
@@ -2822,14 +3146,73 @@ const typeformQuestionnaire = {
     const { disclosures, currentIndex } = typeformQuestionnaireState;
     const total = disclosures.length;
     const pct = total > 0 ? Math.round((currentIndex + 1) / total * 100) : 0;
+    const disclosure = disclosures[currentIndex];
+    const meta = disclosure ? this._getMeta(disclosure.code) : null;
 
-    const fillEl = document.getElementById('tform-progress-fill');
-    const counterEl = document.getElementById('tform-step-counter');
+    // Progress rail & text
+    const fillEl    = document.getElementById('tform-progress-fill');
     const progressEl = document.getElementById('tform-progress-text');
+    const stepLabel = document.getElementById('tform-step-label');
+    if (fillEl)     fillEl.style.width = pct + '%';
+    if (progressEl) progressEl.textContent = `${currentIndex + 1} / ${total}`;
+    if (stepLabel)  stepLabel.textContent = `Sezione ${currentIndex + 1} di ${total}`;
 
-    if (fillEl) fillEl.style.width = pct + '%';
-    if (counterEl) counterEl.textContent = `${currentIndex + 1} / ${total}`;
-    if (progressEl) progressEl.textContent = `Disclosure ${currentIndex + 1}/${total}`;
+    // Topbar: chapter label + module name + dot color
+    const chLabel = document.getElementById('tform-chapter-label');
+    const mName   = document.getElementById('tform-module-name');
+    const mDot    = document.getElementById('tform-module-dot');
+    if (meta) {
+      if (chLabel) chLabel.textContent = meta.ch;
+      if (mName)   mName.textContent   = disclosure.label;
+      if (mDot)    mDot.style.background = meta.color;
+    }
+
+    // Milestone badges (show once per threshold)
+    if (!typeformQuestionnaireState.milestonesShown) typeformQuestionnaireState.milestonesShown = new Set();
+    const milestones = [
+      { pct:25, label:'25% completato 🎯' },
+      { pct:50, label:'Metà strada! 🌿' },
+      { pct:75, label:'Quasi finito! 🚀' },
+    ];
+    const badgeEl = document.getElementById('tform-milestone-badge');
+    if (badgeEl) {
+      for (const m of milestones) {
+        if (pct >= m.pct && !typeformQuestionnaireState.milestonesShown.has(m.pct)) {
+          typeformQuestionnaireState.milestonesShown.add(m.pct);
+          badgeEl.textContent = m.label;
+          badgeEl.style.display = 'inline-block';
+          setTimeout(() => { badgeEl.style.display = 'none'; }, 2800);
+          break;
+        }
+      }
+    }
+  },
+
+  /* ── Directional slide transition ───────────────────────── */
+  _transition(direction, callback) {
+    const el = document.getElementById('tform-content');
+    if (!el) { callback(); return; }
+    const exitX = direction === 'next' ? '-28px' : '28px';
+    const enterX = direction === 'next' ? '28px' : '-28px';
+
+    el.style.transition = 'opacity 0.16s ease, transform 0.16s ease';
+    el.style.opacity = '0';
+    el.style.transform = `translateX(${exitX})`;
+
+    setTimeout(() => {
+      callback();
+      el.style.transition = 'none';
+      el.style.opacity = '0';
+      el.style.transform = `translateX(${enterX})`;
+      // Force reflow
+      void el.offsetHeight;
+      el.style.transition = 'opacity 0.22s ease, transform 0.22s ease';
+      el.style.opacity = '1';
+      el.style.transform = 'translateX(0)';
+      // Scroll top
+      const scrollArea = document.getElementById('tform-scroll-area');
+      if (scrollArea) scrollArea.scrollTop = 0;
+    }, 170);
   },
 
   next() {
@@ -2847,25 +3230,24 @@ const typeformQuestionnaire = {
         if (errEl) { errEl.textContent = constraintError; errEl.style.display = 'block'; }
         return;
       }
-      if (document.getElementById('tform-logic-error')) {
-        document.getElementById('tform-logic-error').style.display = 'none';
-      }
+      const errEl = document.getElementById('tform-logic-error');
+      if (errEl) errEl.style.display = 'none';
     }
 
-    // ── Live report update ────────────────────────────────────
+    // Live report update
     this._liveUpdateReport();
 
     if (typeformQuestionnaireState.currentIndex < disclosures.length) {
       typeformQuestionnaireState.currentIndex++;
     }
-    this._renderCurrentSlide();
+    this._transition('next', () => this._renderCurrentSlide());
   },
 
   prev() {
     if (typeformQuestionnaireState.currentIndex > 0) {
       this._saveCurrentSlide();
       typeformQuestionnaireState.currentIndex--;
-      this._renderCurrentSlide();
+      this._transition('prev', () => this._renderCurrentSlide());
     }
   },
 

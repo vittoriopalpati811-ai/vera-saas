@@ -6070,21 +6070,10 @@ const newClientFlow = {
 
   // Called from login page "Nuova Azienda" button — hides login and starts signup demo
   _startDemoSignup() {
-    // Hide the login view
-    const loginEl = document.getElementById('view-login');
-    if (loginEl) { loginEl.style.display = 'none'; loginEl.classList.remove('active'); }
-    // Set current client to nova
-    _currentClientId = 'nova';
-    // Reset nova to fresh state
-    const nova = CLIENTS_DATA.nova;
-    nova.status = 'new';
-    nova.step = 0;
-    nova.plan = null;
-    nova.ghg = null;
-    nova.ghgRows = [];
-    nova.stamp = { applied: false };
-    // Start plan selection
-    this._showPlanSelection();
+    // Instead of demo mode, redirect to the registration form
+    if (window.veraAuth && typeof window.veraAuth.showRegister === 'function') {
+      window.veraAuth.showRegister();
+    }
   },
 
   _showPlanSelection() {

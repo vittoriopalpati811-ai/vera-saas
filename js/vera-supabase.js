@@ -649,14 +649,51 @@ const veraAuth = {
     }
   },
 
+  /* ── Forgot-password handler ────────────────────────── */
+  async handleForgotPassword(e) {
+    e.preventDefault();
+    _hideLoginError('forgot-error');
+    const email = (document.getElementById('forgot-email') || {}).value || '';
+    if (!email) { _showLoginError('forgot-error', 'Inserisci la tua email.'); return; }
+
+    _setBtnLoading('forgot-submit', true, 'Invia email →');
+
+    try {
+      const { error } = await _sb.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + window.location.pathname + '?reset=1',
+      });
+      if (error) throw error;
+
+      document.getElementById('forgot-panel').innerHTML = `
+        <div style="text-align:center;padding:32px 0">
+          <div style="font-size:48px;margin-bottom:16px">📧</div>
+          <h3 style="color:var(--green-d);margin-bottom:8px">Email inviata!</h3>
+          <p style="color:var(--text-2);max-width:320px;margin:0 auto">
+            Controlla la tua casella <b>${email}</b> e clicca il link per reimpostare la password.
+          </p>
+          <button class="btn btn-outline" style="margin-top:24px" onclick="veraAuth.showLogin()">← Torna al login</button>
+        </div>`;
+    } catch (err) {
+      _showLoginError('forgot-error', _xlErr(err.message));
+      _setBtnLoading('forgot-submit', false, 'Invia email →');
+    }
+  },
+
   /* ── Toggle login / register panels ─────────────────── */
   showRegister() {
     document.getElementById('login-panel').style.display    = 'none';
+    document.getElementById('forgot-panel').style.display   = 'none';
     document.getElementById('register-panel').style.display = 'block';
   },
   showLogin() {
     document.getElementById('register-panel').style.display = 'none';
+    document.getElementById('forgot-panel').style.display   = 'none';
     document.getElementById('login-panel').style.display    = 'block';
+  },
+  showForgotPassword() {
+    document.getElementById('login-panel').style.display    = 'none';
+    document.getElementById('register-panel').style.display = 'none';
+    document.getElementById('forgot-panel').style.display   = 'block';
   },
 
   /* ── Accessors ──────────────────────────────────────── */

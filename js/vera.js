@@ -556,65 +556,581 @@ function _updateClientUI(c) {
   _renderReportScreen(c);
 }
 
+/* ══════════════════════════════════════════════════════════
+   REPORT RENDERER — dynamic, data-driven, per-client
+══════════════════════════════════════════════════════════ */
+
 function _renderReportScreen(c) {
   if (!c) return;
-  const std   = (c.std || 'vsme').toLowerCase();
-  const ghg   = c.ghg || { s1: 0, s2: 0, s3: 0, total: 0 };
-  const name  = c.name || '—';
-  const cf    = c.cf   || '—';
-  const year  = c.year || 2024;
-  const sect  = c.sector || '—';
-  const emp   = c.employees || '—';
-  const city  = c.city || '—';
+  const std  = (c.std || 'vsme').toLowerCase();
+  const ghg  = c.ghg || { s1:0, s2:0, s3:0, total:0 };
+  const year = c.year || new Date().getFullYear();
+  const d    = c.liveReportData || {};   // flattened typeform answers
 
-  // Helper
-  const fmt = (v) => (v / 1000).toFixed(1) + ' tCO₂e';
-  const fmtKg = (v) => v.toLocaleString('it-IT') + ' kgCO₂e';
+  /* ── shared helpers ──────────────────────────────────────── */
+  const n   = k => { const v = parseFloat(d[k]); return isNaN(v) ? null : v; };
+  const sv  = k => (d[k] != null && d[k] !== '') ? String(d[k]) : null;
+  const fmt = (v, dec=0) => (v != null) ? v.toLocaleString('it-IT',{minimumFractionDigits:dec,maximumFractionDigits:dec}) : '—';
+  const pct = (num, den) => (den && den > 0) ? fmt(num/den*100,1)+'%' : '—';
+  const dash = v => (v != null && v !== '') ? v : '—';
 
-  // VSME header
-  const vsmeHeader = document.querySelector('#rpt-vsme .rpt-sub');
-  if (vsmeHeader) vsmeHeader.textContent = `${name} · CF ${cf} · ${sect} · ${year}`;
+  // Trend badge — baseline for year 1; delta if prev data provided
+  const trend = (curr, prev=null) => {
+    if (curr == null) return '';
+    if (prev == null) return `<span style="font-size:10px;color:var(--text-3)">baseline ${year}</span>`;
+    const d = (curr-prev)/prev*100;
+    const col = d > 5 ? '#dc2626' : d < -5 ? '#16a34a' : '#f59e0b';
+    return `<span style="font-size:10px;font-weight:700;color:${col}">${d>=0?'▲':'▼'} ${Math.abs(d).toFixed(1)}% vs ${year-1}</span>`;
+  };
 
-  // VSME scope values
-  const vsmeKpis = document.querySelectorAll('#rpt-vsme .rkpi');
-  if (vsmeKpis.length >= 4) {
-    vsmeKpis[0].querySelector('.rkpi-val').innerHTML = fmtKg(ghg.s1);
-    vsmeKpis[1].querySelector('.rkpi-val').innerHTML = fmtKg(ghg.s2);
-    vsmeKpis[2].querySelector('.rkpi-val').innerHTML = fmtKg(ghg.s3);
-    vsmeKpis[3].querySelector('.rkpi-val').innerHTML = fmtKg(ghg.total);
-  }
+  // Table row: label | num-value | unit | note
+  const tr  = (lbl, val, unit='', note='') =>
+    `<tr><td>${lbl}</td><td class="num" style="font-variant-numeric:tabular-nums">${val}</td><td style="color:var(--text-3);font-size:11px">${unit}</td><td class="src-note">${note}</td></tr>`;
 
-  // VSME breakdown table
-  if (c.ghgRows && c.ghgRows.length) {
-    const tbody = document.querySelector('#rpt-vsme .tbl-wrap table tbody');
-    if (tbody) {
-      tbody.innerHTML = c.ghgRows.map(r =>
-        `<tr><td>${r.mat}</td><td><span class="tag tag-g">S${r.scope}</span></td><td>${r.qty}</td>` +
-        `<td>${r.fe}</td><td class="src-note">${r.src}</td><td class="num">${r.em.toLocaleString('it-IT')}</td></tr>`
-      ).join('');
-    }
-  }
+  // Qualitative row: label (bold) | long text spanning 3 cols
+  const trQ = (lbl, txt) => txt
+    ? `<tr><td style="font-weight:600;font-size:12px;width:170px;vertical-align:top;padding-top:10px">${lbl}</td><td colspan="3" style="font-size:13px;line-height:1.55">${txt}</td></tr>`
+    : '';
 
-  // GRI header
-  const griHeader = document.querySelector('#rpt-gri .rpt-sub');
-  if (griHeader) griHeader.textContent = `${name} · GRI 2, 302, 305, 306 · ${year}`;
+  // Table wrapper — returns empty-state string if no rows
+  const tbl = (hdrs, rows, empty='Dati non ancora inseriti') => {
+    const r = rows.filter(Boolean);
+    if (!r.length) return `<p style="color:var(--text-3);font-size:13px;padding:6px 0">${empty}</p>`;
+    return `<div class="tbl-wrap"><table><thead><tr>${hdrs.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${r.join('')}</tbody></table></div>`;
+  };
 
-  // GRI scope values in table
-  const griRows = document.querySelectorAll('#rpt-gri .tbl-wrap table tbody tr');
-  if (griRows.length >= 4) {
-    const getNum = (el) => el?.querySelector('.num');
-    if (getNum(griRows[0])) getNum(griRows[0]).textContent = ghg.s1.toLocaleString('it-IT');
-    if (getNum(griRows[1])) getNum(griRows[1]).textContent = ghg.s2.toLocaleString('it-IT');
-    if (getNum(griRows[2])) getNum(griRows[2]).textContent = ghg.s3.toLocaleString('it-IT');
-    if (getNum(griRows[3])) getNum(griRows[3]).textContent = ghg.total.toLocaleString('it-IT');
-  }
+  // Section card
+  const sec = (title, body, sub='') =>
+    `<div class="acard" style="margin-bottom:14px"><div class="acard-title">${title}</div>${sub?`<p class="acard-sub" style="margin:0 0 10px">${sub}</p>`:''}${body}</div>`;
 
-  // Update toolbar download link to use dynamic filename
+  // KPI box
+  const kpi = (lbl, val, unit, cls='g', extra='') =>
+    `<div class="rkpi"><div class="rkpi-label">${lbl}</div><div class="rkpi-val ${cls}" style="font-size:17px">${val}</div><div class="src-note">${unit}${extra?'<br>'+extra:''}</div></div>`;
+
+  /* ── shared computed values ─────────────────────────────── */
+  const cName    = sv('vsme_name') || sv('org_name') || c.name || '—';
+  const cCF      = sv('vsme_cf')   || c.cf   || '';
+  const cSector  = sv('vsme_sector') || c.sector || '—';
+  const cPeriod  = sv('vsme_period') || `Anno ${year}`;
+  const cScope   = sv('vsme_scope')  || 'Controllo operativo';
+  const cContact = sv('vsme_contact') || sv('org_contact') || '—';
+  const cCity    = sv('vsme_bio_address') || sv('org_hq') || c.city || '—';
+  const empTotal = n('vsme_emp_total') || n('emp_total') || (typeof c.employees==='number' ? c.employees : null);
+  const empF     = n('vsme_emp_f_n')  || n('emp_f');
+  const empM     = n('vsme_emp_m_n')  || n('emp_m');
+
+  // Update toolbar filename
   const dlLink = document.querySelector('.report-toolbar a[download]');
   if (dlLink) {
     dlLink.removeAttribute('href');
-    dlLink.setAttribute('onclick', `reportFlow.generateAndDownload(); return false;`);
-    dlLink.download = `VERA-Report-${name.replace(/\s/g,'-')}-${year}.pdf`;
+    dlLink.setAttribute('onclick','reportFlow.generateAndDownload(); return false;');
+    dlLink.download = `VERA-Report-${cName.replace(/\s/g,'-')}-${year}.pdf`;
+  }
+
+  /* ════════════════════════════════════════════════════════
+     VSME REPORT
+  ════════════════════════════════════════════════════════ */
+  if (std === 'vsme') {
+
+    // Energy
+    const eRen   = n('elec_ren_kwh');
+    const eNren  = n('elec_nren_kwh');
+    const eElec  = (eRen != null || eNren != null) ? (eRen||0)+(eNren||0) : null;
+    const eGas   = n('gas_kwh');
+    const eDieselL = n('diesel_l');
+    const eDieselKwh = eDieselL != null ? eDieselL*9.97 : null;
+    const eTotal = eElec != null ? eElec+(eGas||0)+(eDieselKwh||0) : null;
+    const eInt   = (eTotal && empTotal) ? eTotal/empTotal : null;
+    const eRenPct = (eRen != null && eTotal) ? eRen/eTotal*100 : null;
+
+    // Waste
+    const wTot  = n('vsme_waste_t');
+    const wHaz  = n('vsme_waste_haz');
+    const wLand = n('vsme_waste_land');
+    const wRec  = n('vsme_waste_rec');
+
+    // Transport
+    const tKm   = n('vsme_transp_km');
+    const tFuel = sv('vsme_transp_fuel');
+    const tVeh  = sv('vsme_transp_veh');
+    let tCO2 = null;
+    if (tKm != null) {
+      const fmap = {
+        'Autocarro pesante (>3,5t)':{Diesel:0.096,Benzina:0.115,'Gas naturale / GNL':0.079,Elettrico:0.025,default:0.096},
+        'Furgone (<3,5t)':{Diesel:0.144,Benzina:0.165,Elettrico:0.035,default:0.144},
+        'Carro ferroviario':{default:0.022},'Nave':{default:0.010},'Aereo cargo':{default:0.602},'Multimodale':{default:0.085},
+      };
+      const vf = fmap[tVeh] || fmap['Autocarro pesante (>3,5t)'];
+      tCO2 = tKm * (vf[tFuel] || vf.default || 0.096) / 1000;
+    }
+
+    // Workforce
+    const empFT   = n('vsme_emp_ft');
+    const empPT   = n('vsme_emp_pt');
+    const empTemp = n('vsme_emp_temp');
+    const wageM   = n('vsme_wage_m_avg');
+    const wageF   = n('vsme_wage_f_avg');
+    const payGap  = (wageM && wageF && wageM > 0) ? (wageM-wageF)/wageM*100 : null;
+    const trainTot = n('vsme_train_hrs_total');
+    const trainPer = (trainTot && empTotal) ? trainTot/empTotal : null;
+    const injuries = n('vsme_injuries');
+    const fatal    = n('vsme_fatal');
+    const hrsWork  = n('vsme_hrs_worked');
+    const trir     = (injuries != null && hrsWork) ? injuries/hrsWork*200000 : null;
+
+    // Governance
+    const antiPol  = sv('vsme_anti_policy');
+    const antiTrn  = n('vsme_anti_training');
+    const whistle  = sv('vsme_whistleblow');
+    const corruptN = n('vsme_corrupt_n');
+    const m231     = sv('vsme_231');
+
+    // Consumers
+    const compN    = n('vsme_complaints');
+    const compRes  = n('vsme_complaints_res');
+    const compRate = (compN && compRes != null) ? compRes/compN*100 : null;
+
+    // Disputes
+    const dispN    = n('vsme_disputes_n');
+
+    // Supply
+    const supN     = n('vsme_supply_n');
+    const supAudit = n('vsme_supply_audit');
+    const supLocal = n('vsme_supply_local');
+
+    // GHG
+    const s1kg = ghg.s1||0, s2kg = ghg.s2||0, s3kg = ghg.s3||0, totkg = ghg.total||0;
+
+    const html = `
+      <!-- ── HEADER ─────────────────────────────────────────── -->
+      <div class="acard rpt-header-card" style="margin-bottom:14px">
+        <div class="rpt-std-badge vsme">VSME 2023</div>
+        <div>
+          <div class="rpt-title">Rendicontazione di Sostenibilità</div>
+          <div class="rpt-sub">${cName}${cCF?' · CF '+cCF:''} · ${cSector} · ${cPeriod}</div>
+          <div class="rpt-note">Conforme VSME 2023 (EFRAG) · GHG Protocol · Fattori Metodologia VERA ${year}${cContact!=='—'?' · Referente: '+cContact:''}</div>
+        </div>
+      </div>
+
+      <!-- ── B1: Informazioni di base ─────────────────────── -->
+      ${sec('B1 — Informazioni di base',
+        tbl(['Indicatore','Valore','',''],
+          [tr('Ragione sociale / Forma giuridica', dash(cName)),
+           cCF ? tr('Codice fiscale / P.IVA', cCF) : '',
+           tr('Settore / codice ATECO', dash(cSector)),
+           tr('Sede principale', dash(cCity)),
+           tr('Periodo di rendicontazione', cPeriod),
+           tr('Perimetro', cScope),
+           empTotal !== null ? tr('Dipendenti al 31/12', fmt(empTotal), 'n.', trend(empTotal)) : '',
+           sv('vsme_gov') ? trQ('Struttura di governance', sv('vsme_gov')) : '',
+           cContact !== '—' ? tr('Referente ESG', cContact) : '',
+          ].filter(Boolean)
+        )
+      )}
+
+      <!-- ── B2-E1: Emissioni GHG ──────────────────────────── -->
+      <div class="acard" style="margin-bottom:14px">
+        <div class="acard-title">B2-E1 — Cambiamenti climatici · Emissioni GHG</div>
+        ${totkg > 0 ? `
+          <div class="rkpi-row" style="margin-bottom:14px">
+            ${kpi('Scope 1 (B2-E1-2)', fmt(s1kg), 'kgCO₂e', 'g')}
+            ${kpi('Scope 2 (B2-E1-3)', fmt(s2kg), 'kgCO₂e', 'b')}
+            ${kpi('Scope 3 (B2-E1-4)', fmt(s3kg), 'kgCO₂e', 'o')}
+            ${kpi('Totale (B2-E1-1)', fmt(totkg), 'kgCO₂e', 'g highlighted', trend(totkg/1000))}
+          </div>
+          ${tbl(['Fonte / Attività','Scope','Quantità','Fattore','Fonte FE','kgCO₂e'],
+            (c.ghgRows||[]).map(r => `<tr>
+              <td>${r.mat}</td>
+              <td><span class="tag tag-${r.scope===1?'g':r.scope===2?'b':'o'}">S${r.scope}</span></td>
+              <td class="num">${r.qty}</td><td>${r.fe}</td>
+              <td class="src-note">${r.src}</td>
+              <td class="num" style="font-weight:700">${r.em.toLocaleString('it-IT')}</td></tr>`),
+            'Dettaglio emissioni non disponibile — completare il calcolatore GHG'
+          )}
+        ` : '<p style="color:var(--text-3);font-size:13px;padding:8px 0">Dati GHG non ancora calcolati — completare il calcolatore emissioni VERA</p>'}
+        ${sv('vsme_targets') ? `<div style="margin-top:12px;padding:10px 14px;background:oklch(0.97 0.025 148);border-radius:8px;font-size:13px"><strong style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:oklch(0.44 0.15 148)">Obiettivi di riduzione GHG</strong><br>${sv('vsme_targets')}</div>` : ''}
+      </div>
+
+      <!-- ── B2-E2/E3/E4: Energia · Rifiuti · Trasporti ───── -->
+      <div class="acard" style="margin-bottom:14px">
+        <div class="acard-title">B2-E2 — Energia · B2-E3 — Rifiuti · B2-E4 — Trasporti</div>
+        ${tbl(['Modulo','Indicatore','Valore','Unità','Note'], [
+          /* ENERGIA */
+          eElec !== null ? `<tr>
+            <td rowspan="${[eRen,eNren,eGas,eDieselL,eTotal,eInt,eRenPct].filter(x=>x!=null).length}" style="font-weight:700;vertical-align:top;font-size:11px;color:oklch(0.55 0.15 70);width:68px">B2-E2<br>Energia</td>
+            <td>Elettricità — fonti rinnovabili</td><td class="num">${fmt(eRen||0)}</td><td>kWh</td><td class="src-note">fotovoltaico, GO, PPA</td></tr>` : '',
+          eNren != null ? `<tr><td>Elettricità — fonti non rinnovabili</td><td class="num">${fmt(eNren)}</td><td>kWh</td><td class="src-note">rete nazionale</td></tr>` : '',
+          eGas  != null ? `<tr><td>Gas naturale</td><td class="num">${fmt(eGas)}</td><td>kWh</td><td class="src-note">contatore</td></tr>` : '',
+          eDieselL != null ? `<tr><td>Gasolio</td><td class="num">${fmt(eDieselL)}</td><td>L</td><td class="src-note">≈ ${fmt(eDieselKwh,0)} kWh</td></tr>` : '',
+          eTotal != null ? `<tr style="background:oklch(0.97 0.015 70/0.6)"><td><strong>Consumo totale</strong></td><td class="num"><strong>${fmt(eTotal/1000,2)}</strong></td><td><strong>MWh</strong></td><td class="src-note">${trend(eTotal/1000)}</td></tr>` : '',
+          eInt   != null ? `<tr><td>Intensità energetica</td><td class="num">${fmt(eInt,0)}</td><td>kWh/dip.</td><td class="src-note">${fmt(empTotal,0)} dip. al 31/12</td></tr>` : '',
+          eRenPct!= null ? `<tr><td>Quota energia rinnovabile</td><td class="num" style="color:oklch(0.44 0.15 148);font-weight:700">${fmt(eRenPct,1)}%</td><td></td><td class="src-note">B2-E2-4 · ${trend(eRenPct)}</td></tr>` : '',
+          /* RIFIUTI */
+          wTot != null ? `<tr>
+            <td rowspan="${[wTot,wHaz,wLand,wRec].filter(x=>x!=null).length}" style="font-weight:700;vertical-align:top;font-size:11px;color:oklch(0.44 0.15 148);width:68px">B2-E3<br>Rifiuti</td>
+            <td>Rifiuti totali prodotti</td><td class="num">${fmt(wTot,2)}</td><td>t</td><td class="src-note">FIR ${year} · ${trend(wTot)}</td></tr>` : '',
+          wHaz  != null ? `<tr><td>Di cui: pericolosi</td><td class="num">${fmt(wHaz,2)}</td><td>t</td><td class="src-note">${wTot ? pct(wHaz,wTot)+' del tot.' : ''}</td></tr>` : '',
+          wRec  != null ? `<tr><td>Avviati a riciclo/recupero</td><td class="num" style="color:oklch(0.44 0.15 148);font-weight:600">${fmt(wRec,2)}</td><td>t</td><td class="src-note">${wTot?pct(wRec,wTot)+' recovery rate':''}</td></tr>` : '',
+          wLand != null ? `<tr><td>Smaltiti in discarica</td><td class="num">${fmt(wLand,2)}</td><td>t</td><td class="src-note">${wTot?pct(wLand,wTot)+' del tot.':''}</td></tr>` : '',
+          /* TRASPORTI */
+          tKm != null ? `<tr>
+            <td rowspan="${[tKm,tFuel,tVeh,tCO2].filter(x=>x!=null).length}" style="font-weight:700;vertical-align:top;font-size:11px;color:oklch(0.44 0.15 148);width:68px">B2-E4<br>Trasporti</td>
+            <td>Volume logistico totale</td><td class="num">${fmt(tKm,0)}</td><td>tkm</td><td class="src-note">anno ${year}</td></tr>` : '',
+          tFuel ? `<tr><td>Carburante prevalente</td><td colspan="2">${tFuel}</td><td></td><td></td></tr>` : '',
+          tVeh  ? `<tr><td>Veicolo prevalente</td><td colspan="2">${tVeh}</td><td></td><td></td></tr>` : '',
+          tCO2  != null ? `<tr style="background:oklch(0.97 0.015 148/0.6)"><td><strong>Emissioni S3 Cat.4 (stimate)</strong></td><td class="num"><strong>${fmt(tCO2,3)}</strong></td><td><strong>tCO₂e</strong></td><td class="src-note">GLEC 2023 · ${trend(tCO2)}</td></tr>` : '',
+        ].filter(Boolean), 'Dati energia/rifiuti/trasporti non ancora inseriti')}
+      </div>
+
+      <!-- ── B2-E5: Biodiversità ───────────────────────────── -->
+      ${sec('B2-E5 — Biodiversità e uso del suolo',
+        tbl(['Indicatore','Dettaglio','',''], [
+          sv('vsme_bio_address') ? trQ('Sede principale', sv('vsme_bio_address')) : '',
+          sv('vsme_bio_other')   ? trQ('Altri siti', sv('vsme_bio_other')) : '',
+          sv('vsme_bio_natura2k')? tr('Prossimità aree Natura 2000', sv('vsme_bio_natura2k')) : '',
+          sv('vsme_bio_impact')  ? trQ('Impatti noti sulla biodiversità', sv('vsme_bio_impact')) : '',
+        ].filter(Boolean))
+      )}
+
+      <!-- ── B3-S1: Forza lavoro, SSL, Formazione ──────────── -->
+      <div class="acard" style="margin-bottom:14px">
+        <div class="acard-title">B3-S1 — Forza lavoro · Salute e sicurezza · Formazione</div>
+        ${empTotal !== null ? `<div class="rkpi-row" style="margin-bottom:14px">
+          ${kpi('Dipendenti', fmt(empTotal), 'n. al 31/12', 'g')}
+          ${empF != null ? kpi('Donne', fmt(empF)+' ('+pct(empF,empTotal)+')', 'n.', 'b') : ''}
+          ${trir != null ? kpi('TRIR', fmt(trir,2), 'per 200.000h', injuries>0?'o':'g') : ''}
+          ${trainPer != null ? kpi('Formazione', fmt(trainPer,1), 'ore/dip.', 'g') : ''}
+        </div>` : ''}
+        ${tbl(['Indicatore','Valore','Unità','Note'], [
+          empTotal!= null ? tr('Dipendenti totali al 31/12', fmt(empTotal), 'n.', trend(empTotal)) : '',
+          empF    != null ? tr('Di cui: donne', fmt(empF)+' ('+pct(empF,empTotal)+')', 'n.') : '',
+          empM    != null ? tr('Di cui: uomini', fmt(empM)+' ('+pct(empM,empTotal)+')', 'n.') : '',
+          empFT   != null ? tr('A tempo pieno', fmt(empFT), 'n.', pct(empFT,empTotal)) : '',
+          empPT   != null ? tr('A tempo parziale', fmt(empPT), 'n.', pct(empPT,empTotal)) : '',
+          empTemp != null ? tr('A tempo determinato', fmt(empTemp), 'n.') : '',
+          wageM   != null ? tr('Retribuzione media — uomini', '€ '+fmt(wageM,0), '€ lordi/anno') : '',
+          wageF   != null ? tr('Retribuzione media — donne', '€ '+fmt(wageF,0), '€ lordi/anno') : '',
+          payGap  != null ? tr('Gender pay gap (M vs F)', fmt(payGap,1)+'%', '', payGap>0?'donne guadagnano meno':'equità retributiva') : '',
+          trainTot!= null ? tr('Ore totali di formazione', fmt(trainTot,0), 'ore', 'anno '+year) : '',
+          trainPer!= null ? tr('Media ore formazione/dipendente', fmt(trainPer,1), 'ore/dip.') : '',
+          injuries!= null ? tr('Infortuni registrabili (INAIL)', fmt(injuries,0), 'n.', trend(injuries)) : '',
+          fatal   != null ? tr('Di cui: mortali', fmt(fatal,0), 'n.') : '',
+          hrsWork != null ? tr('Ore totali lavorate', fmt(hrsWork,0), 'ore') : '',
+          trir    != null ? tr('TRIR', fmt(trir,2), 'per 200.000h', 'GHG Protocol SSL Standard') : '',
+        ].filter(Boolean))}
+      </div>
+
+      <!-- ── B3-S2: Catena del valore ──────────────────────── -->
+      ${sec('B3-S2 — Catena del valore · Fornitori',
+        tbl(['Indicatore','Valore','Unità','Note'], [
+          supN     != null ? tr('Fornitori attivi', fmt(supN,0), 'n.') : '',
+          n('vsme_supply_key') != null ? tr('Di cui: fornitori chiave/strategici', fmt(n('vsme_supply_key'),0), 'n.') : '',
+          supAudit != null ? tr('Sottoposti a valutazione ESG', fmt(supAudit,1)+'%', '', 'anno '+year) : '',
+          supLocal != null ? tr('Fornitori locali (stesso paese)', fmt(supLocal,1)+'%') : '',
+          sv('vsme_supply_risk')   ? trQ('Rischi identificati nella supply chain', sv('vsme_supply_risk')) : '',
+          sv('vsme_supply_action') ? trQ('Azioni correttive adottate', sv('vsme_supply_action')) : '',
+        ].filter(Boolean))
+      )}
+
+      <!-- ── B3-S3: Comunità locali ─────────────────────────── -->
+      ${sec('B3-S3 — Comunità locali',
+        tbl(['Indicatore','Valore','Unità','Note'], [
+          sv('vsme_community') ? trQ('Iniziative di coinvolgimento comunitario', sv('vsme_community')) : '',
+          dispN != null ? tr('Controversie significative', fmt(dispN,0), 'n.', 'anno '+year) : '',
+          sv('vsme_disputes_desc') ? trQ('Descrizione controversie', sv('vsme_disputes_desc')) : '',
+        ].filter(Boolean))
+      )}
+
+      <!-- ── B3-S4: Consumatori ─────────────────────────────── -->
+      ${sec('B3-S4 — Consumatori e protezione dei dati',
+        tbl(['Indicatore','Valore','Unità','Note'], [
+          compN   != null ? tr('Reclami formali ricevuti', fmt(compN,0), 'n.', trend(compN)) : '',
+          compRes != null ? tr('Di cui: risolti', fmt(compRes,0)+(compRate!=null?' ('+fmt(compRate,1)+'%)':''), 'n.') : '',
+          sv('vsme_complaints_desc') ? trQ('Tipologie di reclamo', sv('vsme_complaints_desc')) : '',
+          n('vsme_privacy') != null ? tr('Incidenti data breach / privacy', fmt(n('vsme_privacy'),0), 'n.') : '',
+          sv('vsme_privacy_desc') ? trQ('Descrizione incidenti privacy', sv('vsme_privacy_desc')) : '',
+        ].filter(Boolean))
+      )}
+
+      <!-- ── B4-G: Governance ───────────────────────────────── -->
+      ${sec('B4-G — Governance · Condotta aziendale · Anticorruzione',
+        tbl(['Indicatore','Valore','',''], [
+          antiPol  ? tr('Politica anticorruzione formalizzata', antiPol) : '',
+          antiTrn  != null ? tr('Dipendenti formati su anticorruzione', fmt(antiTrn,1)+'%', 'del tot.', 'anno '+year) : '',
+          whistle  ? tr('Sistema whistleblowing', whistle) : '',
+          corruptN != null ? tr('Incidenti corruzione confermati', fmt(corruptN,0), 'n.', 'anno '+year) : '',
+          m231     ? tr('Modello organizzativo D.Lgs. 231/2001', m231) : '',
+          sv('vsme_lobby') ? tr('Attività di lobbying', sv('vsme_lobby')) : '',
+        ].filter(Boolean))
+      )}
+
+      <!-- ── B5: Rischi e opportunità ───────────────────────── -->
+      ${(sv('risk_env')||sv('risk_social')||sv('opp_env')) ? `
+      <div class="acard" style="margin-bottom:14px">
+        <div class="acard-title">B5 — Rischi e opportunità ESG</div>
+        ${sv('risk_horizon') ? `<p class="src-note" style="margin:0 0 12px">Orizzonte temporale: <strong>${sv('risk_horizon')}</strong></p>` : ''}
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Dimensione</th><th style="width:37%">Rischi principali</th><th style="width:37%">Opportunità principali</th></tr></thead>
+          <tbody>
+            <tr style="vertical-align:top"><td style="font-weight:700;color:oklch(0.44 0.15 148)">Ambiente</td>
+              <td style="font-size:13px;line-height:1.55">${sv('risk_env')||'—'}</td>
+              <td style="font-size:13px;line-height:1.55">${sv('opp_env')||'—'}</td></tr>
+            <tr style="vertical-align:top"><td style="font-weight:700;color:oklch(0.46 0.12 225)">Sociale</td>
+              <td style="font-size:13px;line-height:1.55">${sv('risk_social')||'—'}</td>
+              <td style="font-size:13px;line-height:1.55">${sv('opp_social')||'—'}</td></tr>
+            <tr style="vertical-align:top"><td style="font-weight:700;color:oklch(0.55 0.13 42)">Governance</td>
+              <td style="font-size:13px;line-height:1.55">${sv('risk_gov')||'—'}</td>
+              <td style="font-size:13px;line-height:1.55">—</td></tr>
+          </tbody>
+        </table></div>
+        ${sv('risk_mitigation') ? `<div style="margin-top:12px;padding:10px 14px;background:oklch(0.97 0.018 188);border-radius:8px;font-size:13px;color:oklch(0.35 0.10 188)"><strong>Azioni di mitigazione in atto o pianificate:</strong><br>${sv('risk_mitigation')}</div>` : ''}
+      </div>` : sec('B5 — Rischi e opportunità ESG', '<p style="color:var(--text-3);font-size:13px;padding:6px 0">Dati non ancora inseriti</p>')}
+
+      <!-- ── Emission factors ───────────────────────────────── -->
+      <div class="acard">
+        <div class="acard-title">Fattori di emissione utilizzati</div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Categoria</th><th>Scope</th><th>FE</th><th>Unità</th><th>GWP</th><th>Fonte</th></tr></thead>
+          <tbody>
+            <tr><td>Elettricità (rete IT)</td><td><span class="tag tag-b">S2</span></td><td>0,28307</td><td>kgCO₂e/kWh</td><td>AR6</td><td class="src-note">Metodologia VERA ${year}</td></tr>
+            <tr><td>Gas naturale</td><td><span class="tag tag-g">S1</span></td><td>0,18386</td><td>kgCO₂e/kWh</td><td>AR6</td><td class="src-note">Metodologia VERA ${year}</td></tr>
+            <tr><td>Gasolio</td><td><span class="tag tag-g">S1</span></td><td>2,68490</td><td>kgCO₂e/L</td><td>AR6</td><td class="src-note">Metodologia VERA ${year}</td></tr>
+            <tr><td>Rifiuti (discarica)</td><td><span class="tag tag-o">S3</span></td><td>0,58700</td><td>kgCO₂e/kg</td><td>AR6</td><td class="src-note">IPCC AR6 WG3</td></tr>
+            <tr><td>Rifiuti (riciclo)</td><td><span class="tag tag-o">S3</span></td><td>0,02100</td><td>kgCO₂e/kg</td><td>AR6</td><td class="src-note">Metodologia VERA ${year}</td></tr>
+            <tr><td>Trasporto stradale</td><td><span class="tag tag-o">S3</span></td><td>0,09560</td><td>kgCO₂e/tkm</td><td>AR6</td><td class="src-note">GLEC Framework 2023</td></tr>
+          </tbody>
+        </table></div>
+      </div>`;
+
+    const vsmeEl = document.getElementById('rpt-vsme');
+    const griEl  = document.getElementById('rpt-gri');
+    if (vsmeEl) { vsmeEl.innerHTML = html; vsmeEl.style.display = ''; }
+    if (griEl)  griEl.style.display = 'none';
+
+  /* ════════════════════════════════════════════════════════
+     GRI REPORT
+  ════════════════════════════════════════════════════════ */
+  } else {
+
+    const orgName  = sv('org_name')  || c.name  || '—';
+    const orgHQ    = sv('org_hq')    || c.city  || '—';
+    const orgNature= sv('org_nature')|| '';
+    const empTotG  = n('emp_total')  || empTotal;
+    const empFG    = n('emp_f');
+    const empMG    = n('emp_m');
+    const empFTG   = n('emp_ft');
+    const empPTG   = n('emp_pt');
+    const s1kg = ghg.s1||0, s2kg = ghg.s2||0, s3kg = ghg.s3||0, totkg = ghg.total||0;
+
+    // Energy (GRI 302-1)
+    const eRenG  = n('elec_ren_kwh');
+    const eNrenG = n('elec_nren_kwh');
+    const eElecG = (eRenG != null || eNrenG != null) ? (eRenG||0)+(eNrenG||0) : null;
+    const eGasG  = n('gas_kwh');
+    const eDieselG = n('diesel_l');
+    const eDieselKwhG = eDieselG != null ? eDieselG*9.97 : null;
+    const eTotG  = eElecG != null ? eElecG+(eGasG||0)+(eDieselKwhG||0) : null;
+    const eIntG  = (eTotG && empTotG) ? eTotG/empTotG : null;
+    const eRenPctG = (eRenG != null && eTotG) ? eRenG/eTotG*100 : null;
+
+    // GRI 401-1
+    const hireTot = n('hire_total'), hireM = n('hire_m'), hireF = n('hire_f'), hireU30 = n('hire_u30');
+    const turnTot = n('turn_total');
+    const hireRate = (hireTot != null && empTotG) ? hireTot/empTotG*100 : null;
+    const turnRate = (turnTot != null && empTotG) ? turnTot/empTotG*100 : null;
+
+    // GRI 403-9
+    const ohsFat  = n('ohs_fatalities');
+    const ohsHC   = n('ohs_hc_injuries');
+    const ohsRec  = n('ohs_rec_injuries');
+    const ohsHrs  = n('ohs_hrs_worked');
+    const triRG   = (ohsRec != null && ohsHrs) ? ohsRec/ohsHrs*200000 : null;
+    const hcRate  = (ohsFat != null && ohsHC != null && ohsHrs) ? (ohsFat+ohsHC)/ohsHrs*200000 : null;
+
+    // GRI 404-1
+    const trainTotG = n('train_hrs_total');
+    const trainMG   = n('train_hrs_m');
+    const trainFG   = n('train_hrs_f');
+    const trainPerG = (trainTotG && empTotG) ? trainTotG/empTotG : null;
+
+    // GRI 405-1 Board
+    const boardTot = n('board_total');
+    const boardF   = n('board_f');
+    const boardU30 = n('board_u30');
+    const board3050= n('board_3050');
+
+    // GRI 2-21
+    const ceoPay  = n('ceo_pay');
+    const medPay  = n('median_pay');
+
+    // GRI 201-1
+    const revenue = n('revenue');
+    const opCost  = n('op_cost');
+    const wages   = n('wages');
+    const taxes   = n('tax');
+    const margin  = (revenue != null && opCost != null) ? revenue-opCost : null;
+
+    // GRI 306 Waste
+    const wTotG  = n('waste_total');
+    const wRecG  = n('waste_rec');
+    const wDispG = n('waste_disp');
+
+    const disclosures = (typeformQuestionnaireState.disclosures || []).map(d => d.code);
+    const has = code => disclosures.includes(code) || Object.keys(d).length > 0;
+
+    const griHtml = `
+      <!-- ── HEADER ─────────────────────────────────────────── -->
+      <div class="acard rpt-header-card" style="margin-bottom:14px">
+        <div class="rpt-std-badge gri">GRI 2021</div>
+        <div>
+          <div class="rpt-title">GRI Standards Report</div>
+          <div class="rpt-sub">${orgName}${orgNature?' · '+orgNature:''} · ${orgHQ} · ${cPeriod}</div>
+          <div class="rpt-note">Conforme GRI Standards 2021 · GHG Protocol · Fattori Metodologia VERA ${year}</div>
+        </div>
+      </div>
+
+      <!-- ── GRI 2: Informativa generale ──────────────────── -->
+      <div class="acard" style="margin-bottom:14px">
+        <div class="acard-title">GRI 2 — Informativa generale</div>
+        ${tbl(['Disclosure','Indicatore','Valore','Note'], [
+          tr('GRI 2-1', 'Ragione sociale / forma giuridica', dash(orgName)+(orgNature?' · '+orgNature:'')),
+          tr('GRI 2-1', 'Sede principale', dash(orgHQ)),
+          empTotG != null ? tr('GRI 2-7', 'Dipendenti totali al 31/12', fmt(empTotG)+' n.', trend(empTotG)) : '',
+          empFG   != null ? tr('GRI 2-7', 'Di cui: donne', fmt(empFG)+' ('+pct(empFG,empTotG)+')', 'n.') : '',
+          empMG   != null ? tr('GRI 2-7', 'Di cui: uomini', fmt(empMG)+' ('+pct(empMG,empTotG)+')', 'n.') : '',
+          empFTG  != null ? tr('GRI 2-7', 'A tempo pieno', fmt(empFTG), 'n.') : '',
+          empPTG  != null ? tr('GRI 2-7', 'A tempo parziale', fmt(empPTG), 'n.') : '',
+          boardTot!= null ? tr('GRI 2-9', 'Componenti organo di governo', fmt(boardTot), 'n.') : '',
+          boardF  != null ? tr('GRI 2-9', 'Di cui: donne', fmt(boardF)+' ('+pct(boardF,boardTot)+')', 'n.') : '',
+          sv('gov_body_name') ? tr('GRI 2-9', 'Denominazione organo', sv('gov_body_name')) : '',
+          ceoPay  != null ? tr('GRI 2-21', 'Retribuzione massima dirigente', '€ '+fmt(ceoPay,0)) : '',
+          medPay  != null ? tr('GRI 2-21', 'Retribuzione mediana dipendenti', '€ '+fmt(medPay,0)) : '',
+          (ceoPay && medPay && medPay > 0) ? tr('GRI 2-21', 'Rapporto retributivo', fmt(ceoPay/medPay,1)+'x', 'max / mediana') : '',
+        ].filter(Boolean))}
+      </div>
+
+      <!-- ── GRI 201: Performance economica ───────────────── -->
+      ${(revenue != null || margin != null) ? sec('GRI 201-1 — Valore economico generato e distribuito',
+        tbl(['Disclosure','Indicatore','Valore','Unità'], [
+          revenue != null ? tr('201-1a', 'Ricavi', '€ '+fmt(revenue,0), '€') : '',
+          opCost  != null ? tr('201-1b', 'Costi operativi', '€ '+fmt(opCost,0), '€') : '',
+          wages   != null ? tr('201-1b', 'Costo del lavoro', '€ '+fmt(wages,0)+' ('+pct(wages,revenue)+')', '€') : '',
+          taxes   != null ? tr('201-1d', 'Imposte sul reddito', '€ '+fmt(taxes,0), '€') : '',
+          margin  != null ? tr('—', 'Margine operativo lordo', '€ '+fmt(margin,0), '€') : '',
+        ].filter(Boolean))
+      ) : ''}
+
+      <!-- ── GRI 302: Energia ──────────────────────────────── -->
+      <div class="acard" style="margin-bottom:14px">
+        <div class="acard-title">GRI 302 — Energia</div>
+        ${tbl(['Disclosure','Indicatore','Valore','Unità','Note'], [
+          eRenG  != null ? tr('302-1', 'Elettricità da fonti rinnovabili', fmt(eRenG), 'kWh', 'fotovoltaico, GO, PPA') : '',
+          eNrenG != null ? tr('302-1', 'Elettricità da fonti non rinnovabili', fmt(eNrenG), 'kWh', 'rete nazionale') : '',
+          eGasG  != null ? tr('302-1', 'Gas naturale', fmt(eGasG), 'kWh') : '',
+          eDieselG != null ? tr('302-1', 'Gasolio', fmt(eDieselG), 'L', '≈ '+fmt(eDieselKwhG,0)+' kWh') : '',
+          eTotG  != null ? `<tr style="background:oklch(0.97 0.015 70/0.6)"><td>302-1</td><td><strong>Consumo totale interno</strong></td><td class="num"><strong>${fmt(eTotG/1000,2)}</strong></td><td><strong>MWh</strong></td><td class="src-note">${trend(eTotG/1000)}</td></tr>` : '',
+          eIntG  != null ? tr('302-3', 'Intensità energetica', fmt(eIntG,0), 'kWh/dip.', fmt(empTotG,0)+' dip.') : '',
+          eRenPctG!=null ? `<tr><td>302-1</td><td>Quota energia rinnovabile</td><td class="num" style="color:oklch(0.44 0.15 148);font-weight:700">${fmt(eRenPctG,1)}%</td><td></td><td class="src-note">${trend(eRenPctG)}</td></tr>` : '',
+        ].filter(Boolean), 'GRI 302-1: dati non ancora inseriti')}
+      </div>
+
+      <!-- ── GRI 305: Emissioni GHG ─────────────────────────── -->
+      <div class="acard" style="margin-bottom:14px">
+        <div class="acard-title">GRI 305 — Emissioni GHG</div>
+        ${totkg > 0 ? `
+          <div class="rkpi-row" style="margin-bottom:14px">
+            ${kpi('305-1 Scope 1', fmt(s1kg), 'kgCO₂e', 'g')}
+            ${kpi('305-2 Scope 2 (MB)', fmt(s2kg), 'kgCO₂e', 'b')}
+            ${kpi('305-3 Scope 3', fmt(s3kg), 'kgCO₂e', 'o')}
+            ${kpi('Totale GHG', fmt(totkg), 'kgCO₂e', 'g highlighted', trend(totkg/1000))}
+          </div>
+          ${tbl(['Disclosure','Indicatore','Valore','Unità','Fonte FE'],
+            (c.ghgRows||[]).map(r => `<tr>
+              <td class="src-note">305-${r.scope}</td><td>${r.mat}</td>
+              <td class="num" style="font-weight:700">${r.em.toLocaleString('it-IT')}</td>
+              <td>kgCO₂e</td><td class="src-note">${r.src} · FE ${r.fe}</td></tr>`),
+            'Dettaglio emissioni non disponibile — completare il calcolatore GHG'
+          )}` : '<p style="color:var(--text-3);font-size:13px;padding:8px 0">Dati GHG non ancora calcolati</p>'}
+      </div>
+
+      <!-- ── GRI 306: Rifiuti ──────────────────────────────── -->
+      ${(wTotG != null || wRecG != null) ? sec('GRI 306 — Rifiuti',
+        tbl(['Disclosure','Indicatore','Valore','Unità','Note'], [
+          wTotG  != null ? tr('306-3', 'Rifiuti generati', fmt(wTotG,0), 'kg', trend(wTotG)) : '',
+          wRecG  != null ? tr('306-4', 'Rifiuti recuperati/riciclati', fmt(wRecG,0)+' ('+pct(wRecG,wTotG)+')', 'kg') : '',
+          wDispG != null ? tr('306-5', 'Rifiuti smaltiti', fmt(wDispG,0)+' ('+pct(wDispG,wTotG)+')', 'kg') : '',
+        ].filter(Boolean))
+      ) : ''}
+
+      <!-- ── GRI 401: Occupazione ──────────────────────────── -->
+      ${(hireTot != null || turnTot != null) ? sec('GRI 401-1 — Nuove assunzioni e turnover',
+        tbl(['Disclosure','Indicatore','Valore','Unità','Note'], [
+          hireTot != null ? tr('401-1', 'Nuove assunzioni', fmt(hireTot,0), 'n.', trend(hireTot)) : '',
+          hireM   != null ? tr('401-1', 'Di cui: uomini', fmt(hireM,0), 'n.') : '',
+          hireF   != null ? tr('401-1', 'Di cui: donne', fmt(hireF,0), 'n.') : '',
+          hireU30 != null ? tr('401-1', 'Di cui: under 30', fmt(hireU30,0), 'n.') : '',
+          hireRate!= null ? tr('401-1', 'Tasso di assunzione', fmt(hireRate,1)+'%', '', fmt(empTotG,0)+' dip. base') : '',
+          turnTot != null ? tr('401-1', 'Dipendenti usciti', fmt(turnTot,0), 'n.', trend(turnTot)) : '',
+          turnRate!= null ? tr('401-1', 'Tasso di turnover', fmt(turnRate,1)+'%') : '',
+        ].filter(Boolean))
+      ) : ''}
+
+      <!-- ── GRI 403-9: Infortuni ──────────────────────────── -->
+      ${(ohsRec != null || ohsFat != null) ? sec('GRI 403-9 — Infortuni sul lavoro',
+        tbl(['Disclosure','Indicatore','Valore','Unità','Note'], [
+          ohsFat  != null ? tr('403-9', 'Infortuni mortali (dipendenti)', fmt(ohsFat,0), 'n.') : '',
+          n('ohs_fatalities_ext') != null ? tr('403-9', 'Infortuni mortali (non dipendenti)', fmt(n('ohs_fatalities_ext'),0), 'n.') : '',
+          ohsHC   != null ? tr('403-9', 'Infortuni ad alta conseguenza (esclusi mortali)', fmt(ohsHC,0), 'n.') : '',
+          ohsRec  != null ? tr('403-9', 'Infortuni registrabili totali', fmt(ohsRec,0), 'n.', trend(ohsRec)) : '',
+          n('ohs_rec_ext') != null ? tr('403-9', 'Infortuni registrabili (non dipendenti)', fmt(n('ohs_rec_ext'),0), 'n.') : '',
+          ohsHrs  != null ? tr('403-9', 'Ore totali lavorate', fmt(ohsHrs,0), 'ore') : '',
+          triRG   != null ? `<tr style="background:oklch(0.97 0.015 148/0.6)"><td>403-9</td><td><strong>TRIR</strong></td><td class="num"><strong>${fmt(triRG,2)}</strong></td><td>per 200.000h</td><td class="src-note">GHG Protocol SSL Standard</td></tr>` : '',
+          hcRate  != null ? tr('403-9', 'Tasso infortuni alta conseguenza', fmt(hcRate,3), 'per 200.000h') : '',
+          sv('ohs_main_types') ? trQ('Principali tipologie di infortuno', sv('ohs_main_types')) : '',
+        ].filter(Boolean))
+      ) : ''}
+
+      <!-- ── GRI 404-1: Formazione ─────────────────────────── -->
+      ${trainTotG != null ? sec('GRI 404-1 — Formazione e istruzione',
+        tbl(['Disclosure','Indicatore','Valore','Unità','Note'], [
+          tr('404-1', 'Ore totali di formazione erogate', fmt(trainTotG,0), 'ore', 'anno '+year),
+          trainPerG!= null ? tr('404-1', 'Media ore formazione/dipendente', fmt(trainPerG,1), 'ore/dip.', trend(trainPerG)) : '',
+          trainMG  != null ? tr('404-1', 'Ore erogate a uomini', fmt(trainMG,0), 'ore') : '',
+          trainFG  != null ? tr('404-1', 'Ore erogate a donne', fmt(trainFG,0), 'ore') : '',
+          sv('train_type') ? trQ('Tipologie di formazione', sv('train_type')) : '',
+        ].filter(Boolean))
+      ) : ''}
+
+      <!-- ── GRI 405-1: Diversità ──────────────────────────── -->
+      ${boardTot != null ? sec('GRI 405-1 — Diversità negli organi di governo',
+        tbl(['Disclosure','Indicatore','Valore','Unità','Note'], [
+          tr('405-1', 'Componenti organo di governo', fmt(boardTot,0), 'n.'),
+          boardF   != null ? tr('405-1', 'Di cui: donne', fmt(boardF,0)+' ('+pct(boardF,boardTot)+')', 'n.') : '',
+          boardU30 != null ? tr('405-1', 'Di cui: sotto 30 anni', fmt(boardU30,0), 'n.') : '',
+          board3050!= null ? tr('405-1', 'Di cui: 30–50 anni', fmt(board3050,0), 'n.') : '',
+          (boardU30!= null && board3050 != null) ? tr('405-1', 'Di cui: over 50', fmt(boardTot-(boardU30||0)-(board3050||0),0), 'n.') : '',
+        ].filter(Boolean))
+      ) : ''}
+
+      <!-- ── Emission factors ───────────────────────────────── -->
+      <div class="acard">
+        <div class="acard-title">Fattori di emissione utilizzati</div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Categoria</th><th>Scope</th><th>FE</th><th>Unità</th><th>GWP</th><th>Fonte</th></tr></thead>
+          <tbody>
+            <tr><td>Elettricità (rete IT)</td><td><span class="tag tag-b">S2</span></td><td>0,28307</td><td>kgCO₂e/kWh</td><td>AR6</td><td class="src-note">Metodologia VERA ${year}</td></tr>
+            <tr><td>Gas naturale</td><td><span class="tag tag-g">S1</span></td><td>0,18386</td><td>kgCO₂e/kWh</td><td>AR6</td><td class="src-note">Metodologia VERA ${year}</td></tr>
+            <tr><td>Gasolio</td><td><span class="tag tag-g">S1</span></td><td>2,68490</td><td>kgCO₂e/L</td><td>AR6</td><td class="src-note">Metodologia VERA ${year}</td></tr>
+            <tr><td>Rifiuti (discarica)</td><td><span class="tag tag-o">S3</span></td><td>0,58700</td><td>kgCO₂e/kg</td><td>AR6</td><td class="src-note">IPCC AR6 WG3</td></tr>
+            <tr><td>Rifiuti (riciclo)</td><td><span class="tag tag-o">S3</span></td><td>0,02100</td><td>kgCO₂e/kg</td><td>AR6</td><td class="src-note">Metodologia VERA ${year}</td></tr>
+          </tbody>
+        </table></div>
+      </div>`;
+
+    const vsmeEl = document.getElementById('rpt-vsme');
+    const griEl  = document.getElementById('rpt-gri');
+    if (griEl)  { griEl.innerHTML = griHtml; griEl.style.display = ''; }
+    if (vsmeEl) vsmeEl.style.display = 'none';
   }
 }
 

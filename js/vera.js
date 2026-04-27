@@ -5549,7 +5549,9 @@ function showScreen(id, navEl) {
     }
   }
   document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('screen-' + id).classList.add('active');
+  const _targetScreen = document.getElementById('screen-' + id);
+  if (!_targetScreen) { console.warn('[showScreen] screen not found: screen-' + id); return; }
+  _targetScreen.classList.add('active');
   document.querySelectorAll('.sb-item').forEach(n => n.classList.remove('active'));
   if (navEl) navEl.classList.add('active');
   // Refresh client list from Supabase whenever admin opens clients screen
@@ -5572,12 +5574,12 @@ function showScreen(id, navEl) {
 
   // Inizializza modulo materialità alla prima apertura
   if (id === 'materiality' && window.materialityModule) {
-    window.materialityModule.init();
+    try { window.materialityModule.init(); } catch(e) { console.warn('[showScreen] materialityModule.init error', e); }
   }
 
   // Inizializza modulo insights alla prima apertura
   if (id === 'insights' && window.insightsModule) {
-    window.insightsModule.init();
+    try { window.insightsModule.init(); } catch(e) { console.warn('[showScreen] insightsModule.init error', e); }
   }
 
   // Trigger screen entrance animations
@@ -5625,9 +5627,16 @@ const auth = {
         : `Bentornato${userData && userData.profile && userData.profile.name ? ', ' + userData.profile.name : ''} 👋`;
     }
     if (role === 'client') {
-      // Client: start from Doppia Materialità (self-service DMA before standard selection)
-      showScreen('materiality', document.getElementById('nav-materiality'));
-      if (window.materialityModule) materialityModule.init();
+      // Client: start from Doppia Materialità
+      // Small defer so Supabase client data finishes loading before init()
+      showScreen('home', document.getElementById('nav-home'));
+      setTimeout(() => {
+        try {
+          showScreen('materiality', document.getElementById('nav-materiality'));
+        } catch(e) {
+          console.warn('[auth.login] materiality redirect error', e);
+        }
+      }, 300);
     } else {
       showScreen('home', document.getElementById('nav-home'));
     }

@@ -295,24 +295,7 @@ function matRenderScreen() {
   if (!container) return;
   const c = (typeof currentClient === 'function') ? currentClient() : null;
 
-  if (c && c.plan === 'base') {
-    container.innerHTML = `
-      <div class="mat-upgrade-wrap">
-        <div class="mat-upgrade-card">
-          <div class="mat-upgrade-lock">🔒</div>
-          <h2 class="mat-upgrade-title">Disponibile nel piano Pro</h2>
-          <p class="mat-upgrade-desc">La Doppia Materialità ESRS è inclusa nel piano Pro (€1.299/anno).</p>
-          <div class="mat-upgrade-features">
-            <div class="mat-upgrade-feat">✓ Libreria completa 60+ impatti ESRS</div>
-            <div class="mat-upgrade-feat">✓ Flusso guidato in 3 fasi</div>
-            <div class="mat-upgrade-feat">✓ Mapping automatico GRI/VSME</div>
-            <div class="mat-upgrade-feat">✓ Calcolo materialità con scoring EFRAG</div>
-          </div>
-          <button class="btn btn-primary" onclick="window.open('mailto:info@vera-esg.it?subject=Upgrade Pro','_blank')">Aggiorna piano →</button>
-        </div>
-      </div>`;
-    return;
-  }
+  // DMA è accessibile a tutti i piani — nessun gate qui
 
   container.innerHTML = `
     ${_renderPhaseBar()}

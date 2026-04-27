@@ -596,10 +596,16 @@ const veraAuth = {
     _setBtnLoading('login-submit', true, 'Accedi →');
 
     try {
-      const { data, error } = await _sb.auth.signInWithPassword({ email, password });
+      // Clear any stale session/lock before attempting sign-in
+      try { await _sb.auth.signOut(); } catch(_) {}
+
+      // Race signInWithPassword against a 12s timeout
+      const signInPromise = _sb.auth.signInWithPassword({ email, password });
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout — riprova tra qualche secondo')), 12000)
+      );
+      const { data, error } = await Promise.race([signInPromise, timeoutPromise]);
       if (error) throw error;
-      // Set guard BEFORE transition so onAuthStateChange (which fires
-      // synchronously after signInWithPassword resolves) skips its own call
       this._signingIn = true;
       _transitionToApp();
       await this._onSignedIn(data.user);

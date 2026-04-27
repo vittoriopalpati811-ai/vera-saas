@@ -290,7 +290,7 @@ function _topicDef(id) {
 /* ══════════════════════════════════════════════════════════
    RENDER PRINCIPALE
 ══════════════════════════════════════════════════════════ */
-function matRenderScreen() {
+function _matRenderCore() {
   const container = document.getElementById('screen-materiality');
   if (!container) return;
   const c = (typeof currentClient === 'function') ? currentClient() : null;
@@ -1787,11 +1787,10 @@ function _injectSectorBanner() {
 }
 
 /* ══════════════════════════════════════════════════════════
-   Override matRenderScreen — inietta banner AI
+   matRenderScreen — core + AI banner injection
 ══════════════════════════════════════════════════════════ */
-const _origMatRenderScreen_v3 = matRenderScreen;
 function matRenderScreen() {
-  _origMatRenderScreen_v3();
+  _matRenderCore();  // call renamed core (no recursion)
   if (_matState.phase === 1) {
     const ph1 = document.getElementById('mat-phase-1');
     if (!ph1) return;

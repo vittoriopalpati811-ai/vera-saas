@@ -24,14 +24,15 @@ const QUESTIONS = [
   },
   {
     id: 'obligations',
-    category: 'Contesto normativo',
+    category: 'Perché rendiconto',
     icon: '⚖️',
-    text: 'Hai obblighi ESG normativi o sei quotata in borsa?',
-    sub: 'Verifica se hai obblighi normativi ESG o requisiti da parte di clienti/banche',
+    text: 'Perché stai considerando la rendicontazione ESG?',
+    sub: 'Indica la motivazione principale — determina il livello di dettaglio consigliato',
     options: [
-      { value: 'listed',    label: 'Quotata in borsa',          hint: 'Soggetta a CSRD / ESRS',     vsme: 0, gri: 5 },
-      { value: 'indirect',  label: 'Obblighi CSRD indiretti',   hint: 'Fornitore di grandi imprese', vsme: 2, gri: 3 },
-      { value: 'voluntary', label: 'Scelta completamente volontaria', hint: 'Nessun obbligo diretto', vsme: 4, gri: 1 },
+      { value: 'bank',      label: 'Richiesta da banche o istituti finanziari', hint: 'Accesso a credito verde / rating ESG', vsme: 5, gri: 1 },
+      { value: 'supply',    label: 'Richiesta da clienti o committenti',         hint: 'Supply chain / qualifica fornitori',   vsme: 4, gri: 2 },
+      { value: 'tender',    label: 'Gare d\'appalto pubbliche o bandi UE',       hint: 'CAM, PNRR, bandi sostenibilità',       vsme: 3, gri: 3 },
+      { value: 'voluntary', label: 'Scelta volontaria per miglioramento',        hint: 'Reputazione, ESG interno',             vsme: 4, gri: 1 },
     ]
   },
   {
@@ -5475,18 +5476,9 @@ function openApp(tab) {
   loginEl.style.display = 'flex';
   loginEl.classList.add('active');
 
-  // 'signup' → show register panel; default ('login') → show login panel
-  if (tab === 'signup') {
-    const lp = document.getElementById('login-panel');
-    const rp = document.getElementById('register-panel');
-    if (lp) lp.style.display = 'none';
-    if (rp) rp.style.display = 'block';
-  } else {
-    const lp = document.getElementById('login-panel');
-    const rp = document.getElementById('register-panel');
-    if (lp) lp.style.display = 'block';
-    if (rp) rp.style.display = 'none';
-  }
+  // Always show login panel (public signup removed — invite-only)
+  const lp = document.getElementById('login-panel');
+  if (lp) lp.style.display = 'block';
 }
 
 function closeLogin() {
@@ -5516,6 +5508,46 @@ function showScreen(id, navEl) {
     toast('Il timbro metodologico può essere applicato solo dal consulente', 'error');
     return;
   }
+
+  // Guard insights screen — Pro plan or admin only
+  if (id === 'insights' && !auth.isAdmin()) {
+    const c = (typeof currentClient === 'function') ? currentClient() : null;
+    const isPro = c && (c.plan === 'pro' || c.plan === 'enterprise');
+    if (!isPro) {
+      // Show Pro upsell overlay
+      const existing = document.getElementById('pro-gate-overlay');
+      if (existing) existing.remove();
+      const overlay = document.createElement('div');
+      overlay.id = 'pro-gate-overlay';
+      overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:9000;padding:16px';
+      overlay.innerHTML = `
+        <div style="background:#fff;border-radius:18px;padding:40px 36px;max-width:440px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.25)">
+          <div style="font-size:44px;margin-bottom:12px">📊</div>
+          <h2 style="font-size:20px;font-weight:800;color:#111;margin-bottom:8px">Funzionalità riservata al piano Pro</h2>
+          <p style="font-size:14px;color:#6b7280;margin-bottom:6px">Insights ESG include:</p>
+          <ul style="text-align:left;font-size:13px;color:#374151;margin:0 0 20px 0;padding-left:20px;line-height:1.8">
+            <li>Benchmark di settore vs media nazionale e best-in-class</li>
+            <li>Checklist banche verdi (Intesa S-Loan, UniCredit ESG-Linked, BNL Green, MCC)</li>
+            <li>Simulatore riduzione GHG con ROI calcolato</li>
+            <li>Doppia materialità ESRS</li>
+            <li>Timbro digitale VERA</li>
+          </ul>
+          <div style="font-size:22px;font-weight:800;color:#16a34a;margin-bottom:4px">€1.500<span style="font-size:14px;font-weight:500;color:#6b7280">/anno</span></div>
+          <div style="font-size:12px;color:#9ca3af;margin-bottom:24px">o €149/mese</div>
+          <a href="mailto:info@veraesg.it?subject=Richiesta%20piano%20Pro%20VERA%20ESG"
+            style="display:inline-block;padding:12px 28px;background:#16a34a;color:#fff;border-radius:10px;font-size:14px;font-weight:700;text-decoration:none;margin-bottom:12px">
+            Richiedi il piano Pro →
+          </a>
+          <br/>
+          <button onclick="document.getElementById('pro-gate-overlay').remove()"
+            style="border:none;background:none;color:#6b7280;font-size:13px;cursor:pointer;margin-top:8px;text-decoration:underline">
+            Torna indietro
+          </button>
+        </div>`;
+      document.body.appendChild(overlay);
+      return;
+    }
+  }
   document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + id).classList.add('active');
   document.querySelectorAll('.sb-item').forEach(n => n.classList.remove('active'));
@@ -5534,12 +5566,18 @@ function showScreen(id, navEl) {
     report:      'Report ESG',
     stamp:       'Timbro Metodologico',
     materiality: 'Analisi Doppia Materialità',
+    insights:    'Insights ESG',
   };
   document.getElementById('page-title').textContent = titles[id] || id;
 
   // Inizializza modulo materialità alla prima apertura
   if (id === 'materiality' && window.materialityModule) {
     window.materialityModule.init();
+  }
+
+  // Inizializza modulo insights alla prima apertura
+  if (id === 'insights' && window.insightsModule) {
+    window.insightsModule.init();
   }
 
   // Trigger screen entrance animations
@@ -5586,7 +5624,13 @@ const auth = {
         ? `Bentornato, ${(userData && userData.profile && userData.profile.name) || 'Consulente'} 👋`
         : `Bentornato${userData && userData.profile && userData.profile.name ? ', ' + userData.profile.name : ''} 👋`;
     }
-    showScreen('home', document.getElementById('nav-home'));
+    if (role === 'client') {
+      // Client: start from Doppia Materialità (self-service DMA before standard selection)
+      showScreen('materiality', document.getElementById('nav-materiality'));
+      if (window.materialityModule) materialityModule.init();
+    } else {
+      showScreen('home', document.getElementById('nav-home'));
+    }
     if (role === 'admin' && window.veraAuth && window.veraAuth.refreshAdminClientTable) {
       window.veraAuth.refreshAdminClientTable();
     }
@@ -6211,7 +6255,8 @@ const newClientFlow = {
           // Start onboarding
           auth.login('client');
           _updateClientUI(c);
-          showScreen('assess', document.getElementById('nav-assess'));
+          showScreen('materiality', document.getElementById('nav-materiality'));
+          if (window.materialityModule) materialityModule.init();
         }, 500);
       }
     }, 300);
@@ -6234,6 +6279,190 @@ window.reportFlow   = reportFlow;
 window.aiFileParser = aiFileParser;
 window.sustainabilityPlan = sustainabilityPlan;
 window.db           = db;
+
+/* ══════════════════════════════════════════════════════════
+   EXCEL TEMPLATE GENERATOR — VERA Client Data Template
+══════════════════════════════════════════════════════════ */
+function generateClientTemplate() {
+  _loadSheetJS(() => {
+    const c   = currentClient() || {};
+    const std = c.std || (window._matState && _matState.chosenStandard) || 'vsme';
+    const company = c.name || c.company_name || 'Azienda';
+    const year    = c.reportYear || new Date().getFullYear() - 1;
+    const XLSX    = window.XLSX;
+
+    /* ── Helper: build a sheet from rows array ── */
+    const makeSheet = (rows) => {
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      // Column widths: Label 38 | Value 22 | Unit 14 | Note 38
+      ws['!cols'] = [{ wch: 38 }, { wch: 22 }, { wch: 14 }, { wch: 38 }];
+      // Freeze header row
+      ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+      return ws;
+    };
+
+    /* ── Row builders ── */
+    const H  = (label) => [label, '', '', ''];          // section header
+    const R  = (lbl, val, unit, note) => [lbl, val ?? '', unit ?? '', note ?? ''];
+
+    /* ══ Sheet 1: Energia & Emissioni ══ */
+    const energyRows = [
+      R('Campo', 'Valore', 'Unità', 'Note / Fonte dati'),                       // col header
+      H('── ENERGIA DIRETTA (Scope 1) ──'),
+      R('Gas naturale consumato', '', 'kWh/anno', 'Da bolletta fornitore gas'),
+      R('GPL consumato', '', 'kg/anno', 'Da bolletta o fattura'),
+      R('Gasolio riscaldamento', '', 'L/anno', 'Da fattura'),
+      R('Biomassa/pellet', '', 'kg/anno', 'Da fattura'),
+      H('── ENERGIA ELETTRICA (Scope 2) ──'),
+      R('Elettricità acquistata dalla rete', '', 'kWh/anno', 'Da bolletta elettrica'),
+      R('Energia da fonti rinnovabili (autoprodotta)', '', 'kWh/anno', 'Es. fotovoltaico'),
+      R('Acquisto certificati GO (Green Origin)', '', 'kWh/anno', 'Se applicabile'),
+      H('── CONSUMI TERMICI ──'),
+      R('Teleriscaldamento acquistato', '', 'kWh/anno', 'Da bolletta'),
+      R('Vapore acquistato', '', 'kWh/anno', 'Se applicabile'),
+      H('── PERFORMANCE ENERGETICA ──'),
+      R('Intensità energetica (kWh / unità di prodotto)', '', 'kWh/unità', 'Definire unità di prodotto'),
+      R('Anno di riferimento baseline', year, 'anno', 'Per calcolo trend'),
+    ];
+
+    /* ══ Sheet 2: Emissioni GHG ══ */
+    const ghgRows = [
+      R('Campo', 'Valore', 'Unità', 'Note / Fonte dati'),
+      H('── SCOPE 1 — Emissioni dirette ──'),
+      R('Combustione gas naturale', '', 'tCO₂e', 'Calcolato da VERA'),
+      R('Combustione gasolio', '', 'tCO₂e', 'Calcolato da VERA'),
+      R('Refrigeranti (perdite HFC)', '', 'tCO₂e', 'Da schede F-Gas / IPPC'),
+      R('Processi industriali', '', 'tCO₂e', 'Se applicabile'),
+      H('── SCOPE 2 — Emissioni indirette energia ──'),
+      R('Elettricità acquistata (location-based)', '', 'tCO₂e', 'FE ISPRA anno corrente'),
+      R('Elettricità acquistata (market-based)', '', 'tCO₂e', 'Con certificati GO'),
+      H('── SCOPE 3 — Altre emissioni indirette ──'),
+      R('Cat. 1: Beni e servizi acquistati', '', 'tCO₂e', 'Stima o da LCA fornitori'),
+      R('Cat. 4: Trasporto e distribuzione (upstream)', '', 'tCO₂e', 'km × FE per veicolo/carburante'),
+      R('Cat. 5: Rifiuti prodotti', '', 'tCO₂e', 'kg rifiuti × FE smaltimento'),
+      R('Cat. 6: Viaggi di lavoro', '', 'tCO₂e', 'km aerei/treni'),
+      R('Cat. 11: Uso dei prodotti venduti', '', 'tCO₂e', 'Se applicabile'),
+      H('── TARGET & TREND ──'),
+      R('Emissioni anno base (Scope 1+2)', '', 'tCO₂e', 'Anno di riferimento'),
+      R('Target riduzione al 2030', '', '%', 'Es. -30% vs baseline'),
+    ];
+
+    /* ══ Sheet 3: Acqua & Rifiuti ══ */
+    const wasteRows = [
+      R('Campo', 'Valore', 'Unità', 'Note / Fonte dati'),
+      H('── ACQUA ──'),
+      R('Prelievo totale acqua', '', 'm³/anno', 'Da contatori / fatture'),
+      R('di cui: rete idrica municipale', '', 'm³/anno', ''),
+      R('di cui: pozzo/acquifero', '', 'm³/anno', 'Se applicabile'),
+      R('di cui: acque superficiali', '', 'm³/anno', 'Se applicabile'),
+      R('Acqua ricircolata/riutilizzata', '', 'm³/anno', ''),
+      R('Scarichi idrici totali', '', 'm³/anno', 'Con autorizzazione allo scarico'),
+      H('── RIFIUTI ──'),
+      R('Rifiuti totali generati', '', 'kg/anno', ''),
+      R('di cui: avviati a riciclo', '', 'kg/anno', ''),
+      R('di cui: avviati a recupero energetico', '', 'kg/anno', ''),
+      R('di cui: smaltiti in discarica', '', 'kg/anno', ''),
+      R('Rifiuti pericolosi generati', '', 'kg/anno', 'Con codice CER pericoloso'),
+      R('Intensità rifiuti (kg / unità di prodotto)', '', 'kg/unità', ''),
+    ];
+
+    /* ══ Sheet 4: Sociale ══ */
+    const socialRows = [
+      R('Campo', 'Valore', 'Unità', 'Note / Fonte dati'),
+      H('── OCCUPAZIONE ──'),
+      R('Numero dipendenti totali (EoY)', '', 'n°', 'Fine anno rendicontato'),
+      R('di cui: donne', '', 'n°', ''),
+      R('di cui: uomini', '', 'n°', ''),
+      R('di cui: contratto a tempo indeterminato', '', 'n°', ''),
+      R('di cui: contratto a tempo determinato', '', 'n°', ''),
+      R('di cui: part-time', '', 'n°', ''),
+      R('Nuove assunzioni nell\'anno', '', 'n°', ''),
+      R('Turnover (cessazioni)', '', 'n°', ''),
+      H('── FORMAZIONE ──'),
+      R('Ore di formazione totali erogate', '', 'ore/anno', ''),
+      R('Ore medie formazione per dipendente', '', 'ore/persona', ''),
+      R('di cui: formazione su salute e sicurezza', '', 'ore/anno', ''),
+      H('── SALUTE & SICUREZZA ──'),
+      R('Infortuni sul lavoro (con assenza)', '', 'n°', 'INAIL denuncia'),
+      R('Giorni persi per infortuni', '', 'giorni', ''),
+      R('Indice di frequenza (IF)', '', 'IF', '(infortuni/ore lavorate)×1.000.000'),
+      R('Malattie professionali riconosciute', '', 'n°', ''),
+      H('── RETRIBUZIONE ──'),
+      R('Retribuzione media annua (full-time)', '', '€/anno', ''),
+      R('Gap retributivo di genere (donne/uomini)', '', '%', 'Es. 92% = donne guadagnano 8% in meno'),
+      R('Dipendenti con retribuzione ≥ living wage locale', '', '%', 'Se disponibile'),
+      H('── SUPPLY CHAIN SOCIALE ──'),
+      R('Fornitori totali attivi', '', 'n°', ''),
+      R('Fornitori con autovalutazione ESG completata', '', 'n°', ''),
+      R('Fornitori locali (raggio 100 km)', '', '%', ''),
+    ];
+
+    /* ══ Sheet 5: Governance ══ */
+    const govRows = [
+      R('Campo', 'Valore', 'Unità', 'Note / Fonte dati'),
+      H('── STRUTTURA GOVERNANCE ──'),
+      R('N° componenti CdA / organo di governo', '', 'n°', ''),
+      R('di cui: donne', '', 'n°', ''),
+      R('di cui: indipendenti', '', 'n°', ''),
+      R('Frequenza riunioni CdA/anno', '', 'n°', ''),
+      H('── ETICA & COMPLIANCE ──'),
+      R('Codice etico adottato?', '', 'Sì/No', ''),
+      R('Whistleblowing policy attiva?', '', 'Sì/No', 'D.Lgs. 24/2023 se >50 dip.'),
+      R('Reclami etici ricevuti nell\'anno', '', 'n°', ''),
+      R('Procedimenti legali/sanzioni in corso', '', 'n°', ''),
+      H('── ANTI-CORRUZIONE ──'),
+      R('Dipendenti formati su anti-corruzione', '', 'n°', ''),
+      R('% dipendenti con formazione anti-corruzione', '', '%', ''),
+      R('Episodi di corruzione accertati', '', 'n°', ''),
+      H('── PRIVACY & CYBER ──'),
+      R('Violazioni dati personali (data breach)', '', 'n°', 'Da registro GDPR'),
+      R('Certificazione ISO 27001?', '', 'Sì/No/In corso', ''),
+    ];
+
+    /* ══ Sheet 6: Anagrafica azienda ══ */
+    const infoRows = [
+      R('Campo', 'Valore', 'Unità', 'Note'),
+      H('── DATI GENERALI ──'),
+      R('Ragione sociale', company, '', ''),
+      R('Partita IVA / Codice fiscale', c.vatNumber || '', '', ''),
+      R('Anno di rendicontazione', year, 'anno', ''),
+      R('Settore ATECO principale', c.sector || '', '', ''),
+      R('Standard di rendicontazione', std.toUpperCase(), '', 'VSME / GRI'),
+      R('N° dipendenti (valore al 31/12)', c.employees || '', 'n°', ''),
+      R('Fatturato annuo', c.revenue || '', '€', ''),
+      R('Sede legale (Comune, Provincia)', c.city || '', '', ''),
+      R('Sito web aziendale', '', '', ''),
+      R('Referente ESG (nome e email)', '', '', 'Compilato dal consulente VERA'),
+      H('── ISTRUZIONI ══'),
+      R('1. Compila le celle nella colonna "Valore"', '', '', ''),
+      R('2. Non modificare colonne A, C, D', '', '', ''),
+      R('3. Usa le unità indicate nella colonna C', '', '', ''),
+      R('4. Carica il file completato nella sezione Upload di VERA', '', '', ''),
+    ];
+
+    /* ══ Build workbook ══ */
+    const wb = XLSX.utils.book_new();
+    wb.Props = { Title: `VERA ESG Template — ${company} ${year}`, Author: 'VERA ESG Platform' };
+
+    const sheets = [
+      { name: '0_Anagrafica',         rows: infoRows   },
+      { name: '1_Energia',            rows: energyRows  },
+      { name: '2_Emissioni GHG',      rows: ghgRows     },
+      { name: '3_Acqua e Rifiuti',    rows: wasteRows   },
+      { name: '4_Sociale',            rows: socialRows  },
+      { name: '5_Governance',         rows: govRows     },
+    ];
+
+    sheets.forEach(({ name, rows }) => {
+      XLSX.utils.book_append_sheet(wb, makeSheet(rows), name);
+    });
+
+    /* ══ Download ══ */
+    XLSX.writeFile(wb, `VERA-Template-${company.replace(/\s+/g, '_')}-${year}.xlsx`);
+    if (typeof toast === 'function') toast('Template Excel scaricato ✓', 'success');
+  });
+}
+window.generateClientTemplate = generateClientTemplate;
 
 /* VERA namespace — single entry point used by HTML onclick handlers */
 window.VERA = {

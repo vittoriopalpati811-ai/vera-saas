@@ -443,16 +443,18 @@
       <div class="plan featured reveal">
         <div class="plan-badge">PIÙ SCELTO</div>
         <div class="plan-name">Pro</div>
-        <div class="plan-price">€1.499<span class="plan-cadence">/anno</span></div>
+        <div class="plan-price">€1.500<span class="plan-cadence">/anno</span></div>
         <ul class="plan-features">
           <li>Fino a 5 aziende</li>
           <li>AI assessment avanzato</li>
           <li>VSME + GRI Standards</li>
           <li>Analisi Scope 3 completa</li>
+          <li>Benchmark di settore (Insights ESG)</li>
+          <li>Checklist banche verdi</li>
+          <li>Simulatore riduzione GHG</li>
           <li>Analisi Doppia Materialità ESRS</li>
-          <li>Storico pluriennale e trend (if applicable)</li>
+          <li>Timbro digitale VERA</li>
           <li>Supporto dal consulente incluso</li>
-          <li>Onboarding dedicato con consulente</li>
         </ul>
         <button class="btn btn-primary" style="width:100%" onclick="openApp()">Inizia gratis →</button>
       </div>
@@ -589,10 +591,7 @@
         <button class="btn btn-ghost" style="font-size:13px;color:var(--text-3);margin-bottom:10px" onclick="veraAuth.showForgotPassword()">
           Hai dimenticato la password?
         </button>
-        <p style="color:var(--text-2);font-size:14px;margin-bottom:10px">Non hai ancora un account?</p>
-        <button class="btn btn-outline" style="width:100%;padding:11px;font-size:14px" onclick="veraAuth.showRegister()">
-          Registra la tua azienda →
-        </button>
+        <p style="color:var(--text-3);font-size:13px;margin:0">L'accesso è su invito. Per richiedere un account: <a href="mailto:info@veraesg.it" style="color:var(--green-d);text-decoration:none;font-weight:600">info@veraesg.it</a></p>
       </div>
     </div>
 
@@ -623,64 +622,6 @@
       <div style="margin-top:20px;text-align:center">
         <button class="btn btn-ghost" style="font-size:14px;color:var(--text-3)" onclick="veraAuth.showLogin()">
           ← Torna al login
-        </button>
-      </div>
-    </div>
-
-    <!-- ── REGISTER PANEL ── -->
-    <div id="register-panel" style="display:none;background:var(--white);border:1px solid var(--border);border-radius:18px;padding:32px 28px;box-shadow:0 0 0 1px var(--border),0 20px 60px #00000066,0 0 80px oklch(0.72 0.21 150 / 0.06)"
->
-      <h2 class="login-title" style="margin-bottom:6px">Crea il tuo account</h2>
-      <p class="login-sub" style="margin-bottom:24px">Compila i dati aziendali per iniziare</p>
-
-      <form id="register-form" onsubmit="veraAuth.handleRegister(event)" style="display:flex;flex-direction:column;gap:12px">
-        <input
-          id="reg-name"
-          type="text"
-          placeholder="Nome e cognome referente"
-          required
-          style="padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;outline:none;transition:border .15s;background:var(--white);color:var(--text)"
-          onfocus="this.style.borderColor='#22d06a'" onblur="this.style.borderColor='var(--border)'"
-        />
-        <input
-          id="reg-company"
-          type="text"
-          placeholder="Ragione sociale azienda"
-          required
-          style="padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;outline:none;transition:border .15s;background:var(--white);color:var(--text)"
-          onfocus="this.style.borderColor='#22d06a'" onblur="this.style.borderColor='var(--border)'"
-        />
-        <input
-          id="reg-email"
-          type="email"
-          placeholder="Email aziendale"
-          autocomplete="email"
-          required
-          style="padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;outline:none;transition:border .15s;background:var(--white);color:var(--text)"
-          onfocus="this.style.borderColor='#22d06a'" onblur="this.style.borderColor='var(--border)'"
-        />
-        <input
-          id="reg-password"
-          type="password"
-          placeholder="Password (min. 6 caratteri)"
-          autocomplete="new-password"
-          required
-          minlength="6"
-          style="padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;outline:none;transition:border .15s;background:var(--white);color:var(--text)"
-          onfocus="this.style.borderColor='#22d06a'" onblur="this.style.borderColor='var(--border)'"
-        />
-        <div id="reg-error" style="display:none;background:#2a0f0f;color:#fca5a5;border:1px solid #7f1d1d;border-radius:8px;padding:10px 14px;font-size:13px"></div>
-        <button
-          id="reg-submit"
-          type="submit"
-          class="btn btn-primary"
-          style="padding:13px;font-size:15px;font-weight:700;border-radius:10px"
-        >Crea account →</button>
-      </form>
-
-      <div style="margin-top:20px;text-align:center;border-top:1px solid var(--border);padding-top:18px">
-        <button class="btn btn-outline" style="width:100%;padding:11px;font-size:14px" onclick="veraAuth.showLogin()">
-          ← Hai già un account? Accedi
         </button>
       </div>
     </div>
@@ -746,6 +687,11 @@
     <div class="sb-item" id="nav-materiality" onclick="showScreen('materiality',this)">
       <svg class="sb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
       Doppia Materialità
+      <span class="sb-badge-new" style="background:var(--purple)">PRO</span>
+    </div>
+    <div class="sb-item" id="nav-insights" onclick="showScreen('insights',this)">
+      <svg class="sb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+      Insights ESG
       <span class="sb-badge-new" style="background:var(--purple)">PRO</span>
     </div>
     <div class="sb-item" id="nav-stamp" onclick="showScreen('stamp',this)">
@@ -1241,6 +1187,17 @@
             <div class="info-banner" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#166534;">
               ℹ️ Dopo il caricamento, il consulente VERA revisionerà il report prima che sia disponibile per te. Riceverai una notifica via email.
             </div>
+            <!-- Template download banner -->
+            <div style="display:flex;align-items:center;gap:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;margin-bottom:16px">
+              <span style="font-size:22px">📥</span>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:600;color:#92400e;margin-bottom:2px">Non hai ancora un file?</div>
+                <div style="font-size:12px;color:#b45309">Scarica il template VERA precompilato con le voci richieste per il tuo standard.</div>
+              </div>
+              <button class="btn btn-outline btn-sm" style="white-space:nowrap;border-color:#f59e0b;color:#92400e" onclick="generateClientTemplate()">
+                ⬇ Scarica Template VERA
+              </button>
+            </div>
             <p class="acard-sub">Carica un file .xlsx o .csv con i dati di consumo energetico, rifiuti e trasporti per l'anno selezionato.</p>
             <div class="upload-zone" id="drop-zone" onclick="VERA.upload.simulate()">
               <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--text-3)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
@@ -1565,6 +1522,14 @@
         </div>
       </div><!-- /screen-materiality -->
 
+      <!-- ════════════════════════════════════════
+           SCREEN: INSIGHTS ESG (Pro)
+      ════════════════════════════════════════ -->
+      <div class="app-screen" id="screen-insights">
+        <!-- Contenuto iniettato dinamicamente da insightsModule.init() -->
+        <div id="insights-content"></div>
+      </div><!-- /screen-insights -->
+
     </div><!-- /app-content -->
   </div><!-- /app-main -->
 </div><!-- /view-app -->
@@ -1576,11 +1541,24 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <!-- Supabase JS SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="js/vera.js?v=20260426f"></script>
-<script src="js/vera-supabase.js?v=20260426b"></script>
-<script src="js/vera-materiality.js?v=20260425"></script>
+<script src="js/vera.js?v=20260427b"></script>
+<script src="js/vera-supabase.js?v=20260427a"></script>
+<script src="js/vera-insights.js?v=20260427a"></script>
+<script src="js/vera-materiality.js?v=20260427b"></script>
 <script src="js/vera-animations.js?v=20260419e"></script>
 <script src="js/vera-bubbles.js?v=20260417"></script>
 <script src="js/vera-chat.js?v=20260426"></script>
+<!-- SheetJS: lazy-loaded on demand by generateClientTemplate() -->
+<script>
+window._sheetjsLoaded = false;
+function _loadSheetJS(cb) {
+  if (window._sheetjsLoaded && window.XLSX) { cb(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  s.onload = () => { window._sheetjsLoaded = true; cb(); };
+  s.onerror = () => { if (typeof toast === 'function') toast('Errore caricamento libreria Excel', 'error'); };
+  document.head.appendChild(s);
+}
+</script>
 </body>
 </html>

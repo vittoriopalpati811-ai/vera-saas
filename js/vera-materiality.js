@@ -809,6 +809,12 @@ function _renderPhase3() {
             <div style="font-size:13px;color:var(--text-2)">E1 è materiale → inserisci i dati energia e calcola le emissioni Scope 1/2/3</div>
             <div class="btn btn-primary" style="margin-top:14px;width:100%;justify-content:center">Vai al calcolo GHG →</div>
           </div>` : ''}
+        <div class="mat-cta-card mat-cta-primary" onclick="materialityModule.startQuestionnaire()" style="order:-1">
+          <div style="font-size:28px;margin-bottom:8px">📝</div>
+          <div style="font-size:16px;font-weight:700;margin-bottom:4px">Compila le Disclosure</div>
+          <div style="font-size:13px;color:var(--text-2)">Inserisci i dati ESG per i ${activeModules.length} moduli selezionati — guida passo-passo</div>
+          <div class="btn btn-primary" style="margin-top:14px;width:100%;justify-content:center">Inizia il questionario ESG →</div>
+        </div>
         <div class="mat-cta-card" onclick="materialityModule.goToReport()">
           <div style="font-size:28px;margin-bottom:8px">📄</div>
           <div style="font-size:16px;font-weight:700;margin-bottom:4px">Genera Report</div>
@@ -986,6 +992,22 @@ const materialityModule = {
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = 'VERA-MatriceDouble-Materialita.csv'; a.click();
     if (typeof toast === 'function') toast('Matrice esportata in CSV', 'success');
+  },
+
+  startQuestionnaire() {
+    const std    = _matState.chosenStandard || 'vsme';
+    const sector = (typeof currentClient === 'function' && currentClient())
+      ? (currentClient().sector || '') : '';
+    if (typeof showScreen === 'function') {
+      showScreen('assess', document.getElementById('nav-assess'));
+    }
+    setTimeout(() => {
+      if (typeof typeformQuestionnaire !== 'undefined') {
+        typeformQuestionnaire.open(std, sector);
+      } else if (typeof questionnaire !== 'undefined') {
+        questionnaire.open(std, sector);
+      }
+    }, 150);
   },
 
   /* ── SAVE ── */

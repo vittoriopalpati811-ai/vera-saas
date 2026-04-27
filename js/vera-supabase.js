@@ -610,45 +610,6 @@ const veraAuth = {
     }
   },
 
-  /* ── Register form handler ───────────────────────────── */
-  async handleRegister(e) {
-    e.preventDefault();
-    _hideLoginError('reg-error');
-    const name    = (document.getElementById('reg-name')     || {}).value || '';
-    const company = (document.getElementById('reg-company')  || {}).value || '';
-    const email   = (document.getElementById('reg-email')    || {}).value || '';
-    const password= (document.getElementById('reg-password') || {}).value || '';
-
-    if (!name || !company || !email || !password) {
-      _showLoginError('reg-error', 'Compila tutti i campi.'); return;
-    }
-
-    _setBtnLoading('reg-submit', true, 'Crea account →');
-
-    try {
-      const { error } = await _sb.auth.signUp({
-        email,
-        password,
-        options: { data: { name, company_name: company } },
-      });
-      if (error) throw error;
-
-      // Show success
-      document.getElementById('register-panel').innerHTML = `
-        <div style="text-align:center;padding:32px 0">
-          <div style="font-size:48px;margin-bottom:16px">✅</div>
-          <h3 style="color:var(--green-d);margin-bottom:8px">Account creato con successo!</h3>
-          <p style="color:var(--text-2);max-width:320px;margin:0 auto">
-            Controlla la tua email <b>${email}</b> per confermare l'account, poi accedi.
-          </p>
-          <button class="btn btn-primary" style="margin-top:24px" onclick="veraAuth.showLogin()">← Vai al login</button>
-        </div>`;
-    } catch (err) {
-      _showLoginError('reg-error', _xlErr(err.message));
-      _setBtnLoading('reg-submit', false, 'Crea account →');
-    }
-  },
-
   /* ── Forgot-password handler ────────────────────────── */
   async handleForgotPassword(e) {
     e.preventDefault();
@@ -679,20 +640,13 @@ const veraAuth = {
     }
   },
 
-  /* ── Toggle login / register panels ─────────────────── */
-  showRegister() {
-    document.getElementById('login-panel').style.display    = 'none';
-    document.getElementById('forgot-panel').style.display   = 'none';
-    document.getElementById('register-panel').style.display = 'block';
-  },
+  /* ── Toggle login panels ─────────────────────────────── */
   showLogin() {
-    document.getElementById('register-panel').style.display = 'none';
     document.getElementById('forgot-panel').style.display   = 'none';
     document.getElementById('login-panel').style.display    = 'block';
   },
   showForgotPassword() {
     document.getElementById('login-panel').style.display    = 'none';
-    document.getElementById('register-panel').style.display = 'none';
     document.getElementById('forgot-panel').style.display   = 'block';
   },
 

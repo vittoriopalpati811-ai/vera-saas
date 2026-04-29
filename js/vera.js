@@ -405,6 +405,10 @@ const VSME_MODULES_ALL = [
   { code:'C3',    label:'Economia circolare — Flussi materiali e obiettivi', optional:true },
   { code:'C4',    label:'Salute e sicurezza avanzata — Tassi e programmi', optional:true },
   { code:'C5',    label:'Condotta avanzata — Formazione etica e lobbying', optional:true },
+  // ── MODULO C condizionale (EFRAG VSME 2023 — applicabilità dipende dal profilo azienda) ──
+  { code:'C-Climate', label:'Clima — Obiettivi net-zero e finanza verde (modulo C)', optional:true, condition: (c) => !!(c && (c.hasNetZeroTarget || c.hasGreenFinancing)), conditionLabel:'Applicabile se: obiettivi net-zero o finanziamenti green' },
+  { code:'C-ESRS2',   label:'ESRS 2 — Informativa aggiuntiva settori ad alto impatto (modulo C)', optional:true, condition: (c) => !!(c && ['manuf','energy','chem','mining'].includes(c.sector)), conditionLabel:'Applicabile se: settore ad alto impatto ambientale' },
+  { code:'C-Social',  label:'Sociale esteso — Lavoratori catena valore e comunità (modulo C)', optional:true, condition: (c) => !!(c && (c.employees > 250 || c.hasGlobalOps)), conditionLabel:'Applicabile se: >250 dipendenti o operazioni extra-UE' },
 ];
 
 /* ── Recommendation object ─────────────────────────────── */
@@ -2358,6 +2362,33 @@ const VSME_QUESTIONS = {
       placeholder:'es. Italia, Germania, Svizzera' },
     { id:'c5_tax_approach', label:'Approccio alla fiscalità e trasparenza verso l\'Agenzia delle Entrate', type:'textarea' },
   ],
+
+  /* C-Climate: Obiettivi net-zero e finanza verde (condizionale) */
+  'C-Climate': [
+    { id:'net_zero_year',      label:'Anno target net-zero', type:'number', placeholder:'Es. 2040' },
+    { id:'green_finance_amount', label:'Volume finanziamenti green ottenuti (€)', type:'number' },
+    { id:'sbti_aligned',       label:'Obiettivi allineati a Science Based Targets (SBTi)?', type:'select',
+      options:['Sì — obiettivi SBTi validati','In fase di validazione','No'] },
+    { id:'transition_plan',    label:'Piano di transizione climatica approvato?', type:'select',
+      options:['Sì — approvato e pubblicato','In elaborazione','No'] },
+  ],
+
+  /* C-ESRS2: Informativa aggiuntiva settori ad alto impatto (condizionale) */
+  'C-ESRS2': [
+    { id:'taxonomy_eligible', label:'Attività allineate alla Tassonomia UE (%)', type:'number', placeholder:'Es. 35' },
+    { id:'taxonomy_aligned',  label:'Quota attività allineate e conformi (%)', type:'number' },
+    { id:'dnsh_check',        label:'Verifica DNSH (Do No Significant Harm) completata?', type:'select',
+      options:['Sì','In corso','No / non applicabile'] },
+  ],
+
+  /* C-Social: Sociale esteso — lavoratori catena valore e comunità (condizionale) */
+  'C-Social': [
+    { id:'global_ops_countries', label:'Paesi in cui opera la catena del valore', type:'textarea',
+      placeholder:'Es. Italia, Romania, Bangladesh' },
+    { id:'supply_chain_audit',   label:'Audit ESG fornitori completati (%)', type:'number' },
+    { id:'living_wage_commitment', label:'Impegno living wage per lavoratori catena valore?', type:'select',
+      options:['Sì — con monitoraggio','Sì — impegno senza monitoraggio','No'] },
+  ],
 };
 
 // Stato del questionario post-onboarding
@@ -2428,7 +2459,13 @@ const _legacyQuestionnaire = {
       // Return only those we have questions for
       return byS.filter(d => GRI_QUESTIONS[d.code]);
     } else {
-      return VSME_MODULES_ALL.filter(m => VSME_QUESTIONS[m.code]);
+      const c = currentClient();
+      return VSME_MODULES_ALL.filter(m => {
+        if (!VSME_QUESTIONS[m.code]) return false;
+        if (!m.optional) return true; // moduli B sempre inclusi
+        if (!m.condition) return true; // moduli C senza condizione inclusi
+        return m.condition(c);        // moduli C condizionali: valuta profilo azienda
+      });
     }
   },
 
@@ -3165,8 +3202,14 @@ const typeformQuestionnaire = {
       ) : 'medium';
       disclosures = buildGRISet(sector, empCat).filter(d => GRI_QUESTIONS[d.code]);
     } else {
-      // VSME: modulo B obbligatorio + C solo se opzionale attivato in futuro
-      disclosures = VSME_MODULES_ALL.filter(m => !m.optional && VSME_QUESTIONS[m.code]);
+      // VSME: moduli B obbligatori + moduli C condizionali se applicabili al profilo azienda
+      const c = currentClient();
+      disclosures = VSME_MODULES_ALL.filter(m => {
+        if (!VSME_QUESTIONS[m.code]) return false;
+        if (!m.optional) return true;          // moduli B sempre inclusi
+        if (!m.condition) return false;        // moduli C senza condizione esclusi dal typeform
+        return m.condition(c);                 // moduli C condizionali: valuta profilo azienda
+      });
     }
 
     // Escludi: auto-calcolate (GHG tool) + da file upload (template VERA)
@@ -6271,6 +6314,20 @@ const newClientFlow = {
     }, 300);
   },
 };
+
+/* ══════════════════════════════════════════════════════════
+   UPGRADE GATE — helper per blocchi funzionalità premium
+══════════════════════════════════════════════════════════ */
+function _renderUpgradeGate(featureName, desc) {
+  return `
+    <div class="upgrade-gate" style="border:2px dashed #d1fae5;border-radius:14px;padding:32px;text-align:center;background:#f0fdf4;opacity:0.85">
+      <div style="font-size:32px;margin-bottom:8px">🔒</div>
+      <div style="font-size:15px;font-weight:700;color:#14532d;margin-bottom:6px">${featureName}</div>
+      <div style="font-size:13px;color:#6b7280;margin-bottom:16px;max-width:320px;margin-left:auto;margin-right:auto">${desc}</div>
+      <a href="mailto:info@veraesg.it?subject=Upgrade%20Piano%20Pro%20VERA" class="btn btn-primary" style="font-size:13px">Attiva Piano Pro →</a>
+    </div>`;
+}
+window._renderUpgradeGate = _renderUpgradeGate;
 
 /* Wire module calls from HTML */
 window.assessment   = assessment;

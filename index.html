@@ -1171,6 +1171,22 @@
                 <label>Sede principale</label>
                 <input type="text" id="field-sede" placeholder="Es. Milano (MI)"/>
               </div>
+              <div class="field-group">
+                <label>Obiettivi di riduzione GHG con anno target?</label>
+                <select id="field-net-zero-target" onchange="(function(){const c=currentClient();if(c)c.hasNetZeroTarget=this.value==='yes';}).call(this)">
+                  <option value="">— Seleziona —</option>
+                  <option value="yes">Sì — con anno target definito</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label>Accesso a finanziamenti green/ESG-linked?</label>
+                <select id="field-green-financing" onchange="(function(){const c=currentClient();if(c)c.hasGreenFinancing=this.value==='yes';}).call(this)">
+                  <option value="">— Seleziona —</option>
+                  <option value="yes">Sì (S-Loan, Green Bond, MCC Green…)</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
             </div>
             <div class="panel-footer">
               <button class="btn btn-ghost" onclick="VERA.onboarding.backToStd()">← Indietro</button>
@@ -1541,7 +1557,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <!-- Supabase JS SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="js/vera.js?v=20260427c"></script>
+<script src="js/vera.js?v=20260429a"></script>
 <script src="js/vera-supabase.js?v=20260427e"></script>
 <script src="js/vera-insights.js?v=20260427a"></script>
 <script src="js/vera-materiality.js?v=20260427d"></script>

@@ -810,6 +810,12 @@ function _renderPhase3() {
           <div style="font-size:13px;color:var(--text-2)">Scarica la matrice di materialità in CSV per documentazione interna</div>
           <div class="btn btn-outline" style="margin-top:14px;width:100%;justify-content:center">Esporta CSV →</div>
         </div>
+        <div class="mat-cta-card" onclick="materialityModule.openStakeholderManager()">
+          <div style="font-size:28px;margin-bottom:8px">📧</div>
+          <div style="font-size:16px;font-weight:700;margin-bottom:4px">Coinvolgi Stakeholder</div>
+          <div style="font-size:13px;color:var(--text-2)">Invia il questionario IRO agli stakeholder via email — raccolta automatica delle risposte</div>
+          <div class="btn btn-outline" style="margin-top:14px;width:100%;justify-content:center">Gestisci stakeholder →</div>
+        </div>
       </div>
     </div>`;
 }
@@ -975,6 +981,112 @@ const materialityModule = {
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = 'VERA-MatriceDouble-Materialita.csv'; a.click();
     if (typeof toast === 'function') toast('Matrice esportata in CSV', 'success');
+  },
+
+  openStakeholderManager() {
+    const c = (typeof currentClient === 'function') ? currentClient() : null;
+    const clientId = c?._dbId || c?.id || '';
+    const companyName = c?.name || 'La tua azienda';
+    const sessionBase = `mat-${clientId}-${Date.now()}`;
+
+    const CATEGORIES = [
+      { id:'employees', label:'👥 Dipendenti e collaboratori', hint:'Dipendenti diretti, collaboratori, sindacati' },
+      { id:'suppliers', label:'🏭 Fornitori principali', hint:'Top 10 fornitori per volume d\'acquisto' },
+      { id:'customers', label:'🛒 Clienti', hint:'Clienti B2B o B2C rappresentativi' },
+      { id:'community', label:'🏘 Comunità locale', hint:'Enti locali, associazioni di quartiere' },
+      { id:'investors', label:'💰 Investitori e banche', hint:'Istituti di credito, soci, investitori' },
+      { id:'ngo',       label:'🌿 ONG e associazioni', hint:'Ambientali, sociali, di categoria' },
+    ];
+
+    const existing = document.getElementById('stakeholder-mgr-overlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'stakeholder-mgr-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9500;padding:16px';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:18px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,0.25)">
+        <div style="padding:28px 28px 0;border-bottom:1px solid #e5e7eb;margin-bottom:0">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <div>
+              <h2 style="font-size:18px;font-weight:800;margin-bottom:4px">📧 Gestione Stakeholder</h2>
+              <p style="font-size:13px;color:#6b7280">Inserisci le email degli stakeholder per ogni categoria. Il sistema invierà automaticamente il questionario IRO.</p>
+            </div>
+            <button onclick="document.getElementById('stakeholder-mgr-overlay').remove()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#9ca3af;padding:4px">✕</button>
+          </div>
+        </div>
+        <div style="padding:24px 28px">
+          ${CATEGORIES.map(cat => `
+            <div style="margin-bottom:18px">
+              <label style="font-size:13px;font-weight:700;color:#111;display:block;margin-bottom:2px">${cat.label}</label>
+              <div style="font-size:11px;color:#9ca3af;margin-bottom:6px">${cat.hint}</div>
+              <textarea id="sth-${cat.id}" placeholder="email1@esempio.it, email2@esempio.it"
+                style="width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;min-height:52px"
+                onfocus="this.style.borderColor='#16a34a'" onblur="this.style.borderColor='#e5e7eb'"></textarea>
+            </div>`).join('')}
+          <div id="sth-status" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:8px;font-size:13px"></div>
+          <div style="display:flex;gap:10px;justify-content:flex-end">
+            <button onclick="document.getElementById('stakeholder-mgr-overlay').remove()" style="padding:10px 20px;border:1.5px solid #d1d5db;border-radius:8px;background:#fff;font-size:13px;font-weight:600;cursor:pointer">Annulla</button>
+            <button id="sth-send-btn" onclick="materialityModule._sendStakeholderEmails('${clientId}','${companyName}','${sessionBase}')" style="padding:10px 20px;border:none;border-radius:8px;background:#16a34a;color:#fff;font-size:13px;font-weight:700;cursor:pointer">📨 Invia questionari</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+  },
+
+  async _sendStakeholderEmails(clientId, companyName, sessionBase) {
+    const btn = document.getElementById('sth-send-btn');
+    const statusEl = document.getElementById('sth-status');
+    if (btn) { btn.disabled = true; btn.textContent = 'Invio in corso...'; }
+
+    const CATEGORIES = ['employees','suppliers','customers','community','investors','ngo'];
+    const stakeholders = [];
+
+    for (const cat of CATEGORIES) {
+      const raw = document.getElementById(`sth-${cat}`)?.value || '';
+      const emails = raw.split(/[,;\n]+/).map(e => e.trim()).filter(e => e.includes('@'));
+      for (const email of emails) {
+        stakeholders.push({
+          to: email,
+          stakeholderName: '',
+          category: cat,
+          companyName,
+          clientId,
+          sessionId: `${sessionBase}-${cat}`,
+        });
+      }
+    }
+
+    if (stakeholders.length === 0) {
+      if (statusEl) { statusEl.style.display='block'; statusEl.style.background='#fef2f2'; statusEl.style.color='#b91c1c'; statusEl.textContent='Inserisci almeno un\'email valida.'; }
+      if (btn) { btn.disabled=false; btn.textContent='📨 Invia questionari'; }
+      return;
+    }
+
+    try {
+      const session = window.supabase ? await window.supabase.auth.getSession() : null;
+      const token = session?.data?.session?.access_token || '';
+      const res = await fetch('https://zwangblfyccxqigifmgm.supabase.co/functions/v1/send-stakeholder-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ stakeholders }),
+      });
+      const data = await res.json();
+      const ok = data.results?.filter(r => r.ok).length || 0;
+      const fail = data.results?.filter(r => !r.ok).length || 0;
+      if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.style.background = ok > 0 ? '#f0fdf4' : '#fef2f2';
+        statusEl.style.color = ok > 0 ? '#14532d' : '#b91c1c';
+        statusEl.textContent = ok > 0
+          ? `✓ ${ok} email inviate con successo${fail > 0 ? ` (${fail} fallite)` : ''}.`
+          : `Errore nell'invio. Controlla la configurazione Resend API.`;
+      }
+      if (typeof toast === 'function') toast(`${ok} email stakeholder inviate`, ok > 0 ? 'success' : 'error');
+    } catch(e) {
+      if (statusEl) { statusEl.style.display='block'; statusEl.style.background='#fef2f2'; statusEl.style.color='#b91c1c'; statusEl.textContent='Errore di rete: ' + e.message; }
+    }
+    if (btn) { btn.disabled=false; btn.textContent='📨 Invia questionari'; }
   },
 
   startQuestionnaire() {

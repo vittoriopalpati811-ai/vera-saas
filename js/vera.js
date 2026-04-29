@@ -3289,6 +3289,18 @@ const typeformQuestionnaire = {
           <h1 class="tform-disclosure-title">${disclosure.label}</h1>
           <p class="tform-disclosure-subtitle">Inserisci solo i <strong>dati primari</strong> — i valori derivati vengono calcolati automaticamente</p>
           ${tipRow}
+          <div class="tform-ai-reader" style="display:flex;align-items:center;gap:10px;margin:10px 0 4px;padding:10px 14px;background:oklch(0.97 0.015 148);border:1px solid oklch(0.88 0.05 148);border-radius:10px">
+            <span style="font-size:18px">🤖</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;font-weight:700;color:oklch(0.35 0.12 148)">Estrai automaticamente da documento</div>
+              <div style="font-size:11px;color:oklch(0.5 0.08 148)">Carica PDF, Excel, immagine — l'AI rileva i valori per ${disclosure.label}</div>
+            </div>
+            <label style="cursor:pointer;white-space:nowrap">
+              <input type="file" accept=".pdf,.xlsx,.xls,.csv,.txt,.png,.jpg,.jpeg" style="display:none" onchange="typeformQuestionnaire._aiReadDocument(this,'${codeSafe}','${disclosure.label}',${JSON.stringify(questions.map(q=>({id:q.id,label:q.label,type:q.type})))})">
+              <span class="btn btn-outline btn-sm" style="font-size:12px;pointer-events:none">📎 Carica</span>
+            </label>
+          </div>
+          <div id="tform-ai-result-${codeSafe}" style="display:none;margin:8px 0;padding:10px 14px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;font-size:12px"></div>
         </div>
         ${b5Banner}
         <form id="tform-form" onsubmit="return false;">
@@ -3331,6 +3343,51 @@ const typeformQuestionnaire = {
   },
 
   /* ── Auto-calculation listeners ──────────────────────────── */
+  async _aiReadDocument(input, codeSafe, disclosureLabel, fields) {
+    const file = input.files?.[0];
+    if (!file) return;
+    const resultEl = document.getElementById(`tform-ai-result-${codeSafe}`);
+    if (!resultEl) return;
+
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = '<span style="color:#6b7280">🔄 Analisi AI in corso...</span>';
+
+    try {
+      const reader = new FileReader();
+      const base64 = await new Promise((res, rej) => { reader.onload = e => res(e.target.result.split(',')[1]); reader.onerror = rej; reader.readAsDataURL(file); });
+      const session = window.supabase ? await window.supabase.auth.getSession() : null;
+      const token = session?.data?.session?.access_token || '';
+
+      const results = [];
+      // Call edge function once per numeric/text field
+      for (const f of fields.filter(f => ['number','text','textarea'].includes(f.type)).slice(0, 5)) {
+        const resp = await fetch('https://zwangblfyccxqigifmgm.supabase.co/functions/v1/ai-document-reader', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ fileBase64: base64, mimeType: file.type, fieldContext: `${disclosureLabel} — ${f.label}`, fieldId: f.id }),
+        });
+        const data = await resp.json();
+        if (data.result?.value != null) {
+          // Auto-fill field
+          const el = document.getElementById(`tform-${codeSafe}-${f.id}`);
+          if (el && !el.value) el.value = data.result.value;
+          results.push({ label: f.label, value: data.result.value, unit: data.result.unit || '', confidence: Math.round((data.result.confidence || 0) * 100), source: data.result.source });
+        }
+      }
+
+      if (results.length === 0) {
+        resultEl.innerHTML = '<span style="color:#b45309">⚠ Nessun dato rilevabile nel documento per questa sezione.</span>';
+      } else {
+        resultEl.innerHTML = `<div style="font-weight:700;color:#14532d;margin-bottom:6px">✓ ${results.length} valori estratti — verifica e conferma:</div>` +
+          results.map(r => `<div style="margin-bottom:4px">• <b>${r.label}</b>: ${r.value} ${r.unit} <span style="color:#9ca3af">(${r.confidence}% fiducia — ${r.source})</span></div>`).join('');
+        if (typeof toast === 'function') toast(`AI ha estratto ${results.length} valori dal documento`, 'success');
+      }
+    } catch(e) {
+      resultEl.innerHTML = `<span style="color:#b91c1c">Errore: ${e.message}</span>`;
+    }
+    input.value = '';
+  },
+
   _addDerivedListeners(code) {
     const form = document.getElementById('tform-form');
     if (!form) return;

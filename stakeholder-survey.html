@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Questionario Materialità ESG — VERA</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:oklch(0.97 0.008 75);min-height:100vh;padding:24px 16px}
+.wrap{max-width:680px;margin:0 auto}
+.header{text-align:center;padding:32px 0 24px}
+.logo{font-size:22px;font-weight:800;color:#14532d;margin-bottom:4px}
+.logo-sub{font-size:13px;color:#6b7280}
+h1{font-size:22px;font-weight:800;color:#111;margin:24px 0 8px}
+.intro{font-size:14px;color:#4b5563;line-height:1.6;margin-bottom:24px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:16px}
+.progress{height:4px;background:#e5e7eb;border-radius:2px;margin-bottom:32px;overflow:hidden}
+.progress-fill{height:100%;background:#16a34a;border-radius:2px;transition:width .4s ease}
+.iro-card{background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:20px;margin-bottom:14px;transition:border-color .2s}
+.iro-card:focus-within{border-color:#16a34a}
+.iro-label{font-size:14px;font-weight:600;color:#111;margin-bottom:4px}
+.iro-desc{font-size:12px;color:#6b7280;margin-bottom:14px}
+.scales{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.scale-group label{font-size:11px;font-weight:600;color:#374151;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px}
+.scale-btns{display:flex;gap:4px}
+.scale-btn{width:36px;height:36px;border:1.5px solid #d1d5db;border-radius:8px;background:#fff;cursor:pointer;font-size:13px;font-weight:600;color:#374151;transition:all .15s}
+.scale-btn.active{background:#14532d;border-color:#14532d;color:#fff}
+.scale-btn:hover:not(.active){border-color:#16a34a;color:#16a34a}
+.notes-field{width:100%;margin-top:12px;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;min-height:60px}
+.notes-field:focus{outline:none;border-color:#16a34a}
+.nav{display:flex;gap:12px;justify-content:space-between;margin-top:24px;padding-top:24px;border-top:1px solid #e5e7eb}
+.btn{padding:11px 22px;border-radius:9px;font-size:14px;font-weight:600;border:none;cursor:pointer;transition:all .15s}
+.btn-primary{background:#16a34a;color:#fff}
+.btn-primary:hover{background:#15803d}
+.btn-outline{background:#fff;color:#374151;border:1.5px solid #d1d5db}
+.btn-outline:hover{border-color:#374151}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
+.step-indicator{font-size:12px;color:#9ca3af;text-align:center;margin-bottom:8px}
+.success{text-align:center;padding:48px 24px}
+.success-icon{font-size:56px;margin-bottom:16px}
+.success h2{font-size:20px;font-weight:800;color:#14532d;margin-bottom:8px}
+.success p{font-size:14px;color:#6b7280;line-height:1.6}
+.category-badge{display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#f0fdf4;color:#14532d;border:1px solid #bbf7d0;margin-bottom:16px}
+.scale-labels{display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;margin-top:3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="logo">🌿 VERA ESG</div>
+    <div class="logo-sub">Analisi di Doppia Materialità</div>
+  </div>
+
+  <div id="app">
+    <div style="text-align:center;padding:48px;color:#9ca3af">Caricamento...</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+const SB_URL = 'https://zwangblfyccxqigifmgm.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3YW5nYmxmeWNjeHFpZ2lmbWdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2OTQ2NjcsImV4cCI6MjA5MTI3MDY2N30.LFtZ_rEWbKE04qFVvdPNoxA8j5bJeLCwjKPrg9NcLho';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+// IRO library per settore (semplificata — extend con tassonomia ESRS)
+const IRO_LIBRARY = [
+  { id:'E1-ghg',       label:'Cambiamenti climatici — emissioni GHG', topic:'Ambiente' },
+  { id:'E1-energy',    label:'Consumo energetico e efficienza', topic:'Ambiente' },
+  { id:'E2-pollution', label:'Inquinamento aria, acqua e suolo', topic:'Ambiente' },
+  { id:'E3-water',     label:'Uso e scarsità idrica', topic:'Ambiente' },
+  { id:'E4-biodiv',    label:'Biodiversità ed ecosistemi', topic:'Ambiente' },
+  { id:'E5-circular',  label:'Economia circolare — rifiuti e materiali', topic:'Ambiente' },
+  { id:'S1-workforce', label:'Condizioni di lavoro dei dipendenti', topic:'Sociale' },
+  { id:'S1-safety',    label:'Salute e sicurezza sul lavoro', topic:'Sociale' },
+  { id:'S1-diversity', label:'Diversità, equità e inclusione', topic:'Sociale' },
+  { id:'S2-supply',    label:'Standard di lavoro nella catena di fornitura', topic:'Sociale' },
+  { id:'S3-community', label:'Impatti sulle comunità locali', topic:'Sociale' },
+  { id:'S4-consumer',  label:'Privacy e protezione dei consumatori', topic:'Sociale' },
+  { id:'G1-ethics',    label:'Etica aziendale e anticorruzione', topic:'Governance' },
+  { id:'G1-tax',       label:'Trasparenza fiscale', topic:'Governance' },
+  { id:'G1-lobby',     label:'Attività di lobbying e contributi politici', topic:'Governance' },
+];
+
+const CATEGORY_LABELS = {
+  employees:'Dipendenti e collaboratori', suppliers:'Fornitori',
+  customers:'Clienti', community:'Comunità locale',
+  investors:'Investitori', ngo:'ONG e associazioni', regulator:'Enti regolatori',
+};
+
+// Parse URL params
+const params = new URLSearchParams(location.search);
+const SESSION_ID = params.get('session') || '';
+const CLIENT_ID  = params.get('client')  || '';
+const CATEGORY   = params.get('cat')     || 'stakeholder';
+
+let state = {};  // { iroId: { impact, probability, notes } }
+let currentStep = 0;
+const IROS = IRO_LIBRARY;
+const PER_PAGE = 4;
+const TOTAL_PAGES = Math.ceil(IROS.length / PER_PAGE);
+
+function irosForPage(page) {
+  return IROS.slice(page * PER_PAGE, (page + 1) * PER_PAGE);
+}
+
+function pct() { return Math.round((currentStep / TOTAL_PAGES) * 100); }
+
+function setScale(iroId, axis, val) {
+  if (!state[iroId]) state[iroId] = {};
+  state[iroId][axis] = val;
+  document.querySelectorAll(`.scale-btn[data-iro="${iroId}"][data-axis="${axis}"]`).forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.val) === val);
+  });
+}
+
+function renderPage(page) {
+  const iros = irosForPage(page);
+  const cards = iros.map(iro => {
+    const s = state[iro.id] || {};
+    const impactBtns  = [1,2,3,4,5].map(v => `<button class="scale-btn${s.impact===v?' active':''}" data-iro="${iro.id}" data-axis="impact" data-val="${v}" onclick="setScale('${iro.id}','impact',${v})">${v}</button>`).join('');
+    const probBtns    = [1,2,3,4,5].map(v => `<button class="scale-btn${s.probability===v?' active':''}" data-iro="${iro.id}" data-axis="probability" data-val="${v}" onclick="setScale('${iro.id}','probability',${v})">${v}</button>`).join('');
+    return `
+    <div class="iro-card">
+      <div class="iro-label">${iro.label}</div>
+      <div class="iro-desc">Topic: ${iro.topic}</div>
+      <div class="scales">
+        <div class="scale-group">
+          <label>Impatto (1=basso, 5=alto)</label>
+          <div class="scale-btns">${impactBtns}</div>
+          <div class="scale-labels"><span>Basso</span><span>Alto</span></div>
+        </div>
+        <div class="scale-group">
+          <label>Probabilità (1=rara, 5=certa)</label>
+          <div class="scale-btns">${probBtns}</div>
+          <div class="scale-labels"><span>Rara</span><span>Certa</span></div>
+        </div>
+      </div>
+      <textarea class="notes-field" placeholder="Note opzionali..." oninput="(state['${iro.id}']||(state['${iro.id}']={}).notes=this.value)">${(s.notes||'')}</textarea>
+    </div>`;
+  }).join('');
+
+  document.getElementById('app').innerHTML = `
+    <span class="category-badge">👤 ${CATEGORY_LABELS[CATEGORY]||CATEGORY}</span>
+    <h1>Quali temi ESG sono più rilevanti per la tua organizzazione?</h1>
+    <div class="intro">
+      Valuta ogni tema su due assi: <strong>Impatto</strong> (quanto l'azienda impatta su questo tema) e <strong>Probabilità</strong> (quanto è probabile che si materializzi come rischio/opportunità).<br>
+      Puoi lasciare blank i temi che ritieni non applicabili.
+    </div>
+    <div class="step-indicator">Pagina ${page+1} di ${TOTAL_PAGES} — ${IROS.length} temi totali</div>
+    <div class="progress"><div class="progress-fill" style="width:${pct()}%"></div></div>
+    ${cards}
+    <div class="nav">
+      <button class="btn btn-outline" onclick="prevPage()" ${page===0?'disabled':''}>← Indietro</button>
+      <button class="btn btn-primary" onclick="nextPage()">${page===TOTAL_PAGES-1?'Invia risposte ✓':'Avanti →'}</button>
+    </div>`;
+}
+
+function prevPage() { if(currentStep>0){currentStep--;renderPage(currentStep);} }
+
+async function nextPage() {
+  if (currentStep < TOTAL_PAGES - 1) {
+    currentStep++;
+    renderPage(currentStep);
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
+  // Submit
+  const btn = document.querySelector('.btn-primary');
+  btn.disabled = true; btn.textContent = 'Invio in corso...';
+
+  const rows = Object.entries(state).map(([iro_id, s]) => ({
+    session_id:   SESSION_ID,
+    client_id:    CLIENT_ID || null,
+    email:        params.get('email') || 'anonymous',
+    category:     CATEGORY,
+    iro_id,
+    iro_label:    IRO_LIBRARY.find(i=>i.id===iro_id)?.label || iro_id,
+    impact_score:  s.impact    || null,
+    probability:   s.probability || null,
+    notes:         s.notes     || null,
+  })).filter(r => r.impact_score || r.probability);
+
+  if (rows.length === 0) {
+    alert('Valuta almeno un tema prima di inviare.');
+    btn.disabled = false; btn.textContent = 'Invia risposte ✓';
+    return;
+  }
+
+  const { error } = await sb.from('stakeholder_responses').insert(rows);
+
+  if (error) {
+    alert('Errore durante l\'invio: ' + error.message);
+    btn.disabled = false; btn.textContent = 'Invia risposte ✓';
+    return;
+  }
+
+  // Mark session as completed
+  await sb.from('stakeholder_sessions')
+    .update({ status:'completed', completed_at: new Date().toISOString() })
+    .eq('session_id', SESSION_ID).eq('email', params.get('email')||'');
+
+  document.getElementById('app').innerHTML = `
+    <div class="success">
+      <div class="success-icon">✅</div>
+      <h2>Risposte inviate con successo!</h2>
+      <p>Grazie per il tuo contributo all'analisi di doppia materialità.<br>
+      Le tue risposte sono state registrate in forma anonima e aggregate con quelle degli altri stakeholder.</p>
+      <p style="margin-top:16px;font-size:12px;color:#9ca3af">Puoi chiudere questa pagina.</p>
+    </div>`;
+}
+
+// Init
+if (!SESSION_ID) {
+  document.getElementById('app').innerHTML = '<div style="text-align:center;padding:48px;color:#ef4444">Link non valido o scaduto.</div>';
+} else {
+  renderPage(0);
+}
+</script>
+</body>
+</html>

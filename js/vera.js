@@ -381,6 +381,61 @@ const GRI_BY_SECTOR = {
 };
 GRI_BY_SECTOR.default = GRI_BY_SECTOR.serv;
 
+/* ── GRI_DISCLOSURES — set completo con mapping temi materiali ─────────
+   Usato da _getActiveGRIDisclosures() per filtraggio dinamico basato su
+   doppia materialità (window._matState.matTopics)
+──────────────────────────────────────────────────────────── */
+const GRI_DISCLOSURES = [
+  // GRI 2 — universali, sempre incluse
+  { code:'GRI 2-1',  label:'Dettagli organizzativi', topic:'universal', material:true, always:true },
+  { code:'GRI 2-2',  label:'Entità incluse nel reporting', topic:'universal', material:true, always:true },
+  { code:'GRI 2-6',  label:'Attività, catena del valore e rapporti commerciali', topic:'universal', material:true, always:true },
+  { code:'GRI 2-7',  label:'Dipendenti', topic:'universal', material:true, always:true },
+  { code:'GRI 2-9',  label:'Struttura e composizione del CdA', topic:'governance', material:true, always:true },
+  { code:'GRI 2-21', label:'Rapporto retributivo annuale', topic:'social', material:true, always:true },
+  { code:'GRI 201-1',label:'Valore economico diretto generato e distribuito', topic:'economic', always:true },
+  // GRI tematici — inclusi solo se il topic è materiale
+  { code:'GRI 302-1',label:'Consumo energetico interno all\'organizzazione', topic:'energy', matTopics:['E1-energy','E1-ghg'] },
+  { code:'GRI 302-3',label:'Intensità energetica', topic:'energy', matTopics:['E1-energy'] },
+  { code:'GRI 302-4',label:'Riduzione del consumo energetico', topic:'energy', matTopics:['E1-energy'] },
+  { code:'GRI 305-1',label:'Emissioni GHG Scope 1 dirette', topic:'climate', matTopics:['E1-ghg'] },
+  { code:'GRI 305-2',label:'Emissioni GHG Scope 2 indirette da energia', topic:'climate', matTopics:['E1-ghg'] },
+  { code:'GRI 305-3',label:'Altre emissioni GHG indirette Scope 3', topic:'climate', matTopics:['E1-ghg'] },
+  { code:'GRI 305-4',label:'Intensità delle emissioni GHG', topic:'climate', matTopics:['E1-ghg'] },
+  { code:'GRI 306-3',label:'Rifiuti generati', topic:'waste', matTopics:['E5-circular','E2-pollution'] },
+  { code:'GRI 306-4',label:'Rifiuti non destinati allo smaltimento', topic:'waste', matTopics:['E5-circular'] },
+  { code:'GRI 303-3',label:'Prelievo idrico', topic:'water', matTopics:['E3-water'] },
+  { code:'GRI 303-4',label:'Scarico idrico', topic:'water', matTopics:['E3-water'] },
+  { code:'GRI 304-1',label:'Siti operativi in aree protette — biodiversità', topic:'biodiv', matTopics:['E4-biodiv'] },
+  { code:'GRI 308-1',label:'Nuovi fornitori sottoposti a screening ambientale', topic:'supply', matTopics:['S2-supply','E2-pollution'] },
+  { code:'GRI 401-1',label:'Nuove assunzioni e turnover', topic:'workforce', matTopics:['S1-workforce'] },
+  { code:'GRI 403-1',label:'Sistema di gestione SSL', topic:'safety', matTopics:['S1-safety'] },
+  { code:'GRI 403-9',label:'Infortuni sul lavoro', topic:'safety', matTopics:['S1-safety'] },
+  { code:'GRI 404-1',label:'Ore medie di formazione per dipendente', topic:'training', matTopics:['S1-workforce','S1-diversity'] },
+  { code:'GRI 405-1',label:'Diversità degli organi di governance e dipendenti', topic:'diversity', matTopics:['S1-diversity'] },
+  { code:'GRI 406-1',label:'Incidenti di discriminazione', topic:'diversity', matTopics:['S1-diversity'] },
+  { code:'GRI 413-1',label:'Attività con coinvolgimento della comunità locale', topic:'community', matTopics:['S3-community'] },
+  { code:'GRI 418-1',label:'Reclami fondati riguardanti violazioni della privacy', topic:'privacy', matTopics:['S4-consumer'] },
+  { code:'GRI 205-1',label:'Operazioni valutate per rischi di corruzione', topic:'ethics', matTopics:['G1-ethics'] },
+  { code:'GRI 205-3',label:'Casi di corruzione confermati', topic:'ethics', matTopics:['G1-ethics'] },
+];
+
+/* ── _getActiveGRIDisclosures — filtra GRI_DISCLOSURES per temi materiali ──
+   Legge i temi materiali da window._matState.matTopics (doppia materialità)
+──────────────────────────────────────────────────────────── */
+function _getActiveGRIDisclosures() {
+  const matTopics = (window._matState && window._matState.matTopics)
+    ? window._matState.matTopics
+    : (typeof _getMaterialTopics === 'function' ? _getMaterialTopics() : []);
+  const materialSet = new Set((matTopics || []).map(t => typeof t === 'string' ? t : t.id));
+
+  return GRI_DISCLOSURES.filter(d => {
+    if (d.always) return true;
+    if (!d.matTopics) return false;
+    return d.matTopics.some(mt => materialSet.has(mt));
+  });
+}
+
 /* ── VSME modules — EFRAG VSME S1 (2023) ─────────────────
    Modulo B: 5 macro-moduli obbligatori (B1–B5) con sotto-topic
    Modulo C: disclosure addizionali volontarie (C1–C5)
@@ -3174,12 +3229,53 @@ const typeformQuestionnaire = {
         padding:1px 5px; font-size:10px; font-family:monospace; font-weight:700;
       }
 
+      /* ── GRI indicator ───────────────────────────────────── */
+      .tform-gri-indicator {
+        display:flex; align-items:flex-start; gap:8px;
+        background:oklch(0.97 0.02 188); border:1px solid oklch(0.82 0.08 188);
+        border-radius:10px; padding:10px 14px; margin-bottom:20px;
+        font-size:12px; color:oklch(0.40 0.10 188); line-height:1.5;
+        text-align:left;
+      }
+
+      /* ── Module completion bars ──────────────────────────── */
+      .tform-module-completion {
+        text-align:left; margin-bottom:24px;
+        background:oklch(0.975 0.010 75); border-radius:12px; padding:16px 20px;
+      }
+      .tform-module-completion-title {
+        font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+        color:oklch(0.60 0.04 75); margin-bottom:12px;
+      }
+      .tform-mod-row {
+        display:flex; align-items:center; gap:10px;
+        margin-bottom:8px;
+      }
+      .tform-mod-name {
+        font-size:11px; font-weight:700; color:oklch(0.35 0.04 75);
+        min-width:80px; max-width:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+      }
+      .tform-mod-bar {
+        flex:1; height:6px; background:oklch(0.90 0.015 75);
+        border-radius:4px; overflow:hidden;
+      }
+      .tform-mod-bar > div {
+        height:100%; background:oklch(0.44 0.15 148);
+        border-radius:4px; transition:width 0.6s cubic-bezier(.4,0,.2,1);
+        min-width:2px;
+      }
+      .tform-mod-pct {
+        font-size:11px; font-weight:700; color:oklch(0.44 0.15 148);
+        min-width:34px; text-align:right;
+      }
+
       @media (max-width:600px) {
         .tform-card { padding:24px 20px; }
         #tform-scroll-area { padding:24px 12px; }
         #tform-topbar, #tform-bottom-bar { padding:12px 16px; }
         .tform-disclosure-title { font-size:18px; }
         .tform-completion-stats { gap:12px; }
+        .tform-mod-name { min-width:60px; max-width:60px; }
       }
     `;
     document.head.appendChild(style);
@@ -3193,14 +3289,24 @@ const typeformQuestionnaire = {
     let disclosures = [];
 
     if (std === 'gri') {
-      // Usa la selezione adattiva settore + dimensioni (da c.employees)
-      const c = currentClient();
-      const empCat = (c && c.employees) ? (
-        typeof c.employees === 'number'
-          ? (c.employees > 250 ? 'large' : c.employees > 50 ? 'medium' : c.employees > 20 ? 'small' : 'micro')
-          : c.employees  // già stringa ('micro','small','medium','large')
-      ) : 'medium';
-      disclosures = buildGRISet(sector, empCat).filter(d => GRI_QUESTIONS[d.code]);
+      // Prima tenta la selezione dinamica basata su temi materiali (doppia materialità)
+      const activeGRI = _getActiveGRIDisclosures();
+      const hasMatTopics = (window._matState && window._matState.matTopics && window._matState.matTopics.length > 0)
+        || (typeof _getMaterialTopics === 'function' && (_getMaterialTopics() || []).length > 0);
+
+      if (hasMatTopics) {
+        // Usa il set dinamico filtrato per materialità, limita a quelli con domande disponibili
+        disclosures = activeGRI.filter(d => GRI_QUESTIONS[d.code]);
+      } else {
+        // Fallback: selezione adattiva settore + dimensioni (da c.employees)
+        const c = currentClient();
+        const empCat = (c && c.employees) ? (
+          typeof c.employees === 'number'
+            ? (c.employees > 250 ? 'large' : c.employees > 50 ? 'medium' : c.employees > 20 ? 'small' : 'micro')
+            : c.employees  // già stringa ('micro','small','medium','large')
+        ) : 'medium';
+        disclosures = buildGRISet(sector, empCat).filter(d => GRI_QUESTIONS[d.code]);
+      }
     } else {
       // VSME: moduli B obbligatori + moduli C condizionali se applicabili al profilo azienda
       const c = currentClient();
@@ -3637,6 +3743,7 @@ const typeformQuestionnaire = {
   _renderCompletion() {
     const contentEl = document.getElementById('tform-content');
     const { disclosures } = typeformQuestionnaireState;
+    const std = typeformQuestionnaireState.std;
     const answered = Object.keys(typeformQuestionnaireState.answers).length;
     const total = disclosures.length;
 
@@ -3659,6 +3766,35 @@ const typeformQuestionnaire = {
     if (mName)   mName.textContent   = 'Questionario completato';
     if (mDot)    mDot.style.background = 'oklch(0.44 0.15 148)';
 
+    // GRI indicator: quante disclosure attive
+    let griIndicatorHtml = '';
+    if (std === 'gri') {
+      const activeGRI = _getActiveGRIDisclosures();
+      const alwaysCount = activeGRI.filter(d => d.always).length;
+      const thematicCount = activeGRI.filter(d => !d.always).length;
+      griIndicatorHtml = `
+        <div class="tform-gri-indicator">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" style="flex-shrink:0;margin-top:1px">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+          </svg>
+          <span>GRI 2 universali (${alwaysCount}) + ${thematicCount} disclosure tematiche attivate dai tuoi temi materiali</span>
+        </div>`;
+    }
+
+    // Module completion bars
+    const modules = this._getCompletionByModule();
+    const moduleBarsHtml = modules.length > 0 ? `
+      <div class="tform-module-completion">
+        <div class="tform-module-completion-title">Completamento per disclosure</div>
+        ${modules.map(m => `
+          <div class="tform-mod-row">
+            <span class="tform-mod-name" title="${m.label}">${m.code}</span>
+            <div class="tform-mod-bar"><div style="width:${m.pct}%"></div></div>
+            <span class="tform-mod-pct">${m.pct}%</span>
+          </div>
+        `).join('')}
+      </div>` : '';
+
     contentEl.innerHTML = `
       <div class="tform-card tform-completion" style="border-left-color:oklch(0.44 0.15 148)">
         <div class="tform-completion-icon">
@@ -3668,6 +3804,7 @@ const typeformQuestionnaire = {
         </div>
         <h2>Ottimo lavoro!</h2>
         <p>Hai compilato tutte le disclosure richieste.<br>I dati verranno elaborati per generare il report ESG.</p>
+        ${griIndicatorHtml}
         <div class="tform-completion-stats">
           <div class="tform-stat">
             <span class="tform-stat-num">${answered}</span>
@@ -3682,6 +3819,7 @@ const typeformQuestionnaire = {
             <span class="tform-stat-label">Tempo impiegato</span>
           </div>
         </div>
+        ${moduleBarsHtml}
         <button onclick="typeformQuestionnaire.save()" class="tform-save-btn">
           <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
             <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6a1 1 0 10-2 0v5.586l-1.293-1.293z"/>
@@ -3701,6 +3839,21 @@ const typeformQuestionnaire = {
     if (prevBtn) prevBtn.style.display = 'none';
     const stepLabel = document.getElementById('tform-step-label');
     if (stepLabel) stepLabel.textContent = 'Tutte le disclosure completate ✓';
+  },
+
+  _getCompletionByModule() {
+    // Returns array of { code, label, filled, total, pct }
+    const state = typeformQuestionnaireState;
+    const disclosures = state.disclosures || [];
+    const std = state.std;
+    return disclosures.map(d => {
+      const questions = std === 'gri' ? (GRI_QUESTIONS[d.code] || []) : (VSME_QUESTIONS[d.code] || []);
+      const answers = state.answers[d.code] || {};
+      const required = questions.filter(q => q.required);
+      const filled = required.filter(q => answers[q.id] != null && answers[q.id] !== '').length;
+      const pct = required.length ? Math.round(filled / required.length * 100) : 100;
+      return { code: d.code, label: d.label, filled, total: required.length, pct };
+    });
   },
 
   _validateCurrentSlide() {

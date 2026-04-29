@@ -1,6 +1,7 @@
 /* ╔══════════════════════════════════════════════════════════
-   ║  VERA ESG — Modulo Doppia Materialità v3
+   ║  VERA ESG — Modulo Doppia Materialità v4
    ║  Flusso: Fase 1 Materialità → Fase 2 Standard → Fase 3 GHG+Report
+   ║  v4: Matrice DMA interattiva (SVG drag & drop) · v=20260429d
    ║  Base: ESRS (EFRAG) · Output: VSME 2023 o GRI Standards
    ╚══════════════════════════════════════════════════════════ */
 'use strict';
@@ -816,8 +817,232 @@ function _renderPhase3() {
           <div style="font-size:13px;color:var(--text-2)">Invia il questionario IRO agli stakeholder via email — raccolta automatica delle risposte</div>
           <div class="btn btn-outline" style="margin-top:14px;width:100%;justify-content:center">Gestisci stakeholder →</div>
         </div>
+        <div class="mat-cta-card mat-cta-primary" onclick="materialityModule.openDMAMatrix()">
+          <div style="font-size:28px;margin-bottom:8px">🗺️</div>
+          <div style="font-size:16px;font-weight:700;margin-bottom:4px">Matrice DMA Interattiva</div>
+          <div style="font-size:13px;color:var(--text-2)">Visualizza gli IRO su mappa a due assi: Impatto × Finanziario. Trascina i punti per aggiustare manualmente</div>
+          <div class="btn btn-primary" style="margin-top:14px;width:100%;justify-content:center">Apri matrice →</div>
+        </div>
       </div>
     </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   MATRICE DMA — dati punti
+   X = Materialità Finanziaria (Outside-in)  0–100
+   Y = Materialità di Impatto  (Inside-out)  0–100
+══════════════════════════════════════════════════════════ */
+const _dmaManualPos = {}; // { topicId: { x, y } }  — persist drag & drop overrides
+
+function _getDMAPoints() {
+  const matTopics = _getMaterialTopics();
+  const points    = [];
+  const pColors   = { E: '#22d06a', S: '#60a5fa', G: '#fb923c' };
+
+  Object.entries(ESRS_TOPICS).forEach(([pillar, pDef]) => {
+    pDef.topics.forEach(tDef => {
+      const tid     = tDef.id;
+      if (!matTopics.includes(tid)) return;
+      const impacts = IMPACT_LIBRARY[tid] || [];
+      const active  = impacts.filter(i => _matState.selected[i.id]?.active);
+      if (!active.length) return;
+
+      const scores    = active.map(i => _calcScore(_matState.selected[i.id]));
+      const maxScore  = Math.max(...scores);
+      const impactPct = Math.round(maxScore / 64 * 100);
+
+      // Financial materiality: from finRisks when available, else proxy from assessment
+      let financialPct = 0;
+      const risks = (_matState.finRisks || {})[tid] || [];
+      if (risks.length) {
+        const avgFin = risks.reduce((s, r) =>
+          s + Number(r.magnitude || 3) * Number(r.probability || 3), 0) / risks.length;
+        financialPct = Math.round(avgFin / 25 * 100);
+      } else {
+        const medSc = active.reduce((s, i) => s + Number(_matState.selected[i.id]?.scale || 1), 0) / active.length;
+        const medSp = active.reduce((s, i) => s + Number(_matState.selected[i.id]?.scope || 1), 0) / active.length;
+        financialPct = Math.round(medSc * medSp / 25 * 100);
+      }
+
+      points.push({
+        id: tid, label: tDef.label, short: tDef.short || tid,
+        pillar, color: pColors[pillar] || '#64748b',
+        impactPct, financialPct,
+        materialCount: active.filter(i => _isMaterial(i.id)).length,
+      });
+    });
+  });
+  return points;
+}
+
+/* ══════════════════════════════════════════════════════════
+   MATRICE DMA — rendering SVG
+══════════════════════════════════════════════════════════ */
+function _buildDMAMatrixSVG(points) {
+  const W = 580, H = 430;
+  const ML = 58, MT = 24, MR = 18, MB = 52;
+  const pw = W - ML - MR, ph = H - MT - MB;
+
+  // Threshold at 40 % both axes → 4 quadrants
+  const TX = ML + pw * 0.40;
+  const TY = MT + ph * (1 - 0.40);
+
+  const quads = [
+    { x: TX,  y: MT,  w: pw * 0.60, h: ph * 0.60, fill: 'oklch(0.95 0.06 25)',  lbl: 'Alta priorità',         lx: TX  + pw * 0.30, ly: MT  + ph * 0.30 },
+    { x: ML,  y: MT,  w: pw * 0.40, h: ph * 0.60, fill: 'oklch(0.97 0.04 145)', lbl: 'Impatto significativo', lx: ML  + pw * 0.20, ly: MT  + ph * 0.30 },
+    { x: TX,  y: TY,  w: pw * 0.60, h: ph * 0.40, fill: 'oklch(0.97 0.04 230)', lbl: 'Rischio finanziario',   lx: TX  + pw * 0.30, ly: TY  + ph * 0.20 },
+    { x: ML,  y: TY,  w: pw * 0.40, h: ph * 0.40, fill: 'oklch(0.97 0.00 0)',   lbl: 'Monitoraggio',          lx: ML  + pw * 0.20, ly: TY  + ph * 0.20 },
+  ];
+
+  const quadSvg = quads.map(q =>
+    `<rect x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}" fill="${q.fill}"/>` +
+    `<text x="${q.lx}" y="${q.ly}" text-anchor="middle" font-size="10" fill="#9ca3af" font-weight="600" opacity="0.8">${q.lbl}</text>`
+  ).join('');
+
+  // Grid + axes ticks
+  const ticks = [0,20,40,60,80,100];
+  const gridSvg = ticks.map(v => {
+    const px = ML + pw * v / 100;
+    const py = MT + ph * (1 - v / 100);
+    return `<line x1="${px}" y1="${MT}" x2="${px}" y2="${MT+ph}" stroke="#e5e7eb" stroke-width="0.5" stroke-dasharray="3,3"/>` +
+           `<line x1="${ML}" y1="${py}" x2="${ML+pw}" y2="${py}" stroke="#e5e7eb" stroke-width="0.5" stroke-dasharray="3,3"/>` +
+           `<line x1="${px}" y1="${MT+ph}" x2="${px}" y2="${MT+ph+4}" stroke="#d1d5db"/>` +
+           `<text x="${px}" y="${MT+ph+15}" text-anchor="middle" font-size="9" fill="#9ca3af">${v}%</text>` +
+           `<line x1="${ML-4}" y1="${py}" x2="${ML}" y2="${py}" stroke="#d1d5db"/>` +
+           `<text x="${ML-7}" y="${py+3}" text-anchor="end" font-size="9" fill="#9ca3af">${v}%</text>`;
+  }).join('');
+
+  const border = `<rect x="${ML}" y="${MT}" width="${pw}" height="${ph}" fill="none" stroke="#d1d5db" stroke-width="1"/>`;
+  const threshSvg =
+    `<line x1="${TX}" y1="${MT}" x2="${TX}" y2="${MT+ph}" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.8"/>` +
+    `<line x1="${ML}" y1="${TY}" x2="${ML+pw}" y2="${TY}" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.8"/>`;
+
+  // Points
+  const pointsSvg = points.map(pt => {
+    const ov = _dmaManualPos[pt.id];
+    const fx = ov ? ov.x : pt.financialPct;
+    const fy = ov ? ov.y : pt.impactPct;
+    const cx = ML + pw * Math.min(Math.max(fx,3),97) / 100;
+    const cy = MT + ph * (1 - Math.min(Math.max(fy,3),97) / 100);
+    const r  = 14 + Math.min(pt.materialCount, 4) * 2;
+    return `<g class="dma-point" data-topic="${pt.id}" data-ox="${pt.financialPct}" data-oy="${pt.impactPct}" style="cursor:grab" tabindex="0" aria-label="${pt.label}">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="${pt.color}" fill-opacity="0.18" stroke="${pt.color}" stroke-width="2"/>
+      <text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="10" font-weight="700" fill="${pt.color}" style="pointer-events:none">${pt.short}</text>
+      <title>${pt.label} — Impatto: ${fy}%  Finanziario: ${fx}%</title>
+    </g>`;
+  }).join('');
+
+  // Axis labels
+  const axLabels =
+    `<text x="${ML + pw/2}" y="${H - 4}" text-anchor="middle" font-size="11" font-weight="600" fill="#374151">Materialità Finanziaria (Outside-in) →</text>` +
+    `<text transform="rotate(-90)" x="${-(MT + ph/2)}" y="14" text-anchor="middle" font-size="11" font-weight="600" fill="#374151">← Materialità di Impatto (Inside-out)</text>`;
+
+  return { svg: `<svg id="dma-matrix-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"
+    style="width:100%;max-width:${W}px;height:auto;display:block;margin:0 auto;touch-action:none;user-select:none">
+    ${quadSvg}${gridSvg}${border}${threshSvg}${pointsSvg}${axLabels}
+  </svg>`, W, H, ML, MT, pw, ph };
+}
+
+/* ══════════════════════════════════════════════════════════
+   MATRICE DMA — drag & drop
+══════════════════════════════════════════════════════════ */
+function _initDMADrag(points) {
+  const svg     = document.getElementById('dma-matrix-svg');
+  const tip     = document.getElementById('dma-tooltip');
+  if (!svg) return;
+
+  // Recover layout constants from SVG viewBox
+  const vb = svg.getAttribute('viewBox').split(' ').map(Number);
+  const W = vb[2], H = vb[3];
+  const ML = 58, MT = 24, MR = 18, MB = 52;
+  const pw = W - ML - MR, ph = H - MT - MB;
+
+  let drag = null;
+
+  function svgPt(e) {
+    const r  = svg.getBoundingClientRect();
+    const sx = W / r.width;
+    const sy = H / r.height;
+    const cl = e.touches ? e.touches[0] : e;
+    return { x: (cl.clientX - r.left) * sx, y: (cl.clientY - r.top) * sy };
+  }
+  function clamp(v, lo, hi) { return Math.min(Math.max(v, lo), hi); }
+
+  svg.querySelectorAll('.dma-point').forEach(g => {
+    const tid = g.dataset.topic;
+    const ox  = Number(g.dataset.ox);
+    const oy  = Number(g.dataset.oy);
+
+    g.addEventListener('mousedown',  e => startDrag(e, g, tid, ox, oy));
+    g.addEventListener('touchstart', e => startDrag(e, g, tid, ox, oy), { passive: false });
+
+    g.addEventListener('mouseenter', () => showTip(tid, ox, oy, points));
+    g.addEventListener('mousemove',  e => { if (tip) { tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px'; } });
+    g.addEventListener('mouseleave', () => { if (tip) tip.style.display='none'; });
+  });
+
+  function startDrag(e, g, tid, ox, oy) {
+    e.preventDefault();
+    const cur = _dmaManualPos[tid] || { x: ox, y: oy };
+    const sp  = svgPt(e);
+    drag = { g, tid, startPtX: cur.x, startPtY: cur.y, startSvgX: sp.x, startSvgY: sp.y };
+    g.style.cursor = 'grabbing';
+    if (tip) tip.style.display = 'none';
+  }
+
+  function onMove(e) {
+    if (!drag) return;
+    e.preventDefault();
+    const p   = svgPt(e);
+    const dx  = (p.x - drag.startSvgX) / pw * 100;
+    const dy  = -(p.y - drag.startSvgY) / ph * 100;
+    const nx  = clamp(Math.round(drag.startPtX + dx), 0, 100);
+    const ny  = clamp(Math.round(drag.startPtY + dy), 0, 100);
+    _dmaManualPos[drag.tid] = { x: nx, y: ny };
+
+    const cx = ML + pw * clamp(nx, 3, 97) / 100;
+    const cy = MT + ph * (1 - clamp(ny, 3, 97) / 100);
+    const circ = drag.g.querySelector('circle');
+    const txt  = drag.g.querySelector('text');
+    if (circ) { circ.setAttribute('cx', cx); circ.setAttribute('cy', cy); }
+    if (txt)  { txt.setAttribute('x', cx);   txt.setAttribute('y', cy + 4); }
+  }
+
+  function onEnd() {
+    if (drag) { drag.g.style.cursor = 'grab'; drag = null; }
+  }
+
+  function showTip(tid, ox, oy, pts) {
+    const pt = pts.find(p => p.id === tid);
+    if (!pt || !tip) return;
+    const ov = _dmaManualPos[tid];
+    const fx = ov ? ov.x : ox, fy = ov ? ov.y : oy;
+    tip.innerHTML = `<strong style="color:${pt.color}">${pt.label}</strong><br>
+      Impatto (inside-out): <strong>${fy}%</strong><br>
+      Finanziario (outside-in): <strong>${fx}%</strong><br>
+      <span style="color:#9ca3af;font-size:11px">${pt.materialCount} impatti materiali${ov?' · posizione manuale':''}</span>`;
+    tip.style.display = 'block';
+  }
+
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup',   onEnd);
+  document.addEventListener('touchmove', onMove, { passive: false });
+  document.addEventListener('touchend',  onEnd);
+
+  // Cleanup event listeners when the overlay is removed
+  const overlay = document.getElementById('dma-matrix-overlay');
+  if (overlay) {
+    const obs = new MutationObserver(() => {
+      if (!document.contains(overlay)) {
+        document.removeEventListener('mousemove',  onMove);
+        document.removeEventListener('mouseup',    onEnd);
+        document.removeEventListener('touchmove',  onMove);
+        document.removeEventListener('touchend',   onEnd);
+        obs.disconnect();
+      }
+    });
+    obs.observe(document.body, { childList: true, subtree: false });
+  }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -981,6 +1206,85 @@ const materialityModule = {
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = 'VERA-MatriceDouble-Materialita.csv'; a.click();
     if (typeof toast === 'function') toast('Matrice esportata in CSV', 'success');
+  },
+
+  openDMAMatrix() {
+    const existing = document.getElementById('dma-matrix-overlay');
+    if (existing) { existing.remove(); return; }
+
+    const points = _getDMAPoints();
+    if (!points.length) {
+      if (typeof toast === 'function') toast('Nessun topic materiale', 'Completa la Fase 1 per generare la matrice');
+      return;
+    }
+
+    const { svg: svgHtml } = _buildDMAMatrixSVG(points);
+
+    // Legend
+    const legend = points.map(pt =>
+      `<div style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:#6b7280">
+        <div style="width:11px;height:11px;border-radius:50%;background:${pt.color};opacity:0.7;border:1.5px solid ${pt.color};flex-shrink:0"></div>
+        <strong style="color:${pt.color}">${pt.id}</strong>&nbsp;${pt.label}
+      </div>`
+    ).join('');
+
+    const overlay = document.createElement('div');
+    overlay.id = 'dma-matrix-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)';
+
+    overlay.innerHTML = `
+      <div style="background:var(--surface,#fff);border-radius:18px;width:100%;max-width:680px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,0.28)">
+        <div style="padding:22px 24px 16px;border-bottom:1px solid var(--border,#e5e7eb);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div>
+            <div style="font-size:17px;font-weight:800;color:var(--text,#111)">🗺️ Matrice di Doppia Materialità</div>
+            <div style="font-size:12px;color:var(--text-2,#6b7280);margin-top:3px">Trascina i punti per aggiustare la posizione degli IRO · Soglia materialità: 40%</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0">
+            <button class="btn btn-outline btn-sm" onclick="materialityModule.resetDMAMatrix()" title="Ripristina posizioni calcolate">↺ Reset</button>
+            <button class="btn btn-outline btn-sm" onclick="materialityModule.exportDMAMatrix()">⬇ SVG</button>
+            <button class="btn btn-outline btn-sm" style="padding:7px 10px" onclick="document.getElementById('dma-matrix-overlay').remove()" aria-label="Chiudi">✕</button>
+          </div>
+        </div>
+        <div style="padding:20px 24px">
+          <div id="dma-svg-wrap" style="border:1px solid var(--border,#e5e7eb);border-radius:10px;overflow:hidden;background:var(--bg,#fff)">
+            ${svgHtml}
+          </div>
+          <div id="dma-legend" style="display:flex;flex-wrap:wrap;gap:10px 20px;margin-top:14px;padding:12px 14px;background:var(--surface,#fff);border:1px solid var(--border,#e5e7eb);border-radius:10px">
+            ${legend}
+          </div>
+          <div id="dma-tooltip" style="display:none;position:fixed;background:var(--surface,#fff);border:1px solid var(--border,#e5e7eb);border-radius:8px;padding:10px 14px;font-size:12.5px;pointer-events:none;z-index:10001;box-shadow:0 4px 20px rgba(0,0,0,0.15);max-width:230px;line-height:1.6"></div>
+          <div style="font-size:11px;color:var(--text-3,#9ca3af);margin-top:10px;text-align:center">
+            Zona <strong>Alta priorità</strong> (top-right) = doppia materialità · Soglia gialla al 40% su entrambi gli assi
+          </div>
+        </div>
+      </div>`;
+
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+    _initDMADrag(points);
+  },
+
+  resetDMAMatrix() {
+    Object.keys(_dmaManualPos).forEach(k => delete _dmaManualPos[k]);
+    // Re-open to redraw with fresh positions
+    this.openDMAMatrix();
+  },
+
+  exportDMAMatrix() {
+    const svg = document.getElementById('dma-matrix-svg');
+    if (!svg) return;
+    // Inline font-family since SVG will be standalone
+    const clone = svg.cloneNode(true);
+    clone.setAttribute('style', '');
+    const blob = new Blob([
+      `<?xml version="1.0" encoding="UTF-8"?>\n` + clone.outerHTML
+    ], { type: 'image/svg+xml' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `VERA-Matrice-DMA-${new Date().toISOString().slice(0,10)}.svg`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    if (typeof toast === 'function') toast('Matrice esportata', 'File SVG scaricato ✓');
   },
 
   openStakeholderManager() {
@@ -2109,6 +2413,12 @@ Object.assign(materialityModule, {
     '  color: #c4b5fd;',
     '  border: 1px solid oklch(0.68 0.165 290 / 0.25);',
     '}',
+    /* ─── DMA Matrix ─── */
+    '#dma-matrix-overlay { animation: fadeIn 0.18s ease; }',
+    '@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }',
+    '.dma-point:focus { outline: 2px solid #f59e0b; outline-offset: 2px; border-radius: 50%; }',
+    '.dma-point circle { transition: filter 0.12s; }',
+    '.dma-point:hover circle { filter: brightness(1.12) drop-shadow(0 0 5px currentColor); }',
   ].join('\n');
 
   var style = document.createElement('style');

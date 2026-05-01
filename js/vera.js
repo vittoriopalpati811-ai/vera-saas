@@ -2809,6 +2809,7 @@ const typeformQuestionnaire = {
     typeformQuestionnaireState.milestonesShown = new Set();
 
     this._buildDisclosures();
+    this._restoreDraft();   // restore localStorage draft if same std + < 24h
 
     const panel = document.getElementById('typeform-panel');
     if (!panel) { this._injectPanel(); }
@@ -3988,6 +3989,45 @@ const typeformQuestionnaire = {
       if (el) vals[q.id] = el.value;
     });
     typeformQuestionnaireState.answers[code] = vals;
+    // Auto-save draft to localStorage after each slide save
+    this._autosaveDraft();
+  },
+
+  _autosaveDraft() {
+    try {
+      const c = (typeof currentClient === 'function') ? currentClient() : null;
+      const key = `vera_tform_draft_${c?.id || 'local'}`;
+      const draft = {
+        std:     typeformQuestionnaireState.std,
+        answers: typeformQuestionnaireState.answers,
+        idx:     typeformQuestionnaireState.currentIndex,
+        ts:      Date.now(),
+      };
+      localStorage.setItem(key, JSON.stringify(draft));
+    } catch(_) {}
+  },
+
+  _restoreDraft() {
+    try {
+      const c = (typeof currentClient === 'function') ? currentClient() : null;
+      const key = `vera_tform_draft_${c?.id || 'local'}`;
+      const raw = localStorage.getItem(key);
+      if (!raw) return false;
+      const draft = JSON.parse(raw);
+      // Only restore if same standard and draft is < 24h old
+      if (draft.std !== typeformQuestionnaireState.std) return false;
+      if (Date.now() - draft.ts > 86_400_000) return false;
+      typeformQuestionnaireState.answers = draft.answers || {};
+      if (typeof toast === 'function') toast('Bozza ripristinata ✓', 'Dati precedenti recuperati');
+      return true;
+    } catch(_) { return false; }
+  },
+
+  _clearDraft() {
+    try {
+      const c = (typeof currentClient === 'function') ? currentClient() : null;
+      localStorage.removeItem(`vera_tform_draft_${c?.id || 'local'}`);
+    } catch(_) {}
   },
 
   _updateProgress() {
@@ -4148,6 +4188,9 @@ const typeformQuestionnaire = {
 
     // Aggiorna report screen
     _renderReportScreen(c);
+
+    // Clear draft: dati ora nel report, non serve più il backup
+    this._clearDraft();
 
     // Flash sull'icona report nella sidebar per indicare aggiornamento
     const navReport = document.getElementById('nav-report');

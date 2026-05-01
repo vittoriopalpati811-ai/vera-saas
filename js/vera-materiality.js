@@ -461,6 +461,90 @@ function _renderImpactDetail(topicId) {
           <div class="mat-legend-item"><span class="mat-legend-dot" style="background:#a78bfa"></span><strong>Soglia materiale</strong>: score ≥ 8/64</div>
         </div>
       </div>
+
+      <!-- FINANCIAL RISK (OUTSIDE-IN) PANEL -->
+      <div class="mat-fin-risk-panel" id="mat-fin-${topicId}">
+        <div class="mat-fin-risk-header">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--text)">💰 Rischi e Opportunità Finanziarie <span style="font-weight:400;color:var(--text-2)">(Outside-in)</span></div>
+            <div style="font-size:11.5px;color:var(--text-2);margin-top:2px">Come questo topic ESG può impattare finanziariamente l'azienda · alimenta l'asse X della matrice DMA</div>
+          </div>
+          <button class="btn btn-outline btn-sm" style="flex-shrink:0"
+            onclick="materialityModule.addFinRisk('${topicId}')">+ Aggiungi</button>
+        </div>
+        <div id="mat-fin-list-${topicId}">
+          ${_renderFinRiskList(topicId)}
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   FINANCIAL RISK (OUTSIDE-IN) PANEL
+   Populates _matState.finRisks[topicId] → X axis of DMA matrix
+══════════════════════════════════════════════════════════ */
+function _renderFinRiskList(topicId) {
+  const risks = (_matState.finRisks || {})[topicId] || [];
+  if (!risks.length) {
+    return `<div style="padding:10px 0;font-size:12px;color:var(--text-3);font-style:italic">
+      Nessun rischio/opportunità finanziaria registrato — clicca "+ Aggiungi" per valutare l'esposizione finanziaria
+    </div>`;
+  }
+  return risks.map((r, i) => _renderFinRiskRow(topicId, i, r)).join('');
+}
+
+function _renderFinRiskRow(topicId, idx, r) {
+  const tid  = topicId.replace(/[^a-z0-9]/gi,'_');
+  const prob = Number(r.probability || 2);
+  const mag  = Number(r.magnitude   || 2);
+  const score = prob * mag;
+  const pct   = Math.round(score / 16 * 100);
+  const col   = score >= 10 ? '#dc2626' : score >= 6 ? '#f59e0b' : '#22c55e';
+
+  const typeOpts = ['Rischio fisico','Rischio di transizione','Rischio legale/normativo','Opportunità di mercato','Opportunità operativa','Opportunità finanziaria'];
+  const horizOpts = ['Breve termine (<2 anni)','Medio termine (2-5 anni)','Lungo termine (>5 anni)'];
+
+  return `
+    <div class="mat-fin-row" id="mat-fin-row-${tid}-${idx}">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+        <select class="mat-select mat-select-sm" style="min-width:200px"
+          onchange="materialityModule.updateFinRisk('${topicId}',${idx},'type',this.value)">
+          ${typeOpts.map(t => `<option value="${t}" ${r.type===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+        <select class="mat-select mat-select-sm" style="min-width:160px"
+          onchange="materialityModule.updateFinRisk('${topicId}',${idx},'horizon',this.value)">
+          ${horizOpts.map(h => `<option value="${h}" ${r.horizon===h?'selected':''}>${h}</option>`).join('')}
+        </select>
+        <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
+          <span style="font-size:10px;font-weight:700;color:${col};background:${col}15;border:1px solid ${col}30;border-radius:4px;padding:2px 8px">${pct}%</span>
+          <button class="btn btn-outline btn-sm" style="padding:3px 8px;color:#ef4444;border-color:#fca5a5"
+            onclick="materialityModule.removeFinRisk('${topicId}',${idx})" title="Rimuovi">✕</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div>
+          <label class="mat-label">Probabilità</label>
+          <select class="mat-select mat-select-sm"
+            onchange="materialityModule.updateFinRisk('${topicId}',${idx},'probability',+this.value)">
+            ${[[1,'Bassa'],[2,'Media'],[3,'Alta'],[4,'Molto alta']].map(([v,l])=>
+              `<option value="${v}" ${prob===v?'selected':''}>${v} — ${l}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label class="mat-label">Magnitudo</label>
+          <select class="mat-select mat-select-sm"
+            onchange="materialityModule.updateFinRisk('${topicId}',${idx},'magnitude',+this.value)">
+            ${[[1,'Limitata'],[2,'Moderata'],[3,'Significativa'],[4,'Molto alta']].map(([v,l])=>
+              `<option value="${v}" ${mag===v?'selected':''}>${v} — ${l}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label class="mat-label">Descrizione (opz.)</label>
+          <input class="mat-select mat-select-sm" type="text" placeholder="Es. Aumento costi energia..."
+            value="${(r.name||'').replace(/"/g,'&quot;')}"
+            oninput="materialityModule.updateFinRisk('${topicId}',${idx},'name',this.value)">
+        </div>
+      </div>
     </div>`;
 }
 
@@ -1234,6 +1318,37 @@ const materialityModule = {
     _updateSidebarActive();
   },
 
+  /* ── Financial risk CRUD ─────────────────────────────── */
+  addFinRisk(topicId) {
+    if (!_matState.finRisks) _matState.finRisks = {};
+    if (!_matState.finRisks[topicId]) _matState.finRisks[topicId] = [];
+    _matState.finRisks[topicId].push({
+      type: 'Rischio di transizione', name: '', probability: 2, magnitude: 2,
+      horizon: 'Medio termine (2-5 anni)',
+    });
+    _matState.dirty = true;
+    const el = document.getElementById(`mat-fin-list-${topicId}`);
+    if (el) el.innerHTML = _renderFinRiskList(topicId);
+  },
+
+  updateFinRisk(topicId, idx, field, value) {
+    const risks = (_matState.finRisks || {})[topicId];
+    if (!risks || !risks[idx]) return;
+    risks[idx][field] = value;
+    _matState.dirty = true;
+    const el = document.getElementById(`mat-fin-list-${topicId}`);
+    if (el) el.innerHTML = _renderFinRiskList(topicId);
+  },
+
+  removeFinRisk(topicId, idx) {
+    const risks = (_matState.finRisks || {})[topicId];
+    if (!risks) return;
+    risks.splice(idx, 1);
+    _matState.dirty = true;
+    const el = document.getElementById(`mat-fin-list-${topicId}`);
+    if (el) el.innerHTML = _renderFinRiskList(topicId);
+  },
+
   refreshDetail() {
     const detail = document.getElementById('mat-detail');
     if (detail) detail.innerHTML = _renderImpactDetail(_matState.activeTopic);
@@ -1617,6 +1732,7 @@ const materialityModule = {
     const clientId = window._veraDbClientId || null;
     const payload = {
       impacts:      _matState.selected,
+      finRisks:     _matState.finRisks,
       matTopics:    _getMaterialTopics(),
       chosenStd:    _matState.chosenStandard,
       activeModules: _matState.activeModules,
@@ -1657,8 +1773,9 @@ const materialityModule = {
         const { data } = await sb.from('materiality_assessments').select('data_json').eq('client_id', clientId).single();
         if (data?.data_json) {
           const saved = JSON.parse(data.data_json);
-          _matState.selected      = saved.impacts       || {};
-          _matState.chosenStandard = saved.chosenStd    || null;
+          _matState.selected       = saved.impacts       || {};
+          _matState.finRisks       = saved.finRisks      || {};
+          _matState.chosenStandard = saved.chosenStd     || null;
           _matState.activeModules  = saved.activeModules || [];
         }
       } catch(e) { console.warn('[mat.load]', e); }
@@ -1667,8 +1784,9 @@ const materialityModule = {
         const raw = localStorage.getItem('vera_mat_' + (clientId || 'local'));
         if (raw) {
           const saved = JSON.parse(raw);
-          _matState.selected      = saved.impacts       || {};
-          _matState.chosenStandard = saved.chosenStd    || null;
+          _matState.selected       = saved.impacts       || {};
+          _matState.finRisks       = saved.finRisks      || {};
+          _matState.chosenStandard = saved.chosenStd     || null;
           _matState.activeModules  = saved.activeModules || [];
         }
       } catch(_) {}
@@ -2616,6 +2734,29 @@ Object.assign(materialityModule, {
     '  color: #c4b5fd;',
     '  border: 1px solid oklch(0.68 0.165 290 / 0.25);',
     '}',
+    /* ─── Financial Risk Panel ─── */
+    '.mat-fin-risk-panel {',
+    '  margin-top: 20px;',
+    '  padding: 14px 16px;',
+    '  background: oklch(0.98 0.012 230 / 0.5);',
+    '  border: 1.5px dashed oklch(0.75 0.06 230);',
+    '  border-radius: 10px;',
+    '}',
+    '.mat-fin-risk-header {',
+    '  display: flex;',
+    '  align-items: flex-start;',
+    '  justify-content: space-between;',
+    '  gap: 12px;',
+    '  margin-bottom: 12px;',
+    '}',
+    '.mat-fin-row {',
+    '  padding: 12px 14px;',
+    '  background: var(--surface);',
+    '  border: 1px solid var(--border);',
+    '  border-radius: 8px;',
+    '  margin-bottom: 8px;',
+    '}',
+    '.mat-fin-row:last-child { margin-bottom: 0; }',
     /* ─── DMA Matrix ─── */
     '#dma-matrix-overlay { animation: fadeIn 0.18s ease; }',
     '@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }',

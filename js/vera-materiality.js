@@ -824,6 +824,126 @@ function _renderPhase3() {
           <div class="btn btn-primary" style="margin-top:14px;width:100%;justify-content:center">Apri matrice →</div>
         </div>
       </div>
+
+      <!-- STAKEHOLDER RESPONSES SECTION -->
+      <div id="mat-stakeholder-responses" style="margin-top:24px">
+        ${_renderStakeholderSection()}
+      </div>
+    </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   STAKEHOLDER RESPONSE AGGREGATION
+   Fetches stakeholder_responses from Supabase and renders
+   aggregated IRO ranking + participation stats
+══════════════════════════════════════════════════════════ */
+function _renderStakeholderSection() {
+  return `
+    <div class="acard mat-sh-section" style="border:1.5px dashed var(--border);cursor:default">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div>
+          <div class="acard-title" style="margin-bottom:2px">📬 Risposte Stakeholder</div>
+          <div style="font-size:12.5px;color:var(--text-2)">
+            Aggregazione delle valutazioni IRO ricevute dai questionari inviati agli stakeholder esterni
+          </div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="materialityModule.loadStakeholderResponses()" id="sh-load-btn">
+          Carica risposte ↓
+        </button>
+      </div>
+      <div id="sh-results" style="margin-top:0"></div>
+    </div>`;
+}
+
+function _renderStakeholderData(rows) {
+  if (!rows || rows.length === 0) {
+    return `<div style="padding:20px;text-align:center;color:var(--text-2);font-size:13px">
+      Nessuna risposta ricevuta. <button class="btn btn-outline btn-sm" onclick="materialityModule.openStakeholderManager()" style="margin-left:8px">Invia questionari →</button>
+    </div>`;
+  }
+
+  // Aggregate per iro_id
+  const byIro = {};
+  rows.forEach(r => {
+    if (!byIro[r.iro_id]) byIro[r.iro_id] = { label: r.iro_label || r.iro_id, impacts: [], probs: [], categories: new Set() };
+    if (r.impact_score) byIro[r.iro_id].impacts.push(Number(r.impact_score));
+    if (r.probability)  byIro[r.iro_id].probs.push(Number(r.probability));
+    if (r.category)     byIro[r.iro_id].categories.add(r.category);
+  });
+
+  // Rank by avg(impact × probability)
+  const ranked = Object.entries(byIro).map(([id, d]) => {
+    const avgImp  = d.impacts.length ? d.impacts.reduce((s,v)=>s+v,0)/d.impacts.length : 0;
+    const avgProb = d.probs.length   ? d.probs.reduce((s,v)=>s+v,0)/d.probs.length   : 0;
+    const score   = avgImp * avgProb;
+    const topicId = id.split('-')[0]; // 'E1' from 'E1-1'
+    const pk      = topicId.charAt(0);
+    const col     = { E: '#22d06a', S: '#60a5fa', G: '#fb923c' }[pk] || '#64748b';
+    return { id, label: d.label, avgImp, avgProb, score, topicId, col, n: d.impacts.length, cats: [...d.categories] };
+  }).sort((a,b) => b.score - a.score);
+
+  // Participation by category
+  const byCat = {};
+  rows.forEach(r => {
+    if (!byCat[r.category]) byCat[r.category] = new Set();
+    byCat[r.category].add(r.email);
+  });
+  const catLabels = { employees:'Dipendenti', suppliers:'Fornitori', customers:'Clienti', community:'Comunità', investors:'Investitori', ngo:'ONG' };
+
+  const maxScore = ranked[0]?.score || 1;
+
+  const iroRows = ranked.slice(0,12).map(p => {
+    const barW = Math.round(p.score / maxScore * 100);
+    return `
+      <div style="display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:11px;font-weight:700;color:${p.col};background:${p.col}18;border:1px solid ${p.col}30;border-radius:4px;padding:2px 6px;text-align:center">${p.id}</span>
+        <div>
+          <div style="font-size:12.5px;font-weight:500;margin-bottom:3px;color:var(--text)">${p.label}</div>
+          <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${barW}%;background:${p.col};border-radius:3px;transition:width .4s"></div>
+          </div>
+        </div>
+        <div style="text-align:right;font-size:11px;white-space:nowrap">
+          <div style="font-weight:700;color:var(--text)">${p.avgImp.toFixed(1)} × ${p.avgProb.toFixed(1)}</div>
+          <div style="color:var(--text-2)">${p.n} risp.</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  const catRows = Object.entries(byCat).map(([cat,emails]) =>
+    `<div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border)">
+      <span>${catLabels[cat]||cat}</span>
+      <span style="font-weight:600;color:var(--text)">${emails.size} rispondenti</span>
+    </div>`
+  ).join('');
+
+  const importable = ranked.filter(p => p.score > 0).length > 0;
+
+  return `
+    <div style="margin-top:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <div style="font-size:13px;font-weight:700;color:var(--text)">
+          📊 Top IRO — ${rows.length} risposte totali · ${ranked.length} IRO valutati
+        </div>
+        <div style="display:flex;gap:8px">
+          ${importable ? `<button class="btn btn-primary btn-sm" onclick="materialityModule.importStakeholderToDMA()" title="Usa le posizioni stakeholder nella matrice DMA">🗺️ Importa nel DMA</button>` : ''}
+          <button class="btn btn-outline btn-sm" onclick="materialityModule.exportStakeholderCSV()">⬇ CSV</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 240px;gap:16px;align-items:start">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">
+            IRO per Impatto × Probabilità media stakeholder (scala 1-5)
+          </div>
+          ${iroRows}
+          ${ranked.length > 12 ? `<div style="font-size:11.5px;color:var(--text-2);margin-top:8px">+${ranked.length-12} altri IRO valutati</div>` : ''}
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Partecipazione</div>
+          ${catRows || '<div style="font-size:12px;color:var(--text-2)">—</div>'}
+        </div>
+      </div>
     </div>`;
 }
 
@@ -1285,6 +1405,89 @@ const materialityModule = {
     a.click();
     URL.revokeObjectURL(a.href);
     if (typeof toast === 'function') toast('Matrice esportata', 'File SVG scaricato ✓');
+  },
+
+  async loadStakeholderResponses() {
+    const btn = document.getElementById('sh-load-btn');
+    const res = document.getElementById('sh-results');
+    if (!res) return;
+    if (btn) { btn.disabled = true; btn.textContent = 'Caricamento…'; }
+
+    try {
+      const c = (typeof currentClient === 'function') ? currentClient() : null;
+      const clientId = c?._dbId || c?.id || null;
+      if (!clientId) {
+        res.innerHTML = '<div style="padding:12px;color:#ef4444;font-size:13px">Nessun cliente attivo — apri una scheda cliente.</div>';
+        return;
+      }
+
+      const sb = window.veraAuth?.getSupabase?.();
+      if (!sb) throw new Error('Supabase non disponibile');
+
+      const { data, error } = await sb
+        .from('stakeholder_responses')
+        .select('iro_id,iro_label,impact_score,probability,category,email,notes')
+        .eq('client_id', clientId);
+
+      if (error) throw error;
+
+      // Store for export/import
+      window._shResponses = data || [];
+      res.innerHTML = _renderStakeholderData(data);
+
+      // Tighten the card border once loaded
+      const card = res.closest('.mat-sh-section');
+      if (card) card.style.borderStyle = 'solid';
+    } catch(e) {
+      res.innerHTML = `<div style="padding:12px;color:#ef4444;font-size:13px">Errore: ${e.message}</div>`;
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Aggiorna ↺'; }
+    }
+  },
+
+  importStakeholderToDMA() {
+    const rows = window._shResponses;
+    if (!rows?.length) return;
+
+    // Aggregate: for each iro_id compute avg impact (→ Y) and avg probability (→ X financial proxy)
+    const byIro = {};
+    rows.forEach(r => {
+      const tid = (r.iro_id || '').split('-')[0];
+      if (!tid) return;
+      if (!byIro[tid]) byIro[tid] = { impacts: [], probs: [] };
+      if (r.impact_score) byIro[tid].impacts.push(Number(r.impact_score));
+      if (r.probability)  byIro[tid].probs.push(Number(r.probability));
+    });
+
+    let imported = 0;
+    Object.entries(byIro).forEach(([tid, d]) => {
+      const avgImp  = d.impacts.length ? d.impacts.reduce((s,v)=>s+v,0)/d.impacts.length : null;
+      const avgProb = d.probs.length   ? d.probs.reduce((s,v)=>s+v,0)/d.probs.length   : null;
+      if (avgImp !== null && avgProb !== null) {
+        // Map 1-5 scale → 0-100 percentage for the DMA matrix axes
+        _dmaManualPos[tid] = {
+          x: Math.round((avgProb - 1) / 4 * 100),   // financial / outside-in
+          y: Math.round((avgImp  - 1) / 4 * 100),   // impact / inside-out
+        };
+        imported++;
+      }
+    });
+
+    if (typeof toast === 'function') toast(`${imported} topic importati nel DMA`, 'Apri la matrice per vedere le posizioni stakeholder ✓');
+  },
+
+  exportStakeholderCSV() {
+    const rows = window._shResponses;
+    if (!rows?.length) { if (typeof toast === 'function') toast('Nessun dato', 'Carica prima le risposte'); return; }
+    const header = ['iro_id','iro_label','category','impact_score','probability','notes'];
+    const csv = [header.join(','), ...rows.map(r =>
+      header.map(k => JSON.stringify(r[k] ?? '')).join(',')
+    )].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `VERA-Stakeholder-Risposte-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(a.href);
+    if (typeof toast === 'function') toast('CSV esportato', `${rows.length} risposte scaricate ✓`);
   },
 
   openStakeholderManager() {

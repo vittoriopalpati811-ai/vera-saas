@@ -2828,6 +2828,7 @@ const typeformQuestionnaire = {
       }
     };
     document.addEventListener('keydown', this._keyHandler);
+    this._initPreviewListeners();
   },
 
   close() {
@@ -3276,6 +3277,83 @@ const typeformQuestionnaire = {
         .tform-disclosure-title { font-size:18px; }
         .tform-completion-stats { gap:12px; }
         .tform-mod-name { min-width:60px; max-width:60px; }
+      }
+
+      /* ── Live Preview Panel ──────────────────────────────── */
+      #typeform-panel {
+        display:flex; flex-direction:row;
+      }
+      #typeform-wrapper {
+        flex:1; min-width:0; transition:none;
+      }
+      #tform-preview-panel {
+        position:absolute; right:0; top:0; bottom:0;
+        width:340px; max-width:100%;
+        background:#fff;
+        border-left:1px solid oklch(0.90 0.015 75);
+        box-shadow:-4px 0 24px rgba(0,0,0,0.08);
+        display:flex; flex-direction:column;
+        transform:translateX(100%);
+        transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);
+        z-index:10;
+        overflow:hidden;
+      }
+      #tform-preview-panel.open {
+        transform:translateX(0);
+      }
+      #typeform-wrapper.preview-open {
+        margin-right:340px;
+        transition:margin-right 0.25s cubic-bezier(0.4,0,0.2,1);
+      }
+      #tform-preview-header {
+        display:flex; align-items:center; justify-content:space-between;
+        padding:14px 16px;
+        border-bottom:1px solid oklch(0.92 0.015 75);
+        flex-shrink:0;
+        background:oklch(0.975 0.012 75);
+      }
+      #tform-preview-close {
+        background:none; border:none; cursor:pointer;
+        font-size:14px; color:#9ca3af; padding:4px 6px;
+        border-radius:6px; line-height:1;
+      }
+      #tform-preview-close:hover { background:#f1f5f9; color:#374151; }
+      #tform-preview-body {
+        flex:1; overflow-y:auto;
+        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      }
+      .tform-prev-section {
+        border-bottom:1px solid #f1f5f9;
+      }
+      .tform-prev-section-header {
+        display:flex; align-items:center; gap:0;
+        padding:8px 10px 6px 10px;
+        cursor:default;
+      }
+      .tform-prev-section.empty .tform-prev-section-header {
+        opacity:0.55;
+      }
+      #tform-preview-toggle {
+        display:inline-flex; align-items:center; gap:6px;
+        padding:6px 12px; border-radius:7px;
+        font-size:12px; font-weight:600;
+        background:oklch(0.96 0.015 75);
+        border:1.5px solid oklch(0.88 0.02 75);
+        color:#374151; cursor:pointer;
+        transition:all 0.15s;
+      }
+      #tform-preview-toggle:hover { border-color:#16a34a; color:#16a34a; }
+      #tform-preview-toggle.active { background:#f0fdf4; border-color:#86efac; color:#15803d; }
+
+      @media (max-width:768px) {
+        #tform-preview-panel {
+          top:auto; left:0; right:0; bottom:0;
+          width:100%; height:55vh;
+          transform:translateY(100%);
+          border-left:none; border-top:1px solid oklch(0.90 0.015 75);
+        }
+        #tform-preview-panel.open { transform:translateY(0); }
+        #typeform-wrapper.preview-open { margin-right:0; margin-bottom:55vh; }
       }
     `;
     document.head.appendChild(style);
@@ -4162,6 +4240,166 @@ const typeformQuestionnaire = {
     }
     return null; // no constraint violation
   },
+
+  /* ══════════════════════════════════════════════════════════
+     LIVE REPORT PREVIEW
+     Floating right-side panel updated as user fills the form
+  ══════════════════════════════════════════════════════════ */
+  _initPreviewListeners() {
+    const panel = document.getElementById('typeform-panel');
+    if (!panel) return;
+
+    // Inject preview toggle button in topbar (idempotent)
+    if (!document.getElementById('tform-preview-toggle')) {
+      const rightBar = document.getElementById('tform-topbar-right');
+      if (rightBar) {
+        const btn = document.createElement('button');
+        btn.id = 'tform-preview-toggle';
+        btn.title = 'Anteprima report live';
+        btn.innerHTML = `<svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/></svg>
+          Anteprima`;
+        btn.onclick = () => this.togglePreview();
+        // Insert before close button
+        rightBar.insertBefore(btn, rightBar.firstChild);
+      }
+    }
+
+    // Inject preview panel inside #typeform-panel (idempotent)
+    if (!document.getElementById('tform-preview-panel')) {
+      const previewEl = document.createElement('div');
+      previewEl.id = 'tform-preview-panel';
+      previewEl.innerHTML = `
+        <div id="tform-preview-header">
+          <div>
+            <div style="font-size:13px;font-weight:700">👁 Anteprima Report</div>
+            <div id="tform-preview-progress" style="font-size:11px;color:#6b7280;margin-top:1px">— sezioni compilate</div>
+          </div>
+          <button id="tform-preview-close" onclick="typeformQuestionnaire.togglePreview()" title="Chiudi anteprima">✕</button>
+        </div>
+        <div id="tform-preview-body"></div>`;
+      panel.appendChild(previewEl);
+    }
+
+    // Restore preference
+    if (localStorage.getItem('vera_preview_open') === '1') {
+      this._setPreviewOpen(true);
+    }
+
+    // Debounced refresh on input
+    let _debTimer;
+    panel.addEventListener('input', () => {
+      clearTimeout(_debTimer);
+      _debTimer = setTimeout(() => this._refreshPreview(), 500);
+    }, { passive: true });
+
+    // Initial render
+    this._refreshPreview();
+  },
+
+  togglePreview() {
+    const panel = document.getElementById('tform-preview-panel');
+    if (!panel) return;
+    const isOpen = panel.classList.contains('open');
+    this._setPreviewOpen(!isOpen);
+  },
+
+  _setPreviewOpen(open) {
+    const panel   = document.getElementById('tform-preview-panel');
+    const wrapper = document.getElementById('typeform-wrapper');
+    const btn     = document.getElementById('tform-preview-toggle');
+    if (!panel) return;
+    if (open) {
+      panel.classList.add('open');
+      if (wrapper) wrapper.classList.add('preview-open');
+      if (btn) btn.classList.add('active');
+      localStorage.setItem('vera_preview_open', '1');
+      this._refreshPreview();
+    } else {
+      panel.classList.remove('open');
+      if (wrapper) wrapper.classList.remove('preview-open');
+      if (btn) btn.classList.remove('active');
+      localStorage.setItem('vera_preview_open', '0');
+    }
+  },
+
+  _refreshPreview() {
+    const body = document.getElementById('tform-preview-body');
+    const prog = document.getElementById('tform-preview-progress');
+    if (!body) return;
+    try {
+      const html    = this._buildPreview();
+      body.innerHTML = html.content;
+      if (prog) prog.textContent = html.progress;
+    } catch(e) {
+      body.innerHTML = `<div style="padding:16px;font-size:12px;color:#9ca3af">Anteprima non disponibile</div>`;
+    }
+  },
+
+  _buildPreview() {
+    const state  = typeformQuestionnaireState;
+    const { disclosures, answers, std } = state;
+    if (!disclosures?.length) {
+      return { content: `<div style="padding:20px;text-align:center;font-size:12px;color:#9ca3af">Apri il questionario per vedere l'anteprima</div>`, progress: '—' };
+    }
+
+    const stdLabel = std === 'gri' ? 'GRI Standards 2021' : 'VSME EFRAG 2023';
+    const questions = std === 'gri' ? GRI_QUESTIONS : VSME_QUESTIONS;
+
+    let filled = 0;
+    const sections = disclosures.map(d => {
+      const code     = d.code;
+      const codeSafe = code.replace(/[^a-z0-9]/gi, '_');
+      const qs       = questions[code] || [];
+      const ans      = answers[code] || {};
+
+      // Also scrape live DOM values for the current slide
+      qs.forEach(q => {
+        const el = document.getElementById(`tform-${codeSafe}-${q.id}`);
+        if (el && el.value && !ans[q.id]) ans[q.id] = el.value;
+      });
+
+      const hasData = qs.some(q => ans[q.id] && String(ans[q.id]).trim());
+      if (hasData) filled++;
+
+      const meta   = this._META?.[code] || {};
+      const color  = meta.color || '#64748b';
+      const _e = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const rows   = qs.filter(q => ans[q.id] && String(ans[q.id]).trim()).map(q =>
+        `<div style="display:flex;gap:8px;font-size:11.5px;padding:3px 0;border-bottom:1px dashed #f1f5f9">
+          <span style="color:#9ca3af;flex-shrink:0;min-width:120px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_e(q.label)}:</span>
+          <span style="font-weight:600;color:#1e293b;font-variant-numeric:tabular-nums">${_e(String(ans[q.id]).trim())}</span>
+        </div>`
+      ).join('');
+
+      return `
+        <div class="tform-prev-section ${hasData ? 'filled' : 'empty'}">
+          <div class="tform-prev-section-header" style="border-left:3px solid ${color}">
+            <span style="font-size:10px;font-weight:700;color:${color}">${code}</span>
+            <span style="font-size:11.5px;font-weight:600;color:#374151;flex:1;margin-left:8px">${d.label || code}</span>
+            ${hasData ? '<span style="font-size:10px;color:#22c55e">✓</span>' : '<span style="font-size:10px;color:#d1d5db">○</span>'}
+          </div>
+          ${hasData ? `<div style="padding:4px 8px 8px">${rows}</div>`
+                    : `<div style="padding:2px 8px 8px;font-size:11px;color:#cbd5e1;font-style:italic">— da compilare</div>`}
+        </div>`;
+    });
+
+    const pct      = disclosures.length ? Math.round(filled / disclosures.length * 100) : 0;
+    const barColor = pct >= 80 ? '#22c55e' : pct >= 40 ? '#f59e0b' : '#94a3b8';
+    const header   = `
+      <div style="padding:12px 14px;background:#f8fafc;border-bottom:1px solid #e2e8f0">
+        <div style="font-size:12px;font-weight:700;color:#334155;margin-bottom:8px">${stdLabel}</div>
+        <div style="height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px;transition:width .4s ease"></div>
+        </div>
+        <div style="font-size:10.5px;color:#64748b;margin-top:4px">${filled} di ${disclosures.length} sezioni con dati</div>
+      </div>`;
+
+    return {
+      content: header + sections.join(''),
+      progress: `${filled}/${disclosures.length} sezioni`,
+    };
+  },
+
 };
 
 /* ══════════════════════════════════════════════════════════

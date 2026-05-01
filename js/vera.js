@@ -627,6 +627,21 @@ function _renderReportScreen(c) {
   const year = c.year || new Date().getFullYear();
   const d    = c.liveReportData || {};   // flattened typeform answers
 
+  // Se i dati non sono in memoria ma la funzione è chiamata senza dati, carica da DB
+  if (!Object.keys(d).length && window.veraAuth?.getSupabase && window._veraDbClientId) {
+    window.veraAuth.getSupabase()
+      .from('clients').select('live_report_data,std').eq('id', window._veraDbClientId).single()
+      .then(({ data }) => {
+        if (data?.live_report_data) {
+          try {
+            c.liveReportData = JSON.parse(data.live_report_data);
+            if (data.std) c.std = data.std;
+            _renderReportScreen(c); // re-render with restored data
+          } catch(_) {}
+        }
+      }).catch(() => {});
+  }
+
   /* ── shared helpers ──────────────────────────────────────── */
   const n   = k => { const v = parseFloat(d[k]); return isNaN(v) ? null : v; };
   const sv  = k => (d[k] != null && d[k] !== '') ? String(d[k]) : null;
@@ -4182,6 +4197,9 @@ const typeformQuestionnaire = {
     c.liveReportData = answers;
     c.std = std;
 
+    // Persist report data to Supabase
+    this._saveReportData(c, answers).catch(() => {});
+
     // Aggiorna header report
     const name = answers.vsme_name || answers.org_name || c.name || '—';
     if (name !== '—') c.name = name;
@@ -4870,6 +4888,256 @@ const reportGen = {
     doc.text('ISPRA 2024 (Istituto Superiore per la Protezione e Ricerca Ambientale),', pad + 6, y + 20);
     doc.text('IPCC AR6 WG3 (2022). GWP a 100 anni: CO₂=1, CH₄=29,8, N₂O=273 (IPCC AR6).', pad + 6, y + 25);
 
+    // ── PAGE 4: Energia e Cambiamenti Climatici ──────────────
+    {
+      doc.addPage();
+      doc.setFillColor(22, 163, 74);
+      doc.rect(0, 0, W, 2, 'F');
+      y = 16;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.setTextColor(17, 17, 17);
+      doc.text('3. Energia e Cambiamenti Climatici', pad, y);
+      y += 12;
+
+      const elecRen   = n('elec_ren_kwh');
+      const elecNren  = n('elec_nren_kwh');
+      const gasKwh    = n('gas_kwh');
+      const dieselL   = n('diesel_l');
+      const elecTotal = (elecRen != null ? elecRen : 0) + (elecNren != null ? elecNren : 0);
+      const dieselKwh = dieselL != null ? dieselL * 9.97 : null;
+      const energyTotal = elecTotal + (gasKwh != null ? gasKwh : 0) + (dieselKwh != null ? dieselKwh : 0);
+      const dipE = n('vsme_emp_total') || n('emp_total');
+      const energyInt = (energyTotal > 0 && dipE) ? energyTotal / dipE : null;
+      const elecRenPct = (elecRen != null && energyTotal > 0) ? elecRen / energyTotal * 100 : null;
+      const ghgData = c.ghg || {};
+      const s1t = ghgData.s1 != null ? ghgData.s1 / 1000 : null;
+      const s2t = ghgData.s2 != null ? ghgData.s2 / 1000 : null;
+      const s3t = ghgData.s3 != null ? ghgData.s3 / 1000 : null;
+      const ghgTotal = ghgData.total != null ? ghgData.total / 1000 : null;
+      const ghgInt = (ghgTotal != null && dipE) ? ghgTotal / dipE : null;
+
+      const energyRows = [
+        ['Consumo elettricità totale', elecTotal > 0 ? fmt(elecTotal) : '—', 'kWh'],
+        ['di cui rinnovabile', elecRen != null ? fmt(elecRen) : '—', 'kWh'],
+        ['Consumo gas naturale', gasKwh != null ? fmt(gasKwh) : '—', 'kWh'],
+        ['Consumo gasolio', dieselL != null ? fmt(dieselL) : '—', 'litri'],
+        ['Consumo gasolio (equiv.)', dieselKwh != null ? fmt(dieselKwh) : '—', 'kWh'],
+        ['Energia totale', energyTotal > 0 ? fmt(energyTotal) : '—', 'kWh'],
+        ['Intensità energetica', energyInt != null ? fmt(energyInt, 1) : '—', 'kWh/dip'],
+        ['% energia rinnovabile', elecRenPct != null ? fmt(elecRenPct, 1) + '%' : '—', ''],
+        ['Emissioni Scope 1', s1t != null ? fmt(s1t, 2) : '—', 'tCO₂e'],
+        ['Emissioni Scope 2', s2t != null ? fmt(s2t, 2) : '—', 'tCO₂e'],
+        ['Emissioni Scope 3', s3t != null ? fmt(s3t, 2) : '—', 'tCO₂e'],
+        ['Emissioni totali GHG', ghgTotal != null ? fmt(ghgTotal, 2) : '—', 'tCO₂e'],
+        ['Intensità GHG', ghgInt != null ? fmt(ghgInt, 4) : '—', 'tCO₂e/dip'],
+      ];
+
+      doc.autoTable({
+        startY: y,
+        head: [['Indicatore', 'Valore', 'Unità']],
+        body: energyRows,
+        styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [17, 17, 17], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        columnStyles: { 0: { cellWidth: 80 }, 1: { cellWidth: 50, halign: 'right', fontStyle: 'bold' }, 2: { cellWidth: 30, textColor: [100, 116, 139] } },
+        margin: { left: pad, right: pad },
+        didParseCell: (data) => { if (data.cell.raw === '—') data.cell.styles.textColor = [200, 200, 200]; },
+      });
+      y = doc.lastAutoTable.finalY + 10;
+    }
+
+    // ── PAGE 5: Forza Lavoro ──────────────────────────────────
+    {
+      doc.addPage();
+      doc.setFillColor(22, 163, 74);
+      doc.rect(0, 0, W, 2, 'F');
+      y = 16;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.setTextColor(17, 17, 17);
+      doc.text('4. Forza Lavoro Propria', pad, y);
+      y += 12;
+
+      const empTotal = n('vsme_emp_total') || n('emp_total');
+      const empF     = n('vsme_emp_f_n')   || n('emp_f');
+      const empM     = n('vsme_emp_m_n')   || n('emp_m');
+      const empFt    = n('vsme_emp_ft')    || n('emp_ft');
+      const empPt    = n('vsme_emp_pt')    || n('emp_pt');
+      const empTemp  = n('vsme_emp_temp');
+      const wageM    = n('vsme_wage_m_avg');
+      const wageF    = n('vsme_wage_f_avg');
+      const gpg      = (wageM && wageF && wageM > 0) ? (wageM - wageF) / wageM * 100 : null;
+      const injuries = n('vsme_injuries') || n('ohs_rec_injuries');
+      const fatal    = n('vsme_fatal')    || n('ohs_fatalities');
+      const hrsWorked = n('vsme_hrs_worked') || n('hrs_worked');
+      const trir     = (injuries != null && hrsWorked && hrsWorked > 0) ? injuries / hrsWorked * 200000 : null;
+      const trainTotal = n('vsme_train_hrs_total') || n('train_hrs_total');
+      const trainPerDip = (trainTotal != null && empTotal) ? trainTotal / empTotal : null;
+      const hireTotal  = n('hire_total');
+      const turnTotal  = n('turn_total');
+      const turnPct    = (turnTotal != null && empTotal) ? turnTotal / empTotal * 100 : null;
+
+      const workRows = [
+        ['Dipendenti totali', empTotal != null ? fmt(empTotal) : '—', ''],
+        ['di cui donne', empF != null ? fmt(empF) : '—', ''],
+        ['di cui uomini', empM != null ? fmt(empM) : '—', ''],
+        ['Tempo pieno', empFt != null ? fmt(empFt) : '—', ''],
+        ['Tempo parziale', empPt != null ? fmt(empPt) : '—', ''],
+        ['Contratti a tempo determinato', empTemp != null ? fmt(empTemp) : '—', ''],
+        ['Retribuzione media uomini', wageM != null ? fmt(wageM) : '—', '€/anno'],
+        ['Retribuzione media donne', wageF != null ? fmt(wageF) : '—', '€/anno'],
+        ['Gender pay gap', gpg != null ? fmt(gpg, 1) + '%' : '—', ''],
+        ['Infortuni registrabili', injuries != null ? fmt(injuries) : '—', ''],
+        ['Infortuni mortali', fatal != null ? fmt(fatal) : '—', ''],
+        ['TRIR', trir != null ? fmt(trir, 2) : '—', 'per 200.000 h'],
+        ['Ore formazione totali', trainTotal != null ? fmt(trainTotal) : '—', 'ore'],
+        ['Ore formazione per dipendente', trainPerDip != null ? fmt(trainPerDip, 1) : '—', 'ore/dip'],
+        ['Nuovi assunti (GRI 401-1)', hireTotal != null ? fmt(hireTotal) : '—', ''],
+        ['Turnover', turnPct != null ? fmt(turnPct, 1) + '%' : '—', ''],
+      ];
+
+      doc.autoTable({
+        startY: y,
+        head: [['Indicatore', 'Valore', 'Unità']],
+        body: workRows,
+        styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [17, 17, 17], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        columnStyles: { 0: { cellWidth: 80 }, 1: { cellWidth: 50, halign: 'right', fontStyle: 'bold' }, 2: { cellWidth: 30, textColor: [100, 116, 139] } },
+        margin: { left: pad, right: pad },
+        didParseCell: (data) => { if (data.cell.raw === '—') data.cell.styles.textColor = [200, 200, 200]; },
+      });
+      y = doc.lastAutoTable.finalY + 10;
+    }
+
+    // ── PAGE 6: Rifiuti, Acqua e Sociale ─────────────────────
+    {
+      doc.addPage();
+      doc.setFillColor(22, 163, 74);
+      doc.rect(0, 0, W, 2, 'F');
+      y = 16;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.setTextColor(17, 17, 17);
+      doc.text('5. Ambiente — Rifiuti e Risorse', pad, y);
+      y += 12;
+
+      const wasteT    = n('vsme_waste_t');
+      const wasteHaz  = n('vsme_waste_haz');
+      const wasteRec  = n('vsme_waste_rec');
+      const wasteLand = n('vsme_waste_land');
+      const recPct    = (wasteRec != null && wasteT && wasteT > 0) ? wasteRec / wasteT * 100 : null;
+      const waterM3   = n('vsme_water_m3');
+      const waterOut  = n('vsme_water_out');
+
+      const wasteRows = [
+        ['Rifiuti totali', wasteT != null ? fmt(wasteT, 2) : '—', 'tonnellate'],
+        ['di cui pericolosi', wasteHaz != null ? fmt(wasteHaz, 2) : '—', 'tonnellate'],
+        ['Avviati a riciclo', wasteRec != null ? fmt(wasteRec, 2) : '—', 'tonnellate'],
+        ['Smaltiti in discarica', wasteLand != null ? fmt(wasteLand, 2) : '—', 'tonnellate'],
+        ['Tasso di riciclo', recPct != null ? fmt(recPct, 1) + '%' : '—', ''],
+        ['Acqua prelevata', waterM3 != null ? fmt(waterM3) : '—', 'm³'],
+        ['Scarichi idrici', waterOut != null ? fmt(waterOut) : '—', 'm³'],
+      ];
+
+      doc.autoTable({
+        startY: y,
+        head: [['Indicatore', 'Valore', 'Unità']],
+        body: wasteRows,
+        styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [17, 17, 17], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        columnStyles: { 0: { cellWidth: 80 }, 1: { cellWidth: 50, halign: 'right', fontStyle: 'bold' }, 2: { cellWidth: 30, textColor: [100, 116, 139] } },
+        margin: { left: pad, right: pad },
+        didParseCell: (data) => { if (data.cell.raw === '—') data.cell.styles.textColor = [200, 200, 200]; },
+      });
+      y = doc.lastAutoTable.finalY + 14;
+
+      // Second table: Sociale e Consumatori
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.setTextColor(17, 17, 17);
+      doc.text('Sociale e Consumatori', pad, y);
+      y += 8;
+
+      const complaints    = n('vsme_complaints')     || n('privacy_complaints');
+      const complaintsRes = n('vsme_complaints_res');
+      const supScreen     = n('vsme_suppliers_screened') || n('sup_screen');
+      const transpKm      = n('vsme_transp_km');
+      // transport CO2: same factor used elsewhere in codebase (0.00008 tCO2/km default)
+      const transpCo2     = transpKm != null ? transpKm * 0.00008 : null;
+
+      const socialRows = [
+        ['Reclami consumatori', complaints != null ? fmt(complaints) : '—', ''],
+        ['Reclami risolti', complaintsRes != null ? fmt(complaintsRes, 1) + '%' : '—', ''],
+        ['Fornitori valutati ESG', supScreen != null ? fmt(supScreen) : '—', ''],
+        ['Km trasporto merci', transpKm != null ? fmt(transpKm) : '—', 'km'],
+        ['CO₂ trasporti (stima)', transpCo2 != null ? fmt(transpCo2, 2) : '—', 'tCO₂e'],
+      ];
+
+      doc.autoTable({
+        startY: y,
+        head: [['Indicatore', 'Valore', 'Unità']],
+        body: socialRows,
+        styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [17, 17, 17], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        columnStyles: { 0: { cellWidth: 80 }, 1: { cellWidth: 50, halign: 'right', fontStyle: 'bold' }, 2: { cellWidth: 30, textColor: [100, 116, 139] } },
+        margin: { left: pad, right: pad },
+        didParseCell: (data) => { if (data.cell.raw === '—') data.cell.styles.textColor = [200, 200, 200]; },
+      });
+      y = doc.lastAutoTable.finalY + 10;
+    }
+
+    // ── PAGE 7: Governance ────────────────────────────────────
+    {
+      doc.addPage();
+      doc.setFillColor(22, 163, 74);
+      doc.rect(0, 0, W, 2, 'F');
+      y = 16;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.setTextColor(17, 17, 17);
+      doc.text('6. Condotta Aziendale e Governance', pad, y);
+      y += 12;
+
+      const antiPolicy   = sv('vsme_anti_policy')  || sv('anti_policy');
+      const antiTraining = n('vsme_anti_training');
+      const corruptCases = n('vsme_corrupt_n')     || n('corrupt_cases');
+      const whistle      = sv('vsme_whistleblow')  || sv('whistle_channel');
+      const mod231       = sv('vsme_231');
+      const boardTotal   = n('vsme_board_total')   || n('board_total');
+      const boardF       = n('vsme_board_f')       || n('board_f');
+      const boardIndep   = n('vsme_board_indep')   || n('board_indep');
+      const boardFpct    = (boardF != null && boardTotal && boardTotal > 0) ? boardF / boardTotal * 100 : null;
+      const boardIpct    = (boardIndep != null && boardTotal && boardTotal > 0) ? boardIndep / boardTotal * 100 : null;
+
+      const govRows = [
+        ['Politica anticorruzione', antiPolicy != null ? antiPolicy : '—', ''],
+        ['Formazione anticorruzione', antiTraining != null ? fmt(antiTraining, 1) + '%' : '—', '% dip.'],
+        ['Casi di corruzione accertati', corruptCases != null ? fmt(corruptCases) : '—', ''],
+        ['Canale whistleblowing', whistle != null ? whistle : '—', ''],
+        ['Modello Organizzativo 231', mod231 != null ? mod231 : '—', ''],
+        ['Componenti CdA (totale)', boardTotal != null ? fmt(boardTotal) : '—', ''],
+        ['di cui donne', boardF != null ? fmt(boardF) + (boardFpct != null ? ' (' + fmt(boardFpct, 1) + '%)' : '') : '—', ''],
+        ['di cui indipendenti', boardIndep != null ? fmt(boardIndep) + (boardIpct != null ? ' (' + fmt(boardIpct, 1) + '%)' : '') : '—', ''],
+      ];
+
+      doc.autoTable({
+        startY: y,
+        head: [['Indicatore', 'Valore', 'Unità']],
+        body: govRows,
+        styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [17, 17, 17], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        columnStyles: { 0: { cellWidth: 80 }, 1: { cellWidth: 60, halign: 'right', fontStyle: 'bold' }, 2: { cellWidth: 30, textColor: [100, 116, 139] } },
+        margin: { left: pad, right: pad },
+        didParseCell: (data) => { if (data.cell.raw === '—') data.cell.styles.textColor = [200, 200, 200]; },
+      });
+      y = doc.lastAutoTable.finalY + 10;
+    }
+
     // ── FOOTER on all pages ──────────────────────────────────
     const totalPages = doc.internal.getNumberOfPages();
     for (let p = 1; p <= totalPages; p++) {
@@ -4886,6 +5154,18 @@ const reportGen = {
     }
 
     return doc.output('datauristring');
+  },
+
+  async _saveReportData(c, answers) {
+    try {
+      const sb = window.veraAuth?.getSupabase?.();
+      const clientId = window._veraDbClientId || c?._dbId || c?.id;
+      if (!sb || !clientId) return;
+      await sb.from('clients').update({
+        live_report_data: JSON.stringify(answers),
+        std: typeformQuestionnaireState.std,
+      }).eq('id', clientId);
+    } catch(e) { console.warn('[saveReportData]', e); }
   },
 };
 

@@ -2845,6 +2845,7 @@ const typeformQuestionnaire = {
     };
     document.addEventListener('keydown', this._keyHandler);
     this._initPreviewListeners();
+    brandIdentity.loadForClient(currentClient()).catch(() => {});
   },
 
   close() {
@@ -3371,6 +3372,55 @@ const typeformQuestionnaire = {
         #tform-preview-panel.open { transform:translateY(0); }
         #typeform-wrapper.preview-open { margin-right:0; margin-bottom:55vh; }
       }
+
+/* ── Brand Identity Panel ────────────────────────────── */
+#tform-brand-btn {
+  display:flex;align-items:center;gap:5px;padding:5px 10px;
+  border:1.5px solid #e2e8f0;border-radius:8px;background:#fff;
+  font-size:12px;font-weight:600;color:#374151;cursor:pointer;
+  transition:border-color .15s,color .15s;
+}
+#tform-brand-btn:hover { border-color:#a855f7; color:#7c3aed; }
+#tform-brand-btn.active { background:#faf5ff; border-color:#c4b5fd; color:#6d28d9; }
+
+#tform-brand-panel {
+  position:absolute;right:0;top:0;bottom:0;width:400px;
+  background:#fff;border-left:1px solid #e2e8f0;
+  box-shadow:-8px 0 32px rgba(0,0,0,.08);
+  transform:translateX(100%);
+  transition:transform .25s cubic-bezier(0.4,0,0.2,1);
+  z-index:30;overflow-y:auto;display:flex;flex-direction:column;
+}
+#tform-brand-panel.open { transform:translateX(0); }
+#typeform-wrapper.brand-open { margin-right:400px; }
+#tform-brand-header {
+  display:flex;justify-content:space-between;align-items:center;
+  padding:16px;border-bottom:1px solid #e2e8f0;position:sticky;top:0;background:#fff;z-index:1;
+}
+.brand-slot {
+  border:2px dashed #e2e8f0;border-radius:10px;padding:14px;
+  margin-bottom:10px;cursor:pointer;transition:border-color .15s,background .15s;
+  text-align:center;
+}
+.brand-slot:hover,.brand-slot.dragover { border-color:#a855f7;background:#faf5ff; }
+.brand-slot.filled { border-color:#86efac;background:#f0fdf4;border-style:solid; }
+.brand-slot-icon { font-size:22px;margin-bottom:4px; }
+.brand-slot-label { font-size:12px;font-weight:700;color:#374151; }
+.brand-slot-sub { font-size:10px;color:#9ca3af;margin-top:2px; }
+.brand-slot-file { font-size:11px;color:#16a34a;font-weight:600;margin-top:4px; }
+.brand-color-swatch {
+  width:28px;height:28px;border-radius:6px;border:1.5px solid rgba(0,0,0,.1);
+  display:inline-block;cursor:pointer;title:'click to copy';
+}
+.brand-preview-row {
+  display:flex;align-items:center;gap:8px;margin-bottom:6px;
+  font-size:12px;color:#374151;
+}
+@media (max-width:768px) {
+  #tform-brand-panel { top:auto;left:0;right:0;width:100%;height:70vh;transform:translateY(100%);border-left:none;border-top:1px solid #e2e8f0; }
+  #tform-brand-panel.open { transform:translateY(0); }
+  #typeform-wrapper.brand-open { margin-right:0;margin-bottom:70vh; }
+}
     `;
     document.head.appendChild(style);
     // Inject CSS custom property at root level so buttons and progress update together
@@ -4355,6 +4405,52 @@ const typeformQuestionnaire = {
 
     // Initial render
     this._refreshPreview();
+
+    // Brand Identity button
+    if (!document.getElementById('tform-brand-btn')) {
+      const rightBar = document.getElementById('tform-topbar-right');
+      if (rightBar) {
+        const brandBtn = document.createElement('button');
+        brandBtn.id = 'tform-brand-btn';
+        brandBtn.title = 'Identità aziendale — colori, logo, font';
+        brandBtn.innerHTML = `<svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clip-rule="evenodd"/></svg> Brand`;
+        brandBtn.onclick = () => brandIdentity.toggle();
+        rightBar.insertBefore(brandBtn, rightBar.firstChild);
+      }
+    }
+
+    // Brand panel (idempotent)
+    if (!document.getElementById('tform-brand-panel')) {
+      const panelEl = document.createElement('div');
+      panelEl.id = 'tform-brand-panel';
+      panelEl.innerHTML = `
+        <div id="tform-brand-header">
+          <div>
+            <div style="font-size:13px;font-weight:700">🎨 Identità Aziendale</div>
+            <div style="font-size:11px;color:#6b7280;margin-top:1px">Carica logo, colori e font del brand</div>
+          </div>
+          <button style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:16px;padding:4px 8px" onclick="brandIdentity.toggle()" title="Chiudi">✕</button>
+        </div>
+        <div style="padding:16px;flex:1">
+          <div id="brand-slots-container"></div>
+          <button onclick="brandIdentity.analyze()" id="brand-analyze-btn"
+            style="width:100%;margin-top:4px;padding:10px;border-radius:8px;border:none;
+            background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;
+            font-size:13px;font-weight:700;cursor:pointer;">
+            ✨ Analizza con AI
+          </button>
+          <div id="brand-ai-status" style="margin-top:8px;font-size:11px;color:#6b7280;min-height:18px"></div>
+          <div id="brand-preview-container" style="margin-top:12px"></div>
+          <button onclick="brandIdentity.save()" id="brand-save-btn"
+            style="display:none;width:100%;margin-top:10px;padding:10px;border-radius:8px;border:none;
+            background:#16a34a;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">
+            💾 Salva identità aziendale
+          </button>
+        </div>`;
+      const tfPanel = document.getElementById('typeform-panel');
+      if (tfPanel) tfPanel.appendChild(panelEl);
+    }
+    brandIdentity._renderSlots();
   },
 
   togglePreview() {
@@ -5525,6 +5621,212 @@ const aiFileParser = {
       });
     };
     reader.readAsText(file, 'utf-8');
+  },
+};
+
+/* ══════════════════════════════════════════════════════════
+   BRAND IDENTITY — upload + AI extraction
+══════════════════════════════════════════════════════════ */
+const brandIdentity = {
+  _files: [null, null, null, null],  // up to 4 uploaded files
+  _extracted: null,                   // last AI extraction result
+  _slots: [
+    { key: 'logo',   icon: '🏷️', label: 'Logo aziendale', sub: 'PNG, SVG, JPG — sfondo trasparente preferito' },
+    { key: 'palette',icon: '🎨', label: 'Palette colori / Brand colors', sub: 'PDF brand guide, PNG con colori, o file .pdf' },
+    { key: 'fonts',  icon: '🔤', label: 'Tipografia', sub: 'PDF con font / campioni testo brand' },
+    { key: 'guide',  icon: '📖', label: 'Brand Guide completo (opzionale)', sub: 'PDF o immagine con tono di voce, logo rules, ecc.' },
+  ],
+
+  toggle() {
+    const panel = document.getElementById('tform-brand-panel');
+    if (!panel) return;
+    const open = panel.classList.contains('open');
+    panel.classList.toggle('open', !open);
+    document.getElementById('typeform-wrapper')?.classList.toggle('brand-open', !open);
+    document.getElementById('tform-brand-btn')?.classList.toggle('active', !open);
+    if (!open) { this._renderSlots(); this._loadFromClient(); }
+  },
+
+  _renderSlots() {
+    const container = document.getElementById('brand-slots-container');
+    if (!container) return;
+    container.innerHTML = this._slots.map((s, i) => `
+      <div class="brand-slot ${this._files[i] ? 'filled' : ''}" id="brand-slot-${i}"
+        onclick="document.getElementById('brand-file-${i}').click()"
+        ondragover="event.preventDefault();this.classList.add('dragover')"
+        ondragleave="this.classList.remove('dragover')"
+        ondrop="event.preventDefault();this.classList.remove('dragover');brandIdentity._onDrop(${i},event)">
+        <input type="file" id="brand-file-${i}" style="display:none"
+          accept="image/png,image/jpeg,image/svg+xml,image/webp,application/pdf"
+          onchange="brandIdentity._onFile(${i},this)">
+        <div class="brand-slot-icon">${s.icon}</div>
+        <div class="brand-slot-label">${s.label}</div>
+        <div class="brand-slot-sub">${s.sub}</div>
+        ${this._files[i] ? `<div class="brand-slot-file">✓ ${this._files[i].name}</div>` : ''}
+      </div>`).join('');
+  },
+
+  _onFile(idx, input) {
+    const file = input.files?.[0];
+    if (!file) return;
+    this._files[idx] = file;
+    this._renderSlots();
+  },
+
+  _onDrop(idx, event) {
+    const file = event.dataTransfer.files?.[0];
+    if (!file) return;
+    this._files[idx] = file;
+    this._renderSlots();
+  },
+
+  async analyze() {
+    const loaded = this._files.filter(Boolean);
+    if (!loaded.length) { toast('Carica almeno un file prima di analizzare', 'error'); return; }
+
+    const btn = document.getElementById('brand-analyze-btn');
+    const status = document.getElementById('brand-ai-status');
+    if (btn) { btn.textContent = '⏳ Analisi AI in corso...'; btn.disabled = true; }
+    if (status) status.textContent = 'Lettura file e invio ad Anthropic Claude...';
+
+    try {
+      // Read files as base64
+      const filesPayload = [];
+      for (let i = 0; i < this._files.length; i++) {
+        const f = this._files[i];
+        if (!f) continue;
+        const base64 = await new Promise((res, rej) => {
+          const reader = new FileReader();
+          reader.onload = e => res(e.target.result.split(',')[1]);
+          reader.onerror = rej;
+          reader.readAsDataURL(f);
+        });
+        filesPayload.push({ name: f.name, base64, mimeType: f.type });
+      }
+
+      if (status) status.textContent = 'Claude sta analizzando il brand...';
+
+      const resp = await fetch('https://zwangblfyccxqigifmgm.supabase.co/functions/v1/analyze-brand', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files: filesPayload }),
+      });
+
+      const data = await resp.json();
+      if (!data.success || !data.brand) throw new Error(data.error || 'Risposta non valida');
+
+      this._extracted = data.brand;
+
+      // If logo file exists and is image, store base64 for PDF
+      const logoIdx = data.brand.logoFileIndex >= 0 ? data.brand.logoFileIndex : -1;
+      if (logoIdx >= 0 && filesPayload[logoIdx]) {
+        const lf = filesPayload[logoIdx];
+        if (lf.mimeType.startsWith('image/')) {
+          this._extracted.logoBase64 = lf.base64;
+          this._extracted.logoMimeType = lf.mimeType;
+        }
+      }
+      // If logoFileIndex == -1 but first file is image, use it as logo
+      if (!this._extracted.logoBase64 && this._files[0] && this._files[0].type.startsWith('image/')) {
+        this._extracted.logoBase64 = filesPayload[0].base64;
+        this._extracted.logoMimeType = this._files[0].type;
+      }
+
+      if (status) status.textContent = '✓ Analisi completata — verifica i risultati';
+      this._renderPreview();
+      const saveBtn = document.getElementById('brand-save-btn');
+      if (saveBtn) saveBtn.style.display = '';
+
+    } catch(e) {
+      if (status) status.textContent = '⚠ Errore: ' + e.message;
+      toast('Errore analisi brand: ' + e.message, 'error');
+    } finally {
+      if (btn) { btn.textContent = '✨ Analizza con AI'; btn.disabled = false; }
+    }
+  },
+
+  _renderPreview() {
+    const b = this._extracted;
+    if (!b) return;
+    const container = document.getElementById('brand-preview-container');
+    if (!container) return;
+    container.innerHTML = `
+      <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:10px">Risultato estrazione AI:</div>
+      <div class="brand-preview-row">
+        <span class="brand-color-swatch" style="background:${b.primaryColor}" title="${b.primaryColor}" onclick="navigator.clipboard?.writeText('${b.primaryColor}')"></span>
+        <span class="brand-color-swatch" style="background:${b.secondaryColor}" title="${b.secondaryColor}" onclick="navigator.clipboard?.writeText('${b.secondaryColor}')"></span>
+        <span class="brand-color-swatch" style="background:${b.accentColor}" title="${b.accentColor}" onclick="navigator.clipboard?.writeText('${b.accentColor}')"></span>
+        <span class="brand-color-swatch" style="background:${b.backgroundColor};border:1.5px solid #e2e8f0" title="${b.backgroundColor}"></span>
+        <span class="brand-color-swatch" style="background:${b.textColor}" title="${b.textColor}"></span>
+        <span style="font-size:10px;color:#9ca3af">primario · secondario · accento · sfondo · testo</span>
+      </div>
+      ${b.logoBase64 ? `<div style="margin:8px 0"><img src="data:${b.logoMimeType};base64,${b.logoBase64}" style="max-height:48px;max-width:140px;object-fit:contain;border:1px solid #e2e8f0;border-radius:6px;padding:4px;background:#fff"></div>` : ''}
+      <div class="brand-preview-row"><b>Font heading:</b>&nbsp;${b.fontHeading || '—'}</div>
+      <div class="brand-preview-row"><b>Font body:</b>&nbsp;${b.fontBody || '—'}</div>
+      <div class="brand-preview-row"><b>Stile:</b>&nbsp;${b.style || '—'}</div>
+      ${b.brandDescription ? `<div style="font-size:11px;color:#4b5563;background:#f8fafc;border-radius:6px;padding:8px;margin-top:6px;line-height:1.5">${b.brandDescription}</div>` : ''}
+      <div style="margin-top:8px">
+        ${['primaryColor','secondaryColor','accentColor'].map(k => `
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:11px">
+            <span class="brand-color-swatch" style="width:20px;height:20px;background:${b[k]}"></span>
+            <span style="color:#6b7280">${k}:</span>
+            <input type="color" value="${b[k]}" onchange="brandIdentity._extracted.${k}=this.value;brandIdentity._recalcRgb('${k}',this.value)" style="width:28px;height:22px;border:none;padding:0;cursor:pointer">
+            <span style="font-family:monospace">${b[k]}</span>
+          </div>`).join('')}
+      </div>`;
+  },
+
+  _recalcRgb(key, hex) {
+    const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b2 = parseInt(hex.slice(5,7),16);
+    const rgbKey = key.replace('Color','Rgb');
+    if (this._extracted) this._extracted[rgbKey] = [r,g,b2];
+  },
+
+  async save() {
+    if (!this._extracted) { toast('Nessun dato da salvare — esegui prima l\'analisi AI', 'error'); return; }
+    const c = currentClient();
+    if (!c) { toast('Nessun cliente attivo', 'error'); return; }
+
+    const brand = { ...this._extracted, updatedAt: new Date().toISOString() };
+    c.brandIdentity = brand;
+
+    // Persist to Supabase
+    try {
+      const sb = window.veraAuth?.getSupabase?.();
+      const clientId = window._veraDbClientId || c?._dbId || c?.id;
+      if (sb && clientId) {
+        // Store without logoBase64 (too large) — store separately
+        const toStore = { ...brand };
+        // logo is ok since it's already base64 — Supabase JSONB handles it
+        await sb.from('clients').update({ brand_identity: toStore }).eq('id', clientId);
+      }
+    } catch(e) { console.warn('[brandIdentity.save]', e); }
+
+    toast('✓ Identità aziendale salvata — il PDF userà i colori e lo stile del brand', 'success');
+    const saveBtn = document.getElementById('brand-save-btn');
+    if (saveBtn) { saveBtn.textContent = '✓ Salvato'; setTimeout(() => { if(saveBtn) saveBtn.textContent = '💾 Salva identità aziendale'; }, 2000); }
+  },
+
+  async _loadFromClient() {
+    const c = currentClient();
+    if (!c || !c.brandIdentity) return;
+    this._extracted = c.brandIdentity;
+    this._renderPreview();
+    const saveBtn = document.getElementById('brand-save-btn');
+    if (saveBtn) saveBtn.style.display = '';
+  },
+
+  async loadForClient(c) {
+    if (!c) return;
+    // If already in memory, skip
+    if (c.brandIdentity) return;
+    try {
+      const sb = window.veraAuth?.getSupabase?.();
+      const clientId = window._veraDbClientId || c?._dbId || c?.id;
+      if (!sb || !clientId) return;
+      const { data } = await sb.from('clients').select('brand_identity').eq('id', clientId).single();
+      if (data?.brand_identity) c.brandIdentity = data.brand_identity;
+    } catch(_) {}
   },
 };
 

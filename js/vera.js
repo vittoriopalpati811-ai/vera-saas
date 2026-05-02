@@ -4754,6 +4754,23 @@ const db = {
   },
 };
 
+function _buildBrandKit(c) {
+  const bi = c?.brandIdentity;
+  return {
+    p1:   bi?.primaryRgb   || [22, 163, 74],
+    p2:   bi?.secondaryRgb || [17, 17, 17],
+    ac:   bi?.accentRgb    || [245, 158, 11],
+    bg:   bi?.bgRgb        || [255, 255, 255],
+    tx:   bi?.textRgb      || [17, 17, 17],
+    logo: bi?.logoBase64   || null,
+    logoMime: bi?.logoMimeType || 'image/png',
+    style: bi?.style || 'corporate',
+    p1hex: bi?.primaryColor || '#16a34a',
+    p2hex: bi?.secondaryColor || '#111827',
+    achex: bi?.accentColor || '#f59e0b',
+  };
+}
+
 const reportGen = {
   _pdfData: null,   // stores last generated PDF as base64
 
@@ -4811,441 +4828,932 @@ const reportGen = {
     showStep();
   },
 
-  async _buildPDF(client) {
+async _buildPDF(client) {
     const { jsPDF } = window.jspdf || {};
     if (!jsPDF) { console.warn('jsPDF not loaded'); return null; }
 
-    const c = client || currentClient();
+    const c   = client || currentClient();
+    const d   = (c && c.liveReportData) || {};
+    const year = (c && c.year) || new Date().getFullYear();
+    const std  = ((c && c.std) || 'vsme').toLowerCase();
+
+    /* helpers */
+    const n   = k => { const v = parseFloat(d[k]); return isNaN(v) ? null : v; };
+    const sv  = k => (d[k] != null && d[k] !== '') ? String(d[k]) : null;
+    const fmt = (v, dec) => { dec = dec === undefined ? 0 : dec; return (v != null) ? Number(v).toLocaleString('it-IT', { minimumFractionDigits: dec, maximumFractionDigits: dec }) : '—'; };
+    const pct = (num, den) => (num != null && den && den > 0) ? fmt(num / den * 100, 1) + '%' : '—';
+    const dash = v => (v != null && v !== '') ? String(v) : '—';
+
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const W = 210, pad = 18;
-    let y = 0;
+    const bk = _buildBrandKit(c);
 
-    // ── COVER PAGE ──────────────────────────────────────────
-    doc.setFillColor(17, 17, 17);
-    doc.rect(0, 0, W, 297, 'F');
-    doc.setFillColor(22, 163, 74);
-    doc.rect(0, 0, W, 6, 'F');
+    /* drawing helpers */
+    const hdrBar = (thick) => { thick = thick || 3; doc.setFillColor(...bk.p1); doc.rect(0, 0, W, thick, 'F'); };
+    const addLogo = (x, y, mw, mh) => {
+      if (!bk.logo) return;
+      x = x||170; y = y||8; mw = mw||26; mh = mh||13;
+      try { doc.addImage('data:image/' + bk.logoMime.toLowerCase() + ';base64,' + bk.logo, bk.logoMime, x, y, mw, mh, '', 'FAST'); } catch(_) {}
+    };
+    const sectionPage = (emoji, title, sub) => {
+      doc.addPage();
+      doc.setFillColor(...bk.p2); doc.rect(0, 0, W, 297, 'F');
+      hdrBar(6); addLogo(164, 10, 28, 14);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(52); doc.setTextColor(...bk.p1); doc.text(emoji, 105, 115, {align:'center'});
+      doc.setFontSize(30); doc.setTextColor(255,255,255); doc.text(title, 105, 148, {align:'center'});
+      if (sub) { doc.setFont('helvetica','normal'); doc.setFontSize(13); doc.setTextColor(156,163,175); doc.text(sub, 105, 163, {align:'center'}); }
+    };
+    const pgTitle = (title, sub, startY) => {
+      startY = startY || 18; hdrBar(3); addLogo();
+      doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.setTextColor(...bk.p2);
+      doc.text(title, pad, startY + 10);
+      let y2 = startY + 18;
+      if (sub) { doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(100,116,139); doc.text(sub, pad, startY+18); y2 = startY+26; }
+      return y2;
+    };
+    const narrative = (title, text, y, mw) => {
+      mw = mw || 174;
+      if (title) { doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...bk.p2); doc.text(title, pad, y); y += 7; }
+      if (!text || text === '—') {
+        doc.setFillColor(248,250,252); doc.roundedRect(pad, y, mw, 13, 2, 2, 'F');
+        doc.setFont('helvetica','italic'); doc.setFontSize(9); doc.setTextColor(156,163,175);
+        doc.text('Dato non inserito — compilare il questionario ESG', pad+3, y+9);
+        return y + 21;
+      }
+      const lines = doc.splitTextToSize(text, mw-10);
+      const boxH = Math.max(16, lines.length * 5.4 + 8);
+      doc.setFillColor(248,250,252); doc.roundedRect(pad, y, mw, boxH, 2, 2, 'F');
+      doc.setFillColor(...bk.p1); doc.rect(pad, y, 3, boxH, 'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(55,65,81);
+      doc.text(lines, pad+8, y+7);
+      return y + boxH + 8;
+    };
+    const tbl = (head, body, y, cols) => {
+      doc.autoTable({
+        startY: y, head: [head], body,
+        styles: { fontSize: 9, cellPadding: 2.8, lineColor: [226,232,240], lineWidth: 0.1 },
+        headStyles: { fillColor: bk.p2, textColor: [255,255,255], fontStyle:'bold', fontSize: 9 },
+        alternateRowStyles: { fillColor: [248,250,252] },
+        columnStyles: cols || {},
+        margin: { left: pad, right: pad },
+        didParseCell: d => { if (d.cell.raw === '—' || d.cell.raw == null) d.cell.styles.textColor = [200,200,200]; },
+      });
+      return doc.lastAutoTable.finalY + 8;
+    };
+    const kpiRow = (kpis, y) => {
+      const cnt = kpis.length, boxW = (W - pad*2 - (cnt-1)*4) / cnt;
+      kpis.forEach((k, i) => {
+        const x = pad + i*(boxW+4);
+        doc.setFillColor(...(k.color||[240,253,244])); doc.roundedRect(x, y, boxW, 22, 3, 3, 'F');
+        doc.setFillColor(...bk.p1); doc.rect(x, y, boxW, 2.5, 'F');
+        doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(...bk.p2);
+        doc.text(String(k.val||'—'), x+boxW/2, y+13, {align:'center'});
+        doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(100,116,139);
+        doc.text(k.label, x+boxW/2, y+20, {align:'center'});
+      });
+      return y + 30;
+    };
+    const barChart = (title, data, y) => {
+      if (!data||!data.length) return y;
+      if (title) { doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...bk.p2); doc.text(title, pad, y); y += 7; }
+      const maxV = Math.max(...data.map(d2=>d2.v||0), 1);
+      const bw = 110;
+      data.forEach(d2 => {
+        const fw = Math.max(1,(d2.v||0)/maxV*bw);
+        doc.setFillColor(240,243,246); doc.rect(pad+62, y, bw, 8, 'F');
+        doc.setFillColor(...(d2.color||bk.p1)); doc.rect(pad+62, y, fw, 8, 'F');
+        doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(55,65,81);
+        doc.text(d2.label, pad, y+5.5);
+        doc.setFont('helvetica','bold');
+        doc.text(String(d2.v||0)+(d2.u?' '+d2.u:''), pad+62+bw+3, y+5.5);
+        y += 12;
+      });
+      return y + 5;
+    };
+    const stackBar = (title, segs, y) => {
+      if (!segs||!segs.length) return y;
+      if (title) { doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...bk.p2); doc.text(title, pad, y); y+=7; }
+      const total = segs.reduce((s,d2)=>s+(d2.v||0),0)||1;
+      const bw=160; let x=pad;
+      segs.forEach(s2 => { const w=Math.max(1,(s2.v||0)/total*bw); doc.setFillColor(...(s2.color||bk.p1)); doc.rect(x,y,w,9,'F'); x+=w; });
+      y+=11;
+      segs.forEach((s2,i) => {
+        const lx=pad+(i%3)*60;
+        doc.setFillColor(...(s2.color||bk.p1)); doc.rect(lx,y,5,5,'F');
+        doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(55,65,81);
+        const pctV=Math.round((s2.v||0)/total*100);
+        doc.text(s2.label+': '+pctV+'%', lx+7, y+4);
+        if (i%3===2) y+=8;
+      });
+      return y + 14;
+    };
 
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(42);
-    doc.setTextColor(255, 255, 255);
-    doc.text('VERA', W / 2, 60, { align: 'center' });
+    /* precompute */
+    const ghg  = (c && c.ghg) || {s1:0,s2:0,s3:0,total:0};
+    const empT = n('vsme_emp_total')||n('emp_total')||(c&&c.employees)||null;
+    const empF = n('vsme_emp_f_n')||n('emp_f');
+    const empM = n('vsme_emp_m_n')||n('emp_m');
+    const elecR= n('elec_ren_kwh'); const elecN=n('elec_nren_kwh');
+    const gasKw= n('gas_kwh'); const dslL=n('diesel_l');
+    const dslKw= dslL!=null?dslL*9.97:null;
+    const enTot= (elecR||0)+(elecN||0)+(gasKw||0)+(dslKw||0);
+    const renPct=(elecR!=null&&enTot>0)?elecR/enTot*100:null;
+    const wageM= n('vsme_wage_m_avg'); const wageF=n('vsme_wage_f_avg');
+    const gpg  = (wageM&&wageF&&wageM>0)?(wageM-wageF)/wageM*100:null;
+    const injur= n('vsme_injuries')||n('ohs_rec_injuries');
+    const hrsW = n('vsme_hrs_worked')||n('ohs_hrs_worked');
+    const trir = (injur!=null&&hrsW&&hrsW>0)?injur/hrsW*200000:null;
+    const trainT=n('vsme_train_hrs_total')||n('train_hrs_total');
+    const trainP=(trainT!=null&&empT)?trainT/empT:null;
+    const wRec = n('vsme_waste_rec'); const wTot=n('vsme_waste_t');
+    const recPct=(wRec!=null&&wTot&&wTot>0)?wRec/wTot*100:null;
+    const supN = n('vsme_supply_n'); const supAud=n('vsme_supply_audit');
+    const compl= n('vsme_complaints'); const complR=n('vsme_complaints_res');
+    const complPct=(complR!=null&&compl&&compl>0)?complR/compl*100:null;
+    const s1t  = ghg.s1?ghg.s1/1000:null;
+    const s2t  = ghg.s2?ghg.s2/1000:null;
+    const s3t  = ghg.s3?ghg.s3/1000:null;
+    const ghgT = ghg.total?ghg.total/1000:null;
+    const ghgInt=(ghgT!=null&&empT)?ghgT/empT:null;
+    const boardT=n('vsme_board_total')||n('board_total');
+    const boardF=n('vsme_board_f')||n('board_f');
+    const boardFp=(boardF!=null&&boardT&&boardT>0)?boardF/boardT*100:null;
+    const cname=(c&&c.name)||sv('vsme_name')||'Azienda';
+    const hireT=n('hire_total'); const hireF=n('hire_f'); const hireM=n('hire_m'); const hireU30=n('hire_u30');
+    const turnT=n('turn_total'); const turnM=n('turn_m'); const turnF2=n('turn_f');
+    const trainM2=n('train_hrs_m'); const trainF3=n('train_hrs_f');
+    const supKey=n('vsme_supply_key'); const supLoc=n('vsme_supply_local');
+    const waterAbs=n('c1_water_abs'); const waterDis=n('c1_water_dis');
+    const waterNet=(waterAbs!=null&&waterDis!=null)?waterAbs-waterDis:null;
+    const wHaz=n('vsme_waste_haz'); const wLand=n('vsme_waste_land');
+    const matT=n('c3_mat_total'); const matR=n('c3_mat_rec');
+    const matPct=(matR!=null&&matT&&matT>0)?matR/matT*100:null;
+    const empFt=n('vsme_emp_ft'); const empPt=n('vsme_emp_pt'); const empTemp=n('vsme_emp_temp');
 
-    doc.setFontSize(12);
-    doc.setTextColor(156, 163, 175);
-    doc.text('ESG PLATFORM', W / 2, 68, { align: 'center' });
-
-    doc.setFontSize(18);
-    doc.setTextColor(255, 255, 255);
-    doc.text('Bilancio di Sostenibilità', W / 2, 100, { align: 'center' });
-
-    doc.setFontSize(14);
-    doc.setTextColor(156, 163, 175);
-    doc.text(c?.name || 'Azienda', W / 2, 112, { align: 'center' });
-
-    doc.setFontSize(11);
-    doc.setTextColor(100, 116, 139);
-    doc.text(`Anno ${c?.year || 2024} · Standard ${c?.std?.toUpperCase() || 'VSME'}`, W / 2, 122, { align: 'center' });
-
-    if (c?.stamp?.applied) {
-      doc.setFillColor(22, 163, 74);
-      doc.roundedRect(W/2 - 40, 135, 80, 12, 3, 3, 'F');
-      doc.setFontSize(9);
-      doc.setTextColor(255, 255, 255);
-      doc.text(`✓ TIMBRO: ${c.stamp.code}`, W / 2, 143, { align: 'center' });
-    }
-
-    doc.setFontSize(9);
-    doc.setTextColor(71, 85, 105);
-    doc.text(`Generato: ${new Date().toLocaleDateString('it-IT')} · Metodologia: GHG Protocol Corporate Standard`, W / 2, 280, { align: 'center' });
-    doc.text('Fattori di emissione: DEFRA 2024 · ISPRA 2024 · IPCC AR6 WG3', W / 2, 286, { align: 'center' });
-
-    // ── PAGE 2: GHG SUMMARY ─────────────────────────────────
-    doc.addPage();
-    y = pad;
-
-    doc.setFillColor(22, 163, 74);
-    doc.rect(0, 0, W, 2, 'F');
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(16);
-    doc.setTextColor(17, 17, 17);
-    doc.text('1. Riepilogo Emissioni GHG', pad, y + 12);
-    y += 22;
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.setTextColor(100, 116, 139);
-    doc.text(`Organizzazione: ${c?.name || '—'} · Settore: ${c?.sector || '—'} · Dipendenti: ${c?.employees || '—'}`, pad, y);
-    y += 6;
-    doc.text(`Periodo: 01/01/${c?.year || 2024} – 31/12/${c?.year || 2024} · Metodo: GHG Protocol, market-based`, pad, y);
-    y += 12;
-
-    // KPI boxes
-    const kpis = c?.ghg ? [
-      { label: 'Scope 1', val: (c.ghg.s1 / 1000).toFixed(1), color: [220, 252, 231] },
-      { label: 'Scope 2', val: (c.ghg.s2 / 1000).toFixed(1), color: [219, 234, 254] },
-      { label: 'Scope 3', val: (c.ghg.s3 / 1000).toFixed(1), color: [254, 243, 199] },
-      { label: 'TOTALE', val: (c.ghg.total / 1000).toFixed(1), color: [240, 253, 244] },
-    ] : [];
-
-    const boxW = (W - pad * 2 - 9) / 4;
-    kpis.forEach((k, i) => {
-      const x = pad + i * (boxW + 3);
-      doc.setFillColor(...k.color);
-      doc.roundedRect(x, y, boxW, 24, 3, 3, 'F');
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.setTextColor(17, 17, 17);
-      doc.text(k.val, x + boxW / 2, y + 14, { align: 'center' });
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.setTextColor(100, 116, 139);
-      doc.text(`${k.label} (tCO₂e)`, x + boxW / 2, y + 21, { align: 'center' });
+    // ══ PAG 1 — COPERTINA ══════════════════════════════════
+    doc.setFillColor(...bk.p2); doc.rect(0,0,W,297,'F'); hdrBar(8);
+    addLogo(80, 42, 50, 25);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(9); doc.setTextColor(...bk.p1);
+    doc.text('BILANCIO DI SOSTENIBILITÀ', 105, 84, {align:'center'});
+    doc.setFontSize(28); doc.setTextColor(255,255,255);
+    doc.text(cname, 105, 100, {align:'center'});
+    doc.setFont('helvetica','normal'); doc.setFontSize(13); doc.setTextColor(156,163,175);
+    doc.text('Anno '+year+' · Standard '+std.toUpperCase(), 105, 112, {align:'center'});
+    if (sv('vsme_sector')||(c&&c.sector)) { doc.setFontSize(10); doc.setTextColor(107,114,128); doc.text(sv('vsme_sector')||c.sector, 105, 120, {align:'center'}); }
+    const covKpis=[
+      {val:ghgT!=null?fmt(ghgT,1)+' tCO₂e':'—', label:'Emissioni GHG totali', color:[22,101,52]},
+      {val:empT!=null?fmt(empT):'—', label:'Dipendenti', color:[30,58,138]},
+      {val:renPct!=null?fmt(renPct,1)+'%':'—', label:'Energia rinnovabile', color:[120,53,15]},
+    ];
+    const covW=52, covX=105-52*1.5-4;
+    covKpis.forEach((k,i) => {
+      const cx=covX+i*(covW+4);
+      doc.setFillColor(...k.color); doc.roundedRect(cx,135,covW,28,3,3,'F');
+      doc.setFillColor(...bk.p1); doc.rect(cx,135,covW,2.5,'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(255,255,255);
+      doc.text(k.val, cx+covW/2, 148, {align:'center'});
+      doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(180,198,180);
+      doc.text(k.label, cx+covW/2, 158, {align:'center'});
     });
-    y += 34;
+    if (c&&c.stamp&&c.stamp.applied) {
+      doc.setFillColor(...bk.p1); doc.roundedRect(67,176,76,12,3,3,'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(255,255,255);
+      doc.text('✓ TIMBRO VERA: '+c.stamp.code, 105, 184, {align:'center'});
+    }
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(71,85,105);
+    doc.text('Generato con VERA ESG Platform · Metodologia GHG Protocol Corporate Standard', 105, 284, {align:'center'});
+    doc.text('Fattori emissione: DEFRA 2024 · ISPRA 2024 · IPCC AR6 WG3', 105, 290, {align:'center'});
 
-    // GHG breakdown table
-    if (c?.ghgRows?.length) {
-      doc.autoTable({
-        startY: y,
-        head: [['Fonte emissiva', 'Scope', 'Quantità', 'FE (kgCO₂e/u)', 'Fonte FE', 'Emissioni (kgCO₂e)']],
-        body: c.ghgRows.map(r => [r.mat, `S${r.scope}`, r.qty, r.fe, r.src, r.em.toLocaleString('it-IT')]),
-        styles: { fontSize: 8, cellPadding: 3 },
-        headStyles: { fillColor: [17, 17, 17], textColor: 255, fontStyle: 'bold', fontSize: 8 },
-        alternateRowStyles: { fillColor: [248, 250, 252] },
-        columnStyles: {
-          0: { cellWidth: 38 }, 1: { cellWidth: 14, halign: 'center' },
-          2: { cellWidth: 28 }, 3: { cellWidth: 24, halign: 'right' },
-          4: { cellWidth: 38, fontSize: 7, textColor: [100, 116, 139] },
-          5: { cellWidth: 24, halign: 'right', fontStyle: 'bold' }
-        },
-        margin: { left: pad, right: pad },
-      });
-      y = doc.lastAutoTable.finalY + 10;
+
+    // == PAG 2 -- LETTERA AGLI STAKEHOLDER ==========================
+    doc.addPage(); hdrBar(3); addLogo();
+    doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(...bk.p2);
+    doc.text('Lettera agli Stakeholder', pad, 34);
+    doc.setFillColor(...bk.p1); doc.rect(pad, 38, 174, 1.5, 'F');
+    let yLtr = 44;
+    const letterText = sv('vsme_ceo_letter') || sv('strategy_statement') ||
+      'Il presente Bilancio di Sostenibilita rappresenta il nostro impegno ' +
+      'verso una crescita responsabile e duratura. Attraverso la rendicontazione ' +
+      'ESG, intendiamo comunicare in modo trasparente le nostre performance ' +
+      'ambientali, sociali e di governance, dimostrare la coerenza tra valori ' +
+      'dichiarati e azioni concrete, e rafforzare il dialogo con tutti i ' +
+      'portatori di interesse.';
+    const lLines = doc.splitTextToSize(letterText, 160);
+    const lBoxH = Math.max(40, lLines.length * 5.6 + 12);
+    doc.setFillColor(248,250,252); doc.roundedRect(pad, yLtr, 174, lBoxH, 3, 3, 'F');
+    doc.setFillColor(...bk.p1); doc.rect(pad, yLtr, 4, lBoxH, 'F');
+    doc.setFont('helvetica','italic'); doc.setFontSize(10); doc.setTextColor(55,65,81);
+    doc.text(lLines, pad+10, yLtr+9);
+    yLtr += lBoxH + 12;
+    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...bk.p2);
+    doc.text('Il nostro impegno ESG in sintesi:', pad, yLtr); yLtr += 8;
+    const commitments = [
+      [[22,101,52], 'Ambiente', 'Riduzione progressiva delle emissioni GHG, transizione energetica, tutela delle risorse idriche e gestione responsabile dei rifiuti.'],
+      [[30,58,138], 'Sociale', 'Valorizzazione del capitale umano, salute e sicurezza sul lavoro, formazione continua, equita retributiva e diversita e inclusione.'],
+      [[120,53,15], 'Governance', 'Struttura di governance trasparente, etica aziendale, gestione dei rischi ESG e conformita normativa.'],
+    ];
+    commitments.forEach(([col, title, desc]) => {
+      doc.setFillColor(...col); doc.roundedRect(pad, yLtr, 174, 24, 3, 3, 'F');
+      doc.setFillColor(255,255,255); doc.rect(pad, yLtr, 174, 2.5, 'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(255,255,255);
+      doc.text(title, pad+6, yLtr+10);
+      doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+      const dl = doc.splitTextToSize(desc, 162);
+      doc.text(dl, pad+6, yLtr+18);
+      yLtr += 30;
+    });
+    if (sv('vsme_ceo') || (c && c.contact && c.contact.name)) {
+      yLtr += 6;
+      doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...bk.p2);
+      doc.text(sv('vsme_ceo') || (c.contact && c.contact.name) || 'Il Management', pad, yLtr);
+      doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(100,116,139);
+      doc.text('Rappresentante legale / CEO', pad, yLtr+6);
     }
 
-    // ── PAGE 3: STANDARD SECTION ─────────────────────────────
+
+    // ══ PAG 2 — INDICE ═════════════════════════════════════
+    doc.addPage(); let y = pgTitle('Indice dei Contenuti', null, 18);
+    const tocEntries=[
+      ['1.','Profilo Aziendale','3'],['2.','Modello di Business e Catena del Valore','4'],
+      ['3.','Strategia di Sostenibilità','5'],['4.','Stakeholder Engagement','6'],
+      ['5.','Performance ESG — Highlights','7'],['6.','Analisi di Doppia Materialità','8'],
+      ['','── SEZIONE AMBIENTE ──','9'],
+      ['7.','Emissioni GHG — Panoramica e Metodologia','10'],
+      ['7.1','Emissioni Scope 1 — Dirette','11'],['7.2','Emissioni Scope 2 — Energia','12'],
+      ['7.3','Emissioni Scope 3 — Indirette','13'],['8.','Energia — Consumi e Fonti','14'],
+      ['8.1','Energia Rinnovabile','15'],['9.','Risorse Idriche','16'],
+      ['10.','Gestione Rifiuti','17'],['11.','Economia Circolare e Materiali','18'],
+      ['12.','Emissioni in Atmosfera','19'],['13.','Biodiversità e Territorio','20'],
+      ['','── SEZIONE SOCIALE ──','21'],
+      ['14.','Forza Lavoro — Panoramica','22'],['14.1','Diversità e Inclusione','23'],
+      ['14.2','Parità Retributiva — Gender Pay Gap','24'],['15.','Salute e Sicurezza sul Lavoro','25'],
+      ['16.','Formazione e Sviluppo Professionale','26'],['17.','Nuove Assunzioni e Turnover','27'],
+      ['18.','Catena di Fornitura Sostenibile','28'],['19.','Consumatori e Qualità','29'],
+      ['20.','Comunità Locale','30'],
+      ['','── SEZIONE GOVERNANCE ──','31'],
+      ['21.','Struttura di Governance','32'],['22.','Etica Aziendale e Anticorruzione','33'],
+      ['23.','Gestione dei Rischi ESG','34'],['24.','Privacy e Protezione dei Dati','35'],
+      ['','── APPENDICI ──','36'],
+      ['25.','Indice Disclosure '+std.toUpperCase()+'/GRI','37–40'],
+      ['26.','Nota Metodologica e Perimetro','41'],['27.','Tabella KPI Completa','42–44'],
+    ];
+    doc.setFont('helvetica','normal'); doc.setFontSize(9);
+    tocEntries.forEach(e => {
+      if (!e[0]) {
+        doc.setFont('helvetica','bold'); doc.setTextColor(...bk.p1); doc.setFontSize(8.5);
+        doc.text(e[1], pad+10, y);
+        doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(55,65,81); y+=7; return;
+      }
+      doc.setTextColor(100,116,139); doc.text(e[0], pad, y);
+      doc.setTextColor(55,65,81); doc.text(e[1], pad+12, y);
+      doc.setTextColor(100,116,139); doc.text(e[2], W-pad, y, {align:'right'});
+      y += 6;
+    });
+
+    // ══ PAG 3 — PROFILO AZIENDALE ══════════════════════════
+    doc.addPage(); y=pgTitle('1. Profilo Aziendale','Informazioni generali sull\'organizzazione',18);
+    y=narrative('Struttura di governance',sv('vsme_gov'),y);
+    y=tbl(['Elemento','Dettaglio'],[
+      ['Denominazione',dash(sv('vsme_name')||cname)],['Settore / ATECO',dash(sv('vsme_sector')||(c&&c.sector))],
+      ['Sede principale',dash(sv('vsme_bio_address'))],['Dipendenti (al 31/12)',empT!=null?fmt(empT):'—'],
+      ['Periodo di rendicontazione',dash(sv('vsme_period')||(year+'-01-01 / '+year+'-12-31'))],
+      ['Standard utilizzato',std.toUpperCase()],['Referente ESG',dash(sv('vsme_contact'))],
+      ['Perimetro',dash(sv('vsme_scope'))],
+    ],y,{0:{cellWidth:60,fontStyle:'bold'},1:{cellWidth:114}});
+
+    // ══ PAG 4 — MODELLO DI BUSINESS ════════════════════════
+    doc.addPage(); y=pgTitle('2. Modello di Business e Catena del Valore',null,18);
+    y=narrative('Descrizione del business e della proposta di valore',sv('strategy_statement')||sv('vsme_gov'),y);
+    y=narrative('Perimetro di rendicontazione',sv('vsme_scope'),y);
+    y=narrative('Metodologia di calcolo GHG',sv('vsme_ghg_meth')||'GHG Protocol Corporate Standard — Metodologia market-based. Fattori di emissione: DEFRA 2024, ISPRA 2024, IPCC AR6.',y);
+    y=narrative('Altri siti e unità operative',sv('vsme_bio_other'),y);
+
+    // ══ PAG 5 — STRATEGIA ESG ══════════════════════════════
+    doc.addPage(); y=pgTitle('3. Strategia di Sostenibilità',null,18);
+    y=narrative('Dichiarazione del Management',sv('strategy_statement'),y);
+    y=narrative('Priorità ESG per il prossimo periodo',sv('strategy_priorities'),y);
+    y=narrative('Obiettivi di riduzione delle emissioni GHG',sv('vsme_targets'),y);
+
+    // ══ PAG 6 — STAKEHOLDER ════════════════════════════════
+    doc.addPage(); y=pgTitle('4. Stakeholder Engagement','Dialogo e coinvolgimento dei portatori di interesse',18);
+    y=tbl(['Categoria stakeholder','Modalità di coinvolgimento','Temi principali'],[
+      ['Lavoratori e sindacati','Survey interne, incontri CdA, sportello H&S','Salute, formazione, retribuzioni'],
+      ['Clienti e consumatori','Questionari soddisfazione, gestione reclami','Qualità, sostenibilità prodotto'],
+      ['Fornitori','Audit ESG, codice condotta fornitori','Pratiche ambientali e sociali'],
+      ['Comunità locale','Rapporti con enti locali, sponsorship','Impatto territoriale, occupazione'],
+      ['Finanziatori e banche','Rendicontazione ESG, rating ESG','Rischio ESG, green finance'],
+      ['Regolatori e PA','Compliance normativa, tavoli tecnici','CSRD, EU Taxonomy, sicurezza'],
+    ],y,{0:{cellWidth:46},1:{cellWidth:72},2:{cellWidth:56}});
+    y=narrative('Temi materiali emersi dal dialogo con gli stakeholder',sv('strategy_priorities'),y);
+
+    // ══ PAG 7 — HIGHLIGHTS ESG ═════════════════════════════
+    doc.addPage(); y=pgTitle('5. Performance ESG — Highlights '+year,null,18);
+    y=kpiRow([
+      {val:ghgT!=null?fmt(ghgT,1):'—',label:'Emissioni GHG tot (tCO₂e)',color:[220,252,231]},
+      {val:empT!=null?fmt(empT):'—',label:'Dipendenti totali',color:[219,234,254]},
+      {val:renPct!=null?fmt(renPct,1)+'%':'—',label:'Energia rinnovabile',color:[254,243,199]},
+      {val:recPct!=null?fmt(recPct,1)+'%':'—',label:'Rifiuti avviati a riciclo',color:[240,253,244]},
+    ],y);
+    y=kpiRow([
+      {val:trainP!=null?fmt(trainP,1):'—',label:'Ore formazione/dip.',color:[243,232,255]},
+      {val:injur!=null?fmt(injur):'—',label:'Infortuni registrabili',color:[255,237,213]},
+      {val:supAud!=null?fmt(supAud,1)+'%':'—',label:'Fornitori valutati ESG',color:[240,253,244]},
+      {val:complPct!=null?fmt(complPct,1)+'%':'—',label:'Reclami risolti',color:[220,252,231]},
+    ],y);
+    y=barChart('Emissioni GHG per Scope (tCO₂e)',[
+      {label:'Scope 1 — Dirette',v:s1t||0,u:'t',color:[22,163,74]},
+      {label:'Scope 2 — Energia',v:s2t||0,u:'t',color:[37,99,235]},
+      {label:'Scope 3 — Indirette',v:s3t||0,u:'t',color:[245,158,11]},
+    ],y);
+
+    // ══ PAG 8 — MATERIALITÀ ════════════════════════════════
+    doc.addPage(); y=pgTitle('6. Analisi di Doppia Materialità','Metodologia EFRAG per PMI',18);
+    y=narrative(null,'La doppia materialità valuta i temi ESG secondo due prospettive: la materialità di impatto (inside-out — effetti dell\'organizzazione su persone e ambiente) e la materialità finanziaria (outside-in — rischi e opportunità ESG con impatti economici sul business). L\'analisi segue le linee guida EFRAG per PMI nell\'ambito della CSRD.',y);
+    y=narrative('Temi ESG materiali identificati',sv('strategy_priorities'),y);
+    y=tbl(['Ambito','Temi materiali','Rilevanza'],[
+      ['Ambiente — Clima','Emissioni GHG, energia, obiettivi neutralità','Alta'],
+      ['Ambiente — Risorse','Acqua, rifiuti, biodiversità, circolarità','Media'],
+      ['Sociale — Workforce','Diversità, salute, formazione, retribuzioni','Alta'],
+      ['Sociale — Supply','Due diligence fornitori, rischi sociali','Media'],
+      ['Governance','Anticorruzione, etica, compliance','Alta'],
+    ],y,{0:{cellWidth:52},1:{cellWidth:86},2:{cellWidth:36,halign:'center'}});
+
+    // ══ SEZ. AMBIENTE ══════════════════════════════════════
+    sectionPage('🌿','AMBIENTE','Sezione I — Performance Ambientale');
+
+    // ══ PAG 10 — GHG OVERVIEW ══════════════════════════════
+    doc.addPage(); y=pgTitle('7. Emissioni GHG — Panoramica','GHG Protocol Corporate Standard — Metodologia market-based',18);
+    y=kpiRow([
+      {val:s1t!=null?fmt(s1t,2):'—',label:'Scope 1 (tCO₂e)',color:[220,252,231]},
+      {val:s2t!=null?fmt(s2t,2):'—',label:'Scope 2 (tCO₂e)',color:[219,234,254]},
+      {val:s3t!=null?fmt(s3t,2):'—',label:'Scope 3 (tCO₂e)',color:[254,243,199]},
+      {val:ghgT!=null?fmt(ghgT,2):'—',label:'TOTALE (tCO₂e)',color:[240,253,244]},
+    ],y);
+    y=narrative('Metodologia e standard utilizzati',sv('vsme_ghg_meth')||'GHG Protocol Corporate Standard, metodologia market-based. Il perimetro operativo include tutte le attività sotto controllo operativo dell\'organizzazione.',y);
+    y=narrative('Gas GHG inclusi nel calcolo',sv('vsme_ghg_gases')||'CO₂, CH₄, N₂O — GWP a 100 anni secondo IPCC AR6: CO₂=1, CH₄=29,8, N₂O=273.',y);
+    y=narrative('Obiettivi di riduzione formalizzati',sv('vsme_targets'),y);
+
+    // ══ PAG 11 — SCOPE 1 ═══════════════════════════════════
+    doc.addPage(); y=pgTitle('7.1 Emissioni Scope 1 — Emissioni Dirette','Fonti di combustione sotto controllo operativo',18);
+    y=narrative(null,'Le emissioni Scope 1 comprendono tutte le emissioni dirette di gas serra generate da fonti controllate: combustione stazionaria (caldaie, forni), combustione mobile (flotta aziendale), processi industriali e fughe (refrigerazione).',y);
+    let s1rows=[];
+    if (c&&c.ghgRows) c.ghgRows.filter(r=>r.scope===1).forEach(r=>s1rows.push([r.mat,String(r.qty),String(r.fe),fmt(r.em)]));
+    if (!s1rows.length) s1rows.push(['Dati dettaglio Scope 1','—','—',fmt(ghg.s1)]);
+    y=tbl(['Fonte emissiva','Quantità','FE (kgCO₂e/u)','Emissioni (kgCO₂e)'],s1rows,y,
+      {0:{cellWidth:58},1:{cellWidth:44},2:{cellWidth:38},3:{cellWidth:34,halign:'right',fontStyle:'bold'}});
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...bk.p2);
+    doc.text('Totale Scope 1: '+(s1t!=null?fmt(s1t,3)+' tCO₂e':'—'), pad, y); y+=10;
+
+    // ══ PAG 12 — SCOPE 2 ═══════════════════════════════════
+    doc.addPage(); y=pgTitle('7.2 Emissioni Scope 2 — Energia Acquistata','Emissioni indirette da consumo di elettricità',18);
+    y=narrative(null,'Le emissioni Scope 2 derivano dalla generazione di elettricità, calore o vapore acquistati. Vengono calcolate con il metodo market-based (GO, PPA, contratti certificati) e location-based (mix elettrico nazionale, fattore ISPRA 2024: 0,28307 kgCO₂e/kWh).',y);
+    let s2rows=[];
+    if (c&&c.ghgRows) c.ghgRows.filter(r=>r.scope===2).forEach(r=>s2rows.push([r.mat,String(r.qty),String(r.fe),fmt(r.em)]));
+    if (!s2rows.length&&elecN!=null) s2rows.push(['Elettricità da rete (non rinn.)',fmt(elecN)+' kWh','0,28307',fmt(elecN*0.28307)]);
+    if (!s2rows.length) s2rows.push(['Dati dettaglio Scope 2','—','—',fmt(ghg.s2)]);
+    y=tbl(['Fonte','Quantità','FE (kgCO₂e/u)','Emissioni (kgCO₂e)'],s2rows,y,
+      {0:{cellWidth:58},1:{cellWidth:44},2:{cellWidth:38},3:{cellWidth:34,halign:'right',fontStyle:'bold'}});
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...bk.p2);
+    doc.text('Totale Scope 2: '+(s2t!=null?fmt(s2t,3)+' tCO₂e':'—'), pad, y); y+=10;
+
+    // ══ PAG 13 — SCOPE 3 ═══════════════════════════════════
+    doc.addPage(); y=pgTitle('7.3 Emissioni Scope 3 — Altre Indirette','15 categorie GHG Protocol — upstream e downstream',18);
+    y=narrative(null,'Le emissioni Scope 3 includono tutte le altre emissioni indirette lungo la catena del valore (upstream: fornitori, acquisti, trasporti; downstream: uso del prodotto, logistica, fine vita). Le categorie rilevanti sono identificate sulla base del profilo di materialità.',y);
+    let s3rows=[];
+    if (c&&c.ghgRows) c.ghgRows.filter(r=>r.scope===3).forEach(r=>s3rows.push([r.mat,String(r.qty),String(r.fe),fmt(r.em)]));
+    if (!s3rows.length) s3rows.push(['Dati dettaglio Scope 3','—','—',fmt(ghg.s3)]);
+    y=tbl(['Fonte / Categoria','Quantità','FE (kgCO₂e/u)','Emissioni (kgCO₂e)'],s3rows,y,
+      {0:{cellWidth:58},1:{cellWidth:44},2:{cellWidth:38},3:{cellWidth:34,halign:'right',fontStyle:'bold'}});
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...bk.p2);
+    doc.text('Totale Scope 3: '+(s3t!=null?fmt(s3t,3)+' tCO₂e':'—'), pad, y); y+=10;
+    y=stackBar('Ripartizione emissioni per Scope',[
+      {label:'Scope 1',v:s1t||0,color:[22,163,74]},
+      {label:'Scope 2',v:s2t||0,color:[37,99,235]},
+      {label:'Scope 3',v:s3t||0,color:[245,158,11]},
+    ],y);
+
+    // ══ PAG 14 — ENERGIA ═══════════════════════════════════
+    doc.addPage(); y=pgTitle('8. Energia — Consumi e Fonti','Dati annuali per fonte energetica ('+year+')',18);
+    y=kpiRow([
+      {val:enTot>0?fmt(enTot):'—',label:'Energia totale (kWh)',color:[220,252,231]},
+      {val:renPct!=null?fmt(renPct,1)+'%':'—',label:'Quota rinnovabile',color:[219,234,254]},
+      {val:(enTot>0&&empT)?fmt(enTot/empT,1):'—',label:'Intensità (kWh/dip.)',color:[254,243,199]},
+      {val:dslL!=null?fmt(dslL):'—',label:'Gasolio (litri)',color:[240,253,244]},
+    ],y);
+    y=tbl(['Fonte energetica','Consumo','Unità','% sul totale'],[
+      ['Elettricità rinnovabile',elecR!=null?fmt(elecR):'—','kWh',enTot>0&&elecR!=null?fmt(elecR/enTot*100,1)+'%':'—'],
+      ['Elettricità non rinnovabile',elecN!=null?fmt(elecN):'—','kWh',enTot>0&&elecN!=null?fmt(elecN/enTot*100,1)+'%':'—'],
+      ['Gas naturale',gasKw!=null?fmt(gasKw):'—','kWh equiv.',enTot>0&&gasKw!=null?fmt(gasKw/enTot*100,1)+'%':'—'],
+      ['Gasolio / diesel',dslKw!=null?fmt(dslKw):'—','kWh equiv.',enTot>0&&dslKw!=null?fmt(dslKw/enTot*100,1)+'%':'—'],
+      ['TOTALE',enTot>0?fmt(enTot):'—','kWh','100%'],
+    ],y,{0:{cellWidth:68,fontStyle:'bold'},1:{cellWidth:44,halign:'right'},2:{cellWidth:28},3:{cellWidth:34,halign:'right'}});
+
+    // ══ PAG 15 — ENERGIA RINNOVABILE ═══════════════════════
+    doc.addPage(); y=pgTitle('8.1 Energia Rinnovabile','Fonti, strumenti e obiettivi',18);
+    y=stackBar('Mix energetico ('+year+')',[
+      {label:'Rinnovabile',v:elecR||0,color:[22,163,74]},
+      {label:'Non rinn. (elec)',v:elecN||0,color:[156,163,175]},
+      {label:'Gas naturale',v:gasKw||0,color:[245,158,11]},
+      {label:'Gasolio',v:dslKw||0,color:[107,114,128]},
+    ],y);
+    y=narrative(null,'L\'energia rinnovabile può essere approvvigionata tramite impianti propri (fotovoltaico, microeolico), contratti PPA (Power Purchase Agreement) con produttori certificati, o Garanzie d\'Origine (GO) rilasciate dal GSE. L\'obiettivo EU è il 42,5% di rinnovabili al 2030 (RED III).',y);
+    y=narrative('Obiettivi e piano d\'azione energia',sv('vsme_targets'),y);
+
+    // ══ PAG 16 — ACQUA ═════════════════════════════════════
+    doc.addPage(); y=pgTitle('9. Risorse Idriche','Prelievi, scarichi e gestione idrica ('+year+')',18);
+    y=kpiRow([
+      {val:waterAbs!=null?fmt(waterAbs):'—',label:'Prelievo idrico (m³)',color:[219,234,254]},
+      {val:waterDis!=null?fmt(waterDis):'—',label:'Scarico idrico (m³)',color:[254,243,199]},
+      {val:waterNet!=null?fmt(waterNet):'—',label:'Consumo netto (m³)',color:[220,252,231]},
+      {val:dash(sv('c1_water_stress')),label:'Area stress idrico',color:[255,237,213]},
+    ],y);
+    y=tbl(['Indicatore','Valore','Unità'],[
+      ['Prelievo idrico totale',waterAbs!=null?fmt(waterAbs):'—','m³'],
+      ['Fonte idrica principale',dash(sv('c1_water_src')),'—'],
+      ['Stabilimento in area stress idrico',dash(sv('c1_water_stress')),'—'],
+      ['Scarico idrico totale',waterDis!=null?fmt(waterDis):'—','m³'],
+      ['Consumo netto (prelievo − scarico)',waterNet!=null?fmt(waterNet):'—','m³'],
+    ],y,{0:{cellWidth:90,fontStyle:'bold'},1:{cellWidth:50,halign:'right'},2:{cellWidth:34}});
+    y=narrative('Obiettivi di riduzione dei consumi idrici',sv('c1_water_target'),y);
+
+    // ══ PAG 17 — RIFIUTI ═══════════════════════════════════
+    doc.addPage(); y=pgTitle('10. Gestione Rifiuti','Produzione, classificazione e destinazione ('+year+')',18);
+    y=kpiRow([
+      {val:wTot!=null?fmt(wTot,2):'—',label:'Rifiuti totali (t)',color:[255,237,213]},
+      {val:wHaz!=null?fmt(wHaz,2):'—',label:'Pericolosi (t)',color:[254,202,202]},
+      {val:wRec!=null?fmt(wRec,2):'—',label:'Riciclati/recuperati (t)',color:[220,252,231]},
+      {val:recPct!=null?fmt(recPct,1)+'%':'—',label:'Tasso di riciclo',color:[240,253,244]},
+    ],y);
+    y=tbl(['Categoria rifiuto','Tonnellate','% sul totale'],[
+      ['Rifiuti totali',wTot!=null?fmt(wTot,2):'—','100%'],
+      ['di cui pericolosi',wHaz!=null?fmt(wHaz,2):'—',wHaz!=null&&wTot?fmt(wHaz/wTot*100,1)+'%':'—'],
+      ['di cui avviati a discarica',wLand!=null?fmt(wLand,2):'—',wLand!=null&&wTot?fmt(wLand/wTot*100,1)+'%':'—'],
+      ['di cui avviati a riciclo/recupero',wRec!=null?fmt(wRec,2):'—',recPct!=null?fmt(recPct,1)+'%':'—'],
+    ],y,{0:{cellWidth:90,fontStyle:'bold'},1:{cellWidth:44,halign:'right'},2:{cellWidth:40,halign:'right'}});
+    y=narrative('Gestore e impianto di smaltimento principale',sv('vsme_waste_op'),y);
+
+    // ══ PAG 18 — ECONOMIA CIRCOLARE ════════════════════════
+    doc.addPage(); y=pgTitle('11. Economia Circolare e Materiali',null,18);
+    y=tbl(['Indicatore','Valore','Unità'],[
+      ['Materiali totali utilizzati',matT!=null?fmt(matT,2):'—','tonnellate'],
+      ['di cui riciclati/recuperati',matR!=null?fmt(matR,2):'—','tonnellate'],
+      ['% materiali riciclati',matPct!=null?fmt(matPct,1)+'%':'—','—'],
+      ['Imballaggi riciclabili/riutilizzabili',n('c3_pack_rec')!=null?fmt(n('c3_pack_rec'),1)+'%':'—','%'],
+      ['Prodotti progettati per il fine vita',dash(sv('c3_prod_eol')),'—'],
+    ],y,{0:{cellWidth:90,fontStyle:'bold'},1:{cellWidth:50,halign:'right'},2:{cellWidth:34}});
+    y=narrative('Obiettivi di economia circolare adottati',sv('c3_target'),y);
+    y=narrative(null,'La transizione verso l\'economia circolare è un pilastro del Green Deal Europeo. Il Piano d\'azione CEAP 2020 richiede alle aziende di ridurre rifiuti, aumentare il contenuto riciclato e progettare prodotti per riparabilità e riciclo (EU Ecodesign Regulation).',y);
+
+    // ══ PAG 19 — EMISSIONI ARIA ════════════════════════════
+    doc.addPage(); y=pgTitle('12. Emissioni in Atmosfera','Inquinanti atmosferici ('+year+')',18);
+    y=tbl(['Inquinante','Emissioni (kg/anno)','Fonte autorizzativa'],[
+      ['NOₓ — Ossidi di azoto',n('c2_air_nox')!=null?fmt(n('c2_air_nox'),1):'—','SUAP / AIA'],
+      ['SOₓ — Ossidi di zolfo',n('c2_air_sox')!=null?fmt(n('c2_air_sox'),1):'—','SUAP / AIA'],
+      ['PM — Polveri sottili',n('c2_air_pm')!=null?fmt(n('c2_air_pm'),1):'—','SUAP / AIA'],
+      ['VOC — Composti organici volatili',n('c2_air_voc')!=null?fmt(n('c2_air_voc'),1):'—','AUA'],
+    ],y,{0:{cellWidth:80},1:{cellWidth:54,halign:'right',fontStyle:'bold'},2:{cellWidth:40}});
+    y=narrative('Siti contaminati e bonificati',n('c2_soil')!=null?fmt(n('c2_soil'))+' siti identificati nell\'anno':null,y);
+    y=narrative('Sversamenti accidentali significativi',n('c2_spills')!=null?fmt(n('c2_spills'))+' sversamenti — '+(sv('c2_spill_desc')||''):null,y);
+
+    // ══ PAG 20 — BIODIVERSITÀ ══════════════════════════════
+    doc.addPage(); y=pgTitle('13. Biodiversità e Territorio','Siti, impatti e misure di tutela',18);
+    y=tbl(['Aspetto','Dettaglio'],[
+      ['Sede / stabilimento principale',dash(sv('vsme_bio_address'))],
+      ['Altri siti operativi',dash(sv('vsme_bio_other'))],
+      ['Prossimità ad aree Natura 2000',dash(sv('vsme_bio_natura2k'))],
+    ],y,{0:{cellWidth:72,fontStyle:'bold'},1:{cellWidth:102}});
+    y=narrative('Impatti noti sulla biodiversità locale',sv('vsme_bio_impact'),y);
+    y=narrative(null,'La Strategia UE per la Biodiversità 2030 e il framework TNFD richiedono alle aziende di valutare dipendenze e impatti sulla natura. Le organizzazioni vicino ad aree sensibili (Natura 2000, IBA) devono adottare misure di mitigazione specifiche.',y);
+
+    // ══ SEZ. SOCIALE ═══════════════════════════════════════
+    sectionPage('👥','SOCIALE','Sezione II — Performance Sociale');
+
+    // ══ PAG 22 — FORZA LAVORO ══════════════════════════════
+    doc.addPage(); y=pgTitle('14. Forza Lavoro — Panoramica','Composizione organico al 31 dicembre '+year,18);
+    y=kpiRow([
+      {val:empT!=null?fmt(empT):'—',label:'Dipendenti totali',color:[219,234,254]},
+      {val:(empF!=null&&empT)?fmt(empF/empT*100,1)+'%':'—',label:'Quota donne',color:[243,232,255]},
+      {val:(empFt!=null&&empT)?fmt(empFt/empT*100,1)+'%':'—',label:'Tempo pieno',color:[220,252,231]},
+      {val:(empTemp!=null&&empT)?fmt(empTemp/empT*100,1)+'%':'—',label:'Tempo determinato',color:[254,243,199]},
+    ],y);
+    y=tbl(['Categoria','N.','% sul totale'],[
+      ['Dipendenti totali',empT!=null?fmt(empT):'—','100%'],
+      ['— Donne',empF!=null?fmt(empF):'—',pct(empF,empT)],
+      ['— Uomini',empM!=null?fmt(empM):'—',pct(empM,empT)],
+      ['Tempo pieno (FTE)',empFt!=null?fmt(empFt):'—',pct(empFt,empT)],
+      ['Tempo parziale',empPt!=null?fmt(empPt):'—',pct(empPt,empT)],
+      ['Contratti a tempo determinato',empTemp!=null?fmt(empTemp):'—',pct(empTemp,empT)],
+    ],y,{0:{cellWidth:88,fontStyle:'bold'},1:{cellWidth:40,halign:'right'},2:{cellWidth:46,halign:'right'}});
+
+    // ══ PAG 23 — DIVERSITÀ ═════════════════════════════════
+    doc.addPage(); y=pgTitle('14.1 Diversità e Inclusione',null,18);
+    y=stackBar('Composizione per genere',[{label:'Donne',v:empF||0,color:[167,139,250]},{label:'Uomini',v:empM||0,color:[96,165,250]}],y);
+    y=tbl(['Nuove assunzioni','N.','% su totale assunzioni'],[
+      ['Totale nuove assunzioni',hireT!=null?fmt(hireT):'—','100%'],
+      ['— Donne',hireF!=null?fmt(hireF):'—',pct(hireF,hireT)],
+      ['— Uomini',hireM!=null?fmt(hireM):'—',pct(hireM,hireT)],
+      ['— Under 30',hireU30!=null?fmt(hireU30):'—',pct(hireU30,hireT)],
+    ],y,{0:{cellWidth:88,fontStyle:'bold'},1:{cellWidth:40,halign:'right'},2:{cellWidth:46,halign:'right'}});
+    y=narrative(null,'La Direttiva UE 2023/970 sulla trasparenza salariale e la strategia EU per la parità di genere 2020–2025 richiedono alle organizzazioni di monitorare i divari di genere, adottare piani d\'azione e garantire parità di opportunità in selezione e crescita professionale.',y);
+
+    // ══ PAG 24 — PAY GAP ═══════════════════════════════════
+    doc.addPage(); y=pgTitle('14.2 Parità Retributiva — Gender Pay Gap',null,18);
+    const gpgColor=gpg!=null?(gpg<10?[220,252,231]:gpg<20?[254,243,199]:[254,202,202]):[240,253,244];
+    y=kpiRow([
+      {val:wageM!=null?'€ '+fmt(wageM):'—',label:'Retrib. media uomini (€/anno)',color:[219,234,254]},
+      {val:wageF!=null?'€ '+fmt(wageF):'—',label:'Retrib. media donne (€/anno)',color:[243,232,255]},
+      {val:gpg!=null?fmt(gpg,1)+'%':'—',label:'Gender Pay Gap',color:gpgColor},
+      {val:n('ceo_pay')!=null?'€ '+fmt(n('ceo_pay')):'—',label:'Retrib. CEO (€/anno)',color:[254,243,199]},
+    ],y);
+    y=narrative(null,'La Direttiva EU 2023/970 obbliga le aziende >100 dip. a pubblicare il GPG annualmente e adottare piani d\'azione se supera il 5%. GPG = (retrib. media uomini − retrib. media donne) / retrib. media uomini × 100.',y);
+    if (gpg!=null) {
+      const msg=gpg<5?'GPG < 5%: conforme ai requisiti EU.':gpg<10?'GPG tra 5% e 10%: si raccomanda piano d\'azione volontario.':'GPG > 10%: raccomandato piano d\'azione con obiettivi temporizzati.';
+      y=narrative('Valutazione e raccomandazioni',msg,y);
+    }
+
+    // ══ PAG 25 — SALUTE E SICUREZZA ════════════════════════
+    doc.addPage(); y=pgTitle('15. Salute e Sicurezza sul Lavoro','Indicatori OHS ('+year+')',18);
+    y=kpiRow([
+      {val:injur!=null?fmt(injur):'—',label:'Infortuni registrabili',color:[255,237,213]},
+      {val:trir!=null?fmt(trir,2):'—',label:'TRIR (per 200k ore)',color:[254,243,199]},
+      {val:hrsW!=null?fmt(hrsW):'—',label:'Ore totali lavorate',color:[220,252,231]},
+      {val:(n('vsme_fatal')||n('ohs_fatalities'))!=null?fmt(n('vsme_fatal')||n('ohs_fatalities')):'—',label:'Infortuni mortali',color:[254,202,202]},
+    ],y);
+    y=tbl(['Indicatore OHS','Valore','Unità'],[
+      ['Infortuni registrabili totali',injur!=null?fmt(injur):'—','n.'],
+      ['di cui mortali',dash((n('vsme_fatal')||n('ohs_fatalities'))!=null?fmt(n('vsme_fatal')||n('ohs_fatalities')):null),'n.'],
+      ['Infortuni ad alta conseguenza',n('ohs_hc_injuries')!=null?fmt(n('ohs_hc_injuries')):'—','n.'],
+      ['Ore totali lavorate',hrsW!=null?fmt(hrsW):'—','ore'],
+      ['TRIR (per 200.000 ore)',trir!=null?fmt(trir,2):'—','—'],
+      ['Copertura sorveglianza sanitaria',n('ohs_med_coverage')!=null?fmt(n('ohs_med_coverage'),1)+'%':'—','%'],
+      ['Visite mediche effettuate',n('ohs_med_visits')!=null?fmt(n('ohs_med_visits')):'—','n.'],
+    ],y,{0:{cellWidth:90,fontStyle:'bold'},1:{cellWidth:44,halign:'right'},2:{cellWidth:40}});
+    y=narrative('Principali tipologie di infortuni',sv('ohs_main_types'),y);
+    y=narrative('Servizi di medicina del lavoro',sv('ohs_med_type'),y);
+
+    // ══ PAG 26 — FORMAZIONE ════════════════════════════════
+    doc.addPage(); y=pgTitle('16. Formazione e Sviluppo Professionale','Ore di formazione erogate ('+year+')',18);
+    y=kpiRow([
+      {val:trainT!=null?fmt(trainT):'—',label:'Ore totali formazione',color:[243,232,255]},
+      {val:trainP!=null?fmt(trainP,1):'—',label:'Ore medie per dip.',color:[219,234,254]},
+      {val:trainM2!=null?fmt(trainM2):'—',label:'Ore a dip. uomini',color:[220,252,231]},
+      {val:trainF3!=null?fmt(trainF3):'—',label:'Ore a dip. donne',color:[243,232,255]},
+    ],y);
+    y=tbl(['Indicatore formazione','Valore','Unità'],[
+      ['Ore totali di formazione erogate',trainT!=null?fmt(trainT):'—','ore'],
+      ['di cui: dipendenti uomini',trainM2!=null?fmt(trainM2):'—','ore'],
+      ['di cui: dipendenti donne',trainF3!=null?fmt(trainF3):'—','ore'],
+      ['Ore medie per dipendente',trainP!=null?fmt(trainP,1):'—','ore/dip.'],
+    ],y,{0:{cellWidth:90,fontStyle:'bold'},1:{cellWidth:44,halign:'right'},2:{cellWidth:40}});
+    y=narrative('Tipologie di formazione prevalenti',sv('train_type'),y);
+
+    // ══ PAG 27 — TURNOVER ══════════════════════════════════
+    doc.addPage(); y=pgTitle('17. Nuove Assunzioni e Turnover',null,18);
+    y=tbl(['Assunzioni '+year,'N.','% su totale assunzioni'],[
+      ['Totale nuove assunzioni',hireT!=null?fmt(hireT):'—','100%'],
+      ['— Uomini',hireM!=null?fmt(hireM):'—',pct(hireM,hireT)],
+      ['— Donne',hireF!=null?fmt(hireF):'—',pct(hireF,hireT)],
+      ['— Under 30',hireU30!=null?fmt(hireU30):'—',pct(hireU30,hireT)],
+    ],y,{0:{cellWidth:88},1:{cellWidth:40,halign:'right'},2:{cellWidth:46,halign:'right'}});
+    y=tbl(['Uscite / Turnover '+year,'N.','% su tot. dipendenti'],[
+      ['Dipendenti usciti (totale)',turnT!=null?fmt(turnT):'—',pct(turnT,empT)],
+      ['— Uomini',turnM!=null?fmt(turnM):'—',pct(turnM,empT)],
+      ['— Donne',turnF2!=null?fmt(turnF2):'—',pct(turnF2,empT)],
+      ['Tasso di turnover complessivo',pct(turnT,empT),'—'],
+    ],y,{0:{cellWidth:88},1:{cellWidth:40,halign:'right'},2:{cellWidth:46,halign:'right'}});
+
+    // ══ PAG 28 — SUPPLY CHAIN ══════════════════════════════
+    doc.addPage(); y=pgTitle('18. Catena di Fornitura Sostenibile',null,18);
+    y=kpiRow([
+      {val:supN!=null?fmt(supN):'—',label:'Fornitori attivi',color:[219,234,254]},
+      {val:supKey!=null?fmt(supKey):'—',label:'Fornitori strategici',color:[220,252,231]},
+      {val:supAud!=null?fmt(supAud,1)+'%':'—',label:'Valutati ESG',color:[254,243,199]},
+      {val:supLoc!=null?fmt(supLoc,1)+'%':'—',label:'Fornitori locali',color:[243,232,255]},
+    ],y);
+    y=tbl(['Indicatore supply chain','Valore'],[
+      ['Fornitori attivi nella catena del valore',supN!=null?fmt(supN):'—'],
+      ['di cui fornitori chiave / strategici',supKey!=null?fmt(supKey):'—'],
+      ['Fornitori sottoposti a valutazione ESG (%)',supAud!=null?fmt(supAud,1)+'%':'—'],
+      ['Fornitori locali (stesso paese) (%)',supLoc!=null?fmt(supLoc,1)+'%':'—'],
+    ],y,{0:{cellWidth:120,fontStyle:'bold'},1:{cellWidth:54,halign:'right'}});
+    y=narrative('Rischi sociali e ambientali nella supply chain',sv('vsme_supply_risk'),y);
+    y=narrative('Azioni correttive adottate verso fornitori a rischio',sv('vsme_supply_action'),y);
+
+    // ══ PAG 29 — CONSUMATORI ═══════════════════════════════
+    doc.addPage(); y=pgTitle('19. Consumatori e Qualità',null,18);
+    y=tbl(['Indicatore','Valore','Unità'],[
+      ['Reclami formali ricevuti',compl!=null?fmt(compl):'—','n.'],
+      ['di cui risolti nell\'anno',complR!=null?fmt(complR):'—','n.'],
+      ['Tasso di risoluzione reclami',complPct!=null?fmt(complPct,1)+'%':'—','%'],
+      ['Incidenti violazione dati personali',n('vsme_privacy')!=null?fmt(n('vsme_privacy')):'—','n.'],
+    ],y,{0:{cellWidth:90,fontStyle:'bold'},1:{cellWidth:44,halign:'right'},2:{cellWidth:40}});
+    y=narrative('Principali tipologie di reclamo',sv('vsme_complaints_desc'),y);
+    y=narrative('Incidenti di violazione dei dati (GDPR)',sv('vsme_privacy_desc'),y);
+
+    // ══ PAG 30 — COMUNITÀ ══════════════════════════════════
+    doc.addPage(); y=pgTitle('20. Comunità Locale',null,18);
+    y=narrative('Iniziative di coinvolgimento della comunità locale',sv('vsme_community'),y);
+    y=tbl(['Controversie con comunità locali','Valore'],[
+      ['Controversie significative nell\'anno',n('vsme_disputes_n')!=null?fmt(n('vsme_disputes_n')):'—'],
+    ],y,{0:{cellWidth:120,fontStyle:'bold'},1:{cellWidth:54,halign:'right'}});
+    y=narrative('Descrizione controversie',sv('vsme_disputes_desc'),y);
+    y=narrative(null,'Il coinvolgimento della comunità è fondamentale per la social license to operate. Le organizzazioni con presenza radicata nel territorio possono generare valore condiviso (shared value) attraverso occupazione locale, partnership con enti del terzo settore e supporto a iniziative culturali e ambientali.',y);
+
+    // ══ SEZ. GOVERNANCE ════════════════════════════════════
+    sectionPage('⚖️','GOVERNANCE','Sezione III — Governance e Condotta Aziendale');
+
+    // ══ PAG 32 — GOVERNANCE ════════════════════════════════
+    doc.addPage(); y=pgTitle('21. Struttura di Governance',null,18);
+    y=narrative('Organi di governance e struttura decisionale',sv('vsme_gov'),y);
+    y=tbl(['Composizione organo di governance','N.','% sul totale'],[
+      ['Componenti totali CdA / organo governance',boardT!=null?fmt(boardT):'—','100%'],
+      ['di cui: donne',boardF!=null?fmt(boardF):'—',boardFp!=null?fmt(boardFp,1)+'%':'—'],
+      ['di cui: sotto 30 anni',n('board_u30')!=null?fmt(n('board_u30')):'—',pct(n('board_u30'),boardT)],
+      ['di cui: 30–50 anni',n('board_3050')!=null?fmt(n('board_3050')):'—',pct(n('board_3050'),boardT)],
+    ],y,{0:{cellWidth:100,fontStyle:'bold'},1:{cellWidth:34,halign:'right'},2:{cellWidth:40,halign:'right'}});
+    const knoEsg=sv('knowledge_esg'); const knoTop=sv('knowledge_topics'); const knoHrs=n('knowledge_hours');
+    y=narrative('Formazione ESG degli organi di governance',knoEsg?'Formazione ESG ricevuta: '+knoEsg+(knoTop?' — Argomenti: '+knoTop:'')+(knoHrs?' — Ore medie: '+fmt(knoHrs):''):null,y);
+
+    // ══ PAG 33 — ETICA ═════════════════════════════════════
+    doc.addPage(); y=pgTitle('22. Etica Aziendale e Anticorruzione',null,18);
+    y=tbl(['Indicatore','Dettaglio'],[
+      ['Politica anticorruzione formalizzata',dash(sv('vsme_anti_policy'))],
+      ['Dipendenti formati su anticorruzione (%)',n('vsme_anti_training')!=null?fmt(n('vsme_anti_training'),1)+'%':'—'],
+      ['Canale di whistleblowing disponibile',dash(sv('vsme_whistleblow'))],
+      ['Incidenti di corruzione confermati',n('vsme_corrupt_n')!=null?fmt(n('vsme_corrupt_n')):'—'],
+      ['Attività di lobbying / relazioni istituzionali',dash(sv('vsme_lobby'))],
+      ['Modello Organizzativo ex D.Lgs. 231/2001',dash(sv('vsme_231'))],
+    ],y,{0:{cellWidth:96,fontStyle:'bold'},1:{cellWidth:78}});
+    y=narrative(null,'La Direttiva UE 2019/1937 sul whistleblowing obbliga organizzazioni >50 dip. a dotarsi di canali di segnalazione sicuri. Il D.Lgs. 231/2001 prevede responsabilità amministrativa degli enti; l\'adozione del Modello 231 costituisce esimente.',y);
+
+    // ══ PAG 34 — RISCHI ESG ════════════════════════════════
+    doc.addPage(); y=pgTitle('23. Gestione dei Rischi ESG','Analisi rischi e opportunità ambientali, sociali e di governance',18);
+    y=tbl(['Dimensione','Rischi principali identificati'],[
+      ['Ambiente',dash(sv('risk_env'))],['Sociale',dash(sv('risk_social'))],['Governance',dash(sv('risk_gov'))],
+    ],y,{0:{cellWidth:36,fontStyle:'bold'},1:{cellWidth:138}});
+    if (sv('risk_horizon')) { doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(100,116,139); doc.text('Orizzonte temporale prevalente: '+sv('risk_horizon'), pad, y); y+=8; }
+    y=narrative('Azioni di mitigazione in atto o pianificate',sv('risk_mitigation'),y);
+    y=tbl(['Dimensione','Opportunità principali identificate'],[
+      ['Ambiente',dash(sv('opp_env'))],['Sociale',dash(sv('opp_social'))],
+    ],y,{0:{cellWidth:36,fontStyle:'bold'},1:{cellWidth:138}});
+
+    // ══ PAG 35 — PRIVACY ═══════════════════════════════════
+    doc.addPage(); y=pgTitle('24. Privacy e Protezione dei Dati Personali',null,18);
+    y=tbl(['Indicatore GDPR','Valore'],[
+      ['Incidenti di violazione dei dati personali',n('vsme_privacy')!=null?fmt(n('vsme_privacy')):'—'],
+    ],y,{0:{cellWidth:120,fontStyle:'bold'},1:{cellWidth:54,halign:'right'}});
+    y=narrative('Descrizione degli incidenti privacy',sv('vsme_privacy_desc'),y);
+    y=narrative(null,'Il GDPR (UE 2016/679) impone la notifica delle violazioni al Garante Privacy entro 72 ore dalla scoperta, e agli interessati se la violazione comporta rischi elevati. Le organizzazioni devono adottare misure tecniche e organizzative adeguate (DPIA, registro trattamenti, DPO ove obbligatorio).',y);
+
+
+    // == PAG OBIETTIVI ESG ==========================================
+    doc.addPage(); let yObj = pgTitle('Obiettivi di Sostenibilita e Piano d\'Azione','Target ESG per i prossimi 3 anni',18);
+    yObj = narrative('Strategia di lungo termine', sv('vsme_targets') || sv('strategy_statement'), yObj);
+    yObj = kpiRow([
+      {val: sv('vsme_ghg_target') || '—', label: 'Target riduzione GHG', color:[240,253,244]},
+      {val: sv('vsme_ren_target') || '—', label: 'Target energia rinn.', color:[239,246,255]},
+      {val: sv('vsme_waste_target') || '—', label: 'Target riciclaggio', color:[255,251,235]},
+    ], yObj);
+    const targRows = [
+      ['Breve (1 anno)', 'Clima/Energia', sv('vsme_target_1y_env') || '—'],
+      ['Breve (1 anno)', 'Sociale', sv('vsme_target_1y_soc') || '—'],
+      ['Breve (1 anno)', 'Governance', sv('vsme_target_1y_gov') || '—'],
+      ['Medio (3 anni)', 'Clima/Energia', sv('vsme_target_3y_env') || '—'],
+      ['Medio (3 anni)', 'Sociale', sv('vsme_target_3y_soc') || '—'],
+      ['Lungo (5+ anni)', 'Vision complessiva', sv('vsme_target_5y') || sv('vsme_targets') || '—'],
+    ];
+    yObj = tbl(['Orizzonte','Area','Obiettivo dichiarato'], targRows, yObj,
+      {0:{cellWidth:36,fontStyle:'bold'},1:{cellWidth:36},2:{cellWidth:102}});
+    yObj = narrative('Certificazioni e adesioni volontarie', sv('vsme_cert') || sv('gri_cert'), yObj);
+    yObj = narrative('Risorse dedicate alla sostenibilita', sv('vsme_esg_budget'), yObj);
+
+
+    // ══ SEZ. APPENDICI ═════════════════════════════════════
+    sectionPage('📊','APPENDICI','Indici, Dati e Metodologia');
+
+    // ══ PAG 37-40 — CONTENT INDEX ══════════════════════════
+    const disclosures = std==='gri' ? [
+      ['GRI 2-1','Dettagli organizzativi','Profilo Aziendale','3',sv('vsme_name')?'✓':'◐'],
+      ['GRI 2-2','Entità incluse nel reporting','Profilo Aziendale','3',sv('vsme_scope')?'✓':'◐'],
+      ['GRI 2-6','Attività e catena del valore','Modello Business','4',sv('vsme_sector')?'✓':'◐'],
+      ['GRI 2-9','Struttura governance','Governance','32',sv('vsme_gov')?'✓':'◐'],
+      ['GRI 2-22','Dichiarazione sulla strategia','Strategia ESG','5',sv('strategy_statement')?'✓':'◐'],
+      ['GRI 3-1','Processo determinazione temi materiali','Materialità','8','✓'],
+      ['GRI 302-1','Consumo energetico interno','Energia','14',enTot>0?'✓':'◐'],
+      ['GRI 302-3','Intensità energetica','Energia','14',(enTot>0&&empT)?'✓':'◐'],
+      ['GRI 303-3','Prelievo idrico','Acqua','16',waterAbs!=null?'✓':'◐'],
+      ['GRI 305-1','Emissioni GHG Scope 1','GHG Scope 1','11',s1t!=null?'✓':'◐'],
+      ['GRI 305-2','Emissioni GHG Scope 2','GHG Scope 2','12',s2t!=null?'✓':'◐'],
+      ['GRI 305-3','Emissioni GHG Scope 3','GHG Scope 3','13',s3t!=null?'✓':'◐'],
+      ['GRI 305-4','Intensità emissioni GHG','Highlights','7',ghgInt!=null?'✓':'◐'],
+      ['GRI 306-3','Rifiuti prodotti','Rifiuti','17',wTot!=null?'✓':'◐'],
+      ['GRI 401-1','Nuove assunzioni e turnover','Assunzioni','27',hireT!=null?'✓':'◐'],
+      ['GRI 405-1','Diversità governance e dipendenti','Diversità','23',empF!=null?'✓':'◐'],
+      ['GRI 405-2','Rapporto retribuzioni uomini/donne','Pay Gap','24',wageM!=null?'✓':'◐'],
+      ['GRI 403-9','Infortuni sul lavoro','Salute','25',injur!=null?'✓':'◐'],
+      ['GRI 404-1','Ore medie formazione per dipendente','Formazione','26',trainP!=null?'✓':'◐'],
+      ['GRI 204-1','Quota spesa fornitori locali','Supply Chain','28',supLoc!=null?'✓':'◐'],
+      ['GRI 205-2','Formazione anticorruzione','Etica','33',n('vsme_anti_training')!=null?'✓':'◐'],
+      ['GRI 418-1','Reclami violazione privacy','Privacy','35',n('vsme_privacy')!=null?'✓':'◐'],
+    ] : [
+      ['VSME-B1.1','Informazioni generali organizzazione','Profilo Aziendale','3',sv('vsme_name')?'✓':'◐'],
+      ['VSME-B1.2','Struttura di governance','Governance','32',sv('vsme_gov')?'✓':'◐'],
+      ['VSME-B1.3','Strategia e obiettivi sostenibilità','Strategia ESG','5',sv('strategy_statement')?'✓':'◐'],
+      ['VSME-B1.4','Stakeholder e materialità','Stakeholder','6','✓'],
+      ['VSME-E1.1','Emissioni GHG Scope 1 (dirette)','GHG Scope 1','11',s1t!=null?'✓':'◐'],
+      ['VSME-E1.2','Emissioni GHG Scope 2 (energia)','GHG Scope 2','12',s2t!=null?'✓':'◐'],
+      ['VSME-E1.3','Emissioni GHG Scope 3 (indirette)','GHG Scope 3','13',s3t!=null?'✓':'◐'],
+      ['VSME-E1.4','Intensità e obiettivi riduzione GHG','GHG Overview','10',sv('vsme_targets')?'✓':'◐'],
+      ['VSME-E2.1','Consumo energetico totale per fonte','Energia','14',enTot>0?'✓':'◐'],
+      ['VSME-E2.2','Intensità energetica','Energia','14',(enTot>0&&empT)?'✓':'◐'],
+      ['VSME-E2.3','Quota energia rinnovabile','Energia Rinn.','15',renPct!=null?'✓':'◐'],
+      ['VSME-E3.1','Prelievo idrico totale','Acqua','16',waterAbs!=null?'✓':'◐'],
+      ['VSME-E3.2','Fonte idrica e stress idrico','Acqua','16',sv('c1_water_src')?'✓':'◐'],
+      ['VSME-E4.1','Rifiuti totali prodotti','Rifiuti','17',wTot!=null?'✓':'◐'],
+      ['VSME-E4.2','Rifiuti pericolosi','Rifiuti','17',n('vsme_waste_haz')!=null?'✓':'◐'],
+      ['VSME-E4.3','Rifiuti avviati a riciclo/recupero','Rifiuti','17',wRec!=null?'✓':'◐'],
+      ['VSME-E5.1','Materiali totali utilizzati','Economia Circ.','18',matT!=null?'✓':'◐'],
+      ['VSME-E5.2','Materiali riciclati e circolarità','Economia Circ.','18',matR!=null?'✓':'◐'],
+      ['VSME-S1.1','Dipendenti totali e composizione','Forza Lavoro','22',empT!=null?'✓':'◐'],
+      ['VSME-S1.2','Diversità di genere — dipendenti','Diversità','23',empF!=null?'✓':'◐'],
+      ['VSME-S1.3','Parità retributiva / Gender Pay Gap','Pay Gap','24',wageM!=null?'✓':'◐'],
+      ['VSME-S2.1','Infortuni registrabili','Salute','25',injur!=null?'✓':'◐'],
+      ['VSME-S2.2','TRIR e ore lavorate','Salute','25',trir!=null?'✓':'◐'],
+      ['VSME-S2.3','Sorveglianza sanitaria','Salute','25',n('ohs_med_coverage')!=null?'✓':'◐'],
+      ['VSME-S3.1','Ore totali di formazione erogate','Formazione','26',trainT!=null?'✓':'◐'],
+      ['VSME-S3.2','Ore di formazione per genere','Formazione','26',trainM2!=null?'✓':'◐'],
+      ['VSME-S4.1','Nuove assunzioni e turnover','Assunzioni','27',hireT!=null?'✓':'◐'],
+      ['VSME-S5.1','Fornitori attivi e valutati ESG','Supply Chain','28',supN!=null?'✓':'◐'],
+      ['VSME-S5.2','Rischi supply chain e azioni','Supply Chain','28',sv('vsme_supply_risk')?'✓':'◐'],
+      ['VSME-S6.1','Reclami consumatori ricevuti/risolti','Consumatori','29',compl!=null?'✓':'◐'],
+      ['VSME-S6.2','Incidenti violazione dati (GDPR)','Privacy','35','✓'],
+      ['VSME-S7.1','Coinvolgimento comunità locale','Comunità','30',sv('vsme_community')?'✓':'◐'],
+      ['VSME-G1.1','Politica anticorruzione','Etica','33',sv('vsme_anti_policy')?'✓':'◐'],
+      ['VSME-G1.2','Formazione anticorruzione (%)','Etica','33',n('vsme_anti_training')!=null?'✓':'◐'],
+      ['VSME-G1.3','Canale di whistleblowing','Etica','33',sv('vsme_whistleblow')?'✓':'◐'],
+      ['VSME-G1.4','Modello Organizzativo 231/2001','Etica','33',sv('vsme_231')?'✓':'◐'],
+      ['VSME-G2.1','Composizione organo di governance','Governance','32',boardT!=null?'✓':'◐'],
+      ['VSME-G2.2','Diversità di genere nel CdA','Governance','32',boardF!=null?'✓':'◐'],
+    ];
+    doc.addPage(); y=pgTitle('25. Indice '+std.toUpperCase()+' — Tavola di Concordanza','Legenda: ✓ Compilata · ◐ Parziale/Non disponibile',18);
+    y=tbl(['Disclosure','Titolo','Sezione report','Pag.','Stato'],disclosures,y,
+      {0:{cellWidth:24},1:{cellWidth:72},2:{cellWidth:40},3:{cellWidth:14,halign:'center'},4:{cellWidth:24,halign:'center'}});
+
+    // ══ PAG 41 — NOTA METODOLOGICA ═════════════════════════
+    doc.addPage(); y=pgTitle('26. Nota Metodologica e Perimetro',null,18);
+    y=narrative(null,'Il presente Bilancio di Sostenibilità è stato redatto in conformità con il '+(std==='gri'?'GRI Standards (GRI 1: Foundation 2021, GRI 2: General Disclosures 2021 e Standard Tematici applicabili)':'VSME Standard EFRAG (Voluntary reporting standard for SMEs)')+' per l\'anno '+year+'. Il perimetro di rendicontazione include: '+(sv('vsme_scope')||'tutte le attività sotto controllo operativo dell\'organizzazione')+'. I dati GHG sono stati calcolati secondo il GHG Protocol Corporate Standard, metodologia market-based.',y);
+    y=tbl(['Fattore di emissione','Valore','Fonte','Anno'],[
+      ['Gas naturale (kgCO₂e/kWh)','0,18386','ISPRA','2024'],
+      ['Elettricità mix IT — location-based (kgCO₂e/kWh)','0,28307','ISPRA','2024'],
+      ['Gasolio / diesel (kgCO₂e/litro)','2,68490','DEFRA','2024'],
+      ['GWP CO₂ (100 anni)','1','IPCC AR6','2022'],
+      ['GWP CH₄ (100 anni)','29,8','IPCC AR6','2022'],
+      ['GWP N₂O (100 anni)','273','IPCC AR6','2022'],
+    ],y,{0:{cellWidth:90},1:{cellWidth:30,halign:'right'},2:{cellWidth:28},3:{cellWidth:26,halign:'center'}});
+    y=narrative(null,'I dati riportati sono di responsabilità del management. Il bilancio non è soggetto a verifica esterna di terza parte, a meno che non sia indicato diversamente. I confronti con anni precedenti non sono disponibili (prima rendicontazione, baseline '+year+').',y);
+
+
+    // == PAG FATTORI EMISSIONE SCOPE 3 ==============================
+    doc.addPage(); let yEF = pgTitle('Fattori di Emissione Scope 3 — Dettaglio Categorie','GHG Protocol Corporate Standard — 15 categorie upstream e downstream',18);
+    const s3cats = [
+      ['Cat. 1','Beni e servizi acquistati', n('s3_cat1_co2')!=null ? fmt(n('s3_cat1_co2'),2)+' tCO2e' : '—','Upstream'],
+      ['Cat. 2','Beni strumentali (capex)', n('s3_cat2_co2')!=null ? fmt(n('s3_cat2_co2'),2)+' tCO2e' : '—','Upstream'],
+      ['Cat. 3','Attivita connesse ai combustibili', n('s3_cat3_co2')!=null ? fmt(n('s3_cat3_co2'),2)+' tCO2e' : '—','Upstream'],
+      ['Cat. 4','Trasporto e distribuzione (upstream)', n('s3_cat4_co2')!=null ? fmt(n('s3_cat4_co2'),2)+' tCO2e' : '—','Upstream'],
+      ['Cat. 5','Rifiuti generati nelle operazioni', wTot!=null ? fmt(wTot*0.5,2)+' tCO2e (stima)' : '—','Upstream'],
+      ['Cat. 6','Viaggi di lavoro', n('s3_cat6_co2')!=null ? fmt(n('s3_cat6_co2'),2)+' tCO2e' : '—','Upstream'],
+      ['Cat. 7','Pendolarismo dipendenti', n('s3_cat7_co2')!=null ? fmt(n('s3_cat7_co2'),2)+' tCO2e' : '—','Upstream'],
+      ['Cat. 11','Uso dei prodotti venduti', n('s3_cat11_co2')!=null ? fmt(n('s3_cat11_co2'),2)+' tCO2e' : '—','Downstream'],
+      ['Cat. 12','Smaltimento fine vita prodotti', n('s3_cat12_co2')!=null ? fmt(n('s3_cat12_co2'),2)+' tCO2e' : '—','Downstream'],
+    ];
+    yEF = tbl(['Categoria','Descrizione','Emissioni stimate','Tipo'], s3cats, yEF,
+      {0:{cellWidth:18,halign:'center',fontStyle:'bold'},1:{cellWidth:86},2:{cellWidth:50,halign:'right'},3:{cellWidth:20,halign:'center'}});
+    yEF = narrative('Note metodologiche Scope 3', sv('vsme_s3_method') || 'Le emissioni Scope 3 sono calcolate con metodo spend-based e/o average-data secondo le linee guida GHG Protocol Corporate Value Chain (Scope 3) Standard. Le categorie non applicabili al modello di business non sono riportate.', yEF);
+    yEF += 4;
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...bk.p2);
+    doc.text('Metodologie di calcolo adottate:', pad, yEF); yEF += 7;
+    const efMethods = [
+      ['GHG Protocol Corporate Standard (2004)', 'Framework principale Scope 1, 2, 3'],
+      ['ISO 14064-1:2018', 'Standard internazionale quantificazione GHG'],
+      ['DEFRA 2024', 'Fattori conversione combustibili fossili'],
+      ['ISPRA 2024', 'Fattore emissione mix elettrico italiano (0,283 kgCO2e/kWh)'],
+      ['IPCC AR6 WG3 (2022)', 'GWP 100 anni — CH4=29,8; N2O=273'],
+    ];
+    yEF = tbl(['Metodologia','Applicazione'], efMethods, yEF,
+      {0:{cellWidth:80,fontStyle:'bold'},1:{cellWidth:94}});
+
+
+    // ══ PAG 42-44 — KPI COMPLETA ═══════════════════════════
+    doc.addPage(); y=pgTitle('27. Tabella KPI — Dati Quantitativi Completi','Anno di riferimento: '+year+' · Prima rendicontazione (baseline)',18);
+    const allKpi=[
+      ['AMBIENTE — Clima','Emissioni GHG Scope 1',s1t!=null?fmt(s1t,3):'—','tCO₂e','baseline'],
+      ['AMBIENTE — Clima','Emissioni GHG Scope 2',s2t!=null?fmt(s2t,3):'—','tCO₂e','baseline'],
+      ['AMBIENTE — Clima','Emissioni GHG Scope 3',s3t!=null?fmt(s3t,3):'—','tCO₂e','baseline'],
+      ['AMBIENTE — Clima','Emissioni GHG totali',ghgT!=null?fmt(ghgT,3):'—','tCO₂e','baseline'],
+      ['AMBIENTE — Clima','Intensità GHG per dipendente',ghgInt!=null?fmt(ghgInt,4):'—','tCO₂e/dip.','baseline'],
+      ['AMBIENTE — Energia','Elettricità rinnovabile',elecR!=null?fmt(elecR):'—','kWh','baseline'],
+      ['AMBIENTE — Energia','Elettricità non rinnovabile',elecN!=null?fmt(elecN):'—','kWh','baseline'],
+      ['AMBIENTE — Energia','Gas naturale',gasKw!=null?fmt(gasKw):'—','kWh equiv.','baseline'],
+      ['AMBIENTE — Energia','Gasolio (litri)',dslL!=null?fmt(dslL):'—','litri','baseline'],
+      ['AMBIENTE — Energia','Energia totale',enTot>0?fmt(enTot):'—','kWh','baseline'],
+      ['AMBIENTE — Energia','% energia rinnovabile',renPct!=null?fmt(renPct,1):'—','%','baseline'],
+      ['AMBIENTE — Acqua','Prelievo idrico',waterAbs!=null?fmt(waterAbs):'—','m³','baseline'],
+      ['AMBIENTE — Acqua','Scarico idrico',waterDis!=null?fmt(waterDis):'—','m³','baseline'],
+      ['AMBIENTE — Rifiuti','Rifiuti totali',wTot!=null?fmt(wTot,2):'—','tonnellate','baseline'],
+      ['AMBIENTE — Rifiuti','Rifiuti pericolosi',wHaz!=null?fmt(wHaz,2):'—','tonnellate','baseline'],
+      ['AMBIENTE — Rifiuti','Rifiuti avviati a riciclo',wRec!=null?fmt(wRec,2):'—','tonnellate','baseline'],
+      ['AMBIENTE — Rifiuti','Tasso di riciclo',recPct!=null?fmt(recPct,1):'—','%','baseline'],
+      ['AMBIENTE — Aria','Emissioni NOₓ',n('c2_air_nox')!=null?fmt(n('c2_air_nox'),1):'—','kg/anno','baseline'],
+      ['AMBIENTE — Aria','Emissioni SOₓ',n('c2_air_sox')!=null?fmt(n('c2_air_sox'),1):'—','kg/anno','baseline'],
+      ['AMBIENTE — Aria','Polveri PM',n('c2_air_pm')!=null?fmt(n('c2_air_pm'),1):'—','kg/anno','baseline'],
+      ['AMBIENTE — Aria','VOC',n('c2_air_voc')!=null?fmt(n('c2_air_voc'),1):'—','kg/anno','baseline'],
+      ['SOCIALE — Lavoro','Dipendenti totali',empT!=null?fmt(empT):'—','n.','baseline'],
+      ['SOCIALE — Lavoro','Di cui: donne',empF!=null?fmt(empF):'—','n.','baseline'],
+      ['SOCIALE — Lavoro','% donne',(empF!=null&&empT)?fmt(empF/empT*100,1):'—','%','baseline'],
+      ['SOCIALE — Lavoro','Retribuzione media uomini',wageM!=null?fmt(wageM):'—','€/anno','baseline'],
+      ['SOCIALE — Lavoro','Retribuzione media donne',wageF!=null?fmt(wageF):'—','€/anno','baseline'],
+      ['SOCIALE — Lavoro','Gender Pay Gap',gpg!=null?fmt(gpg,1):'—','%','baseline'],
+      ['SOCIALE — Salute','Infortuni registrabili',injur!=null?fmt(injur):'—','n.','baseline'],
+      ['SOCIALE — Salute','TRIR',trir!=null?fmt(trir,2):'—','per 200k ore','baseline'],
+      ['SOCIALE — Formazione','Ore totali formazione',trainT!=null?fmt(trainT):'—','ore','baseline'],
+      ['SOCIALE — Formazione','Ore medie per dipendente',trainP!=null?fmt(trainP,1):'—','ore/dip.','baseline'],
+      ['SOCIALE — Assunzioni','Nuove assunzioni',hireT!=null?fmt(hireT):'—','n.','baseline'],
+      ['SOCIALE — Assunzioni','Tasso turnover',(turnT!=null&&empT)?fmt(turnT/empT*100,1):'—','%','baseline'],
+      ['SOCIALE — Supply','Fornitori attivi',supN!=null?fmt(supN):'—','n.','baseline'],
+      ['SOCIALE — Supply','% fornitori valutati ESG',supAud!=null?fmt(supAud,1):'—','%','baseline'],
+      ['SOCIALE — Clienti','Reclami ricevuti',compl!=null?fmt(compl):'—','n.','baseline'],
+      ['SOCIALE — Clienti','Tasso risoluzione reclami',complPct!=null?fmt(complPct,1):'—','%','baseline'],
+      ['GOVERNANCE','Componenti CdA',boardT!=null?fmt(boardT):'—','n.','baseline'],
+      ['GOVERNANCE','% donne nel CdA',boardFp!=null?fmt(boardFp,1):'—','%','baseline'],
+      ['GOVERNANCE','Formazione anticorruzione (%)',n('vsme_anti_training')!=null?fmt(n('vsme_anti_training'),1):'—','%','baseline'],
+      ['GOVERNANCE','Incidenti corruzione confermati',n('vsme_corrupt_n')!=null?fmt(n('vsme_corrupt_n')):'—','n.','baseline'],
+      ['GOVERNANCE','Incidenti violazione dati (GDPR)',n('vsme_privacy')!=null?fmt(n('vsme_privacy')):'—','n.','baseline'],
+    ];
+    y=tbl(['Categoria','Indicatore KPI','Valore','Unità','Note'],allKpi,y,
+      {0:{cellWidth:34},1:{cellWidth:66},2:{cellWidth:30,halign:'right',fontStyle:'bold'},3:{cellWidth:26},4:{cellWidth:18,halign:'center',textColor:[100,116,139]}});
+
+
+    // == PAG CHIUSURA / PROSSIMI PASSI ==============================
     doc.addPage();
-    y = pad;
-    doc.setFillColor(22, 163, 74);
-    doc.rect(0, 0, W, 2, 'F');
+    doc.setFillColor(...bk.p2); doc.rect(0, 0, W, 297, 'F'); hdrBar(6); addLogo(164, 10, 28, 14);
+    doc.setFont('helvetica','bold'); doc.setFontSize(22); doc.setTextColor(255,255,255);
+    doc.text('Prossimi Passi e Contatti', 105, 50, {align:'center'});
+    doc.setFillColor(...bk.p1); doc.rect(40, 56, 130, 1.5, 'F');
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(156,163,175);
+    doc.text('Continuiamo insieme il percorso verso la sostenibilita', 105, 64, {align:'center'});
+    const nextSteps = [
+      ['1', 'Revisione interna', 'Condivisione del report con il management e gli organi di governance per validazione dei dati e approvazione formale.'],
+      ['2', 'Dialogo stakeholder', 'Presentazione dei risultati ESG a dipendenti, clienti, fornitori e comunita locale attraverso canali dedicati.'],
+      ['3', 'Piano di miglioramento', 'Definizione di obiettivi quantitativi per l\'anno successivo basati sulle aree di miglioramento identificate.'],
+      ['4', 'Prossima rendicontazione', 'Il prossimo Bilancio di Sostenibilita sara redatto per l\'anno '+(year+1)+' con perimetro ampliato.'],
+    ];
+    let yCl = 76;
+    nextSteps.forEach(([num, title, desc]) => {
+      doc.setFillColor(30,40,55); doc.roundedRect(pad, yCl, 174, 26, 3, 3, 'F');
+      doc.setFillColor(...bk.p1); doc.circle(pad+11, yCl+13, 7, 'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...bk.p2);
+      doc.text(num, pad+11, yCl+16.5, {align:'center'});
+      doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(255,255,255);
+      doc.text(title, pad+22, yCl+9);
+      doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(156,163,175);
+      const dl = doc.splitTextToSize(desc, 148);
+      doc.text(dl, pad+22, yCl+17);
+      yCl += 32;
+    });
+    yCl += 4;
+    doc.setFillColor(30,40,55); doc.roundedRect(pad, yCl, 82, 50, 3, 3, 'F');
+    doc.setFillColor(30,40,55); doc.roundedRect(pad+88, yCl, 86, 50, 3, 3, 'F');
+    doc.setFillColor(...bk.p1); doc.rect(pad, yCl, 82, 2, 'F');
+    doc.setFillColor(...bk.p1); doc.rect(pad+88, yCl, 86, 2, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(255,255,255);
+    doc.text('Contatti ESG', pad+6, yCl+10);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(156,163,175);
+    const ctc = (c && c.contact) || {};
+    doc.text(ctc.name || sv('vsme_contact') || cname, pad+6, yCl+18);
+    doc.text(ctc.email || sv('vsme_email') || '—', pad+6, yCl+26);
+    doc.text(ctc.phone || sv('vsme_phone') || '—', pad+6, yCl+34);
+    doc.text((c && c.address) || sv('vsme_address') || sv('vsme_city') || '—', pad+6, yCl+42);
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(255,255,255);
+    doc.text('VERA ESG Platform', pad+94, yCl+10);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(156,163,175);
+    doc.text('Standard: '+std.toUpperCase(), pad+94, yCl+18);
+    doc.text('Anno: '+year, pad+94, yCl+26);
+    doc.text('Generato: '+new Date().toLocaleDateString('it-IT'), pad+94, yCl+34);
+    doc.text('www.vera-esg.com', pad+94, yCl+42);
 
-    const stdLabel = c?.std === 'gri' ? 'GRI Standards 2021' : 'VSME 2023 (EFRAG)';
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(16);
-    doc.setTextColor(17, 17, 17);
-    doc.text(`2. Framework: ${stdLabel}`, pad, y + 12);
-    y += 22;
 
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.setTextColor(71, 85, 105);
-
-    if (c?.std === 'vsme') {
-      const vsmeText = [
-        'Il presente bilancio di sostenibilità è redatto in conformità al Voluntary SME Standard (VSME)',
-        'sviluppato da EFRAG (European Financial Reporting Advisory Group) nel 2023 specificamente',
-        'per le piccole e medie imprese europee.',
-        '',
-        'I moduli coperti dalla presente rendicontazione sono:',
-        '• B1 — Informazioni di base e governance',
-        '• B2-E1 — Cambiamento climatico e gas serra (GHG)',
-        '• B2-E2 — Energia (consumi e intensità)',
-        '• B2-E3 — Rifiuti (produzione e gestione)',
-        '• B3-S1 — Forza lavoro propria',
-        '• B4-G — Condotta aziendale e anticorruzione',
-      ];
-      vsmeText.forEach(line => { doc.text(line, pad, y); y += line ? 6 : 4; });
-    } else {
-      const griText = [
-        'Il presente bilancio di sostenibilità è redatto in conformità ai GRI Standards 2021',
-        '(Global Reporting Initiative), il framework di riferimento globale per la rendicontazione ESG.',
-        '',
-        'Disclosure universali coperte (GRI 2): 2-1, 2-2, 2-7, 2-9, 2-22, 2-27, 2-29, 2-30',
-        'Disclosure tematiche coperte: GRI 201-1, 204-1, 302-1, 302-3, 305-1, 305-2, 305-3,',
-        '305-4, 401-1, 401-2, 403-3, 404-1, 405-1',
-        'Disclosure settoriali: selezionate in base al profilo di materialità del settore.',
-      ];
-      griText.forEach(line => { doc.text(line, pad, y); y += line ? 6 : 4; });
-    }
-    y += 10;
-
-    // Methodology note
-    doc.setFillColor(240, 253, 244);
-    doc.roundedRect(pad, y, W - pad * 2, 28, 3, 3, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.setTextColor(22, 163, 74);
-    doc.text('NOTA METODOLOGICA', pad + 6, y + 8);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(71, 85, 105);
-    doc.text('I fattori di emissione utilizzati sono tratti da: DEFRA 2024 (UK DECC),', pad + 6, y + 15);
-    doc.text('ISPRA 2024 (Istituto Superiore per la Protezione e Ricerca Ambientale),', pad + 6, y + 20);
-    doc.text('IPCC AR6 WG3 (2022). GWP a 100 anni: CO₂=1, CH₄=29,8, N₂O=273 (IPCC AR6).', pad + 6, y + 25);
-
-    // ── PAGE 4: Energia e Cambiamenti Climatici ──────────────
-    {
-      doc.addPage();
-      doc.setFillColor(22, 163, 74);
-      doc.rect(0, 0, W, 2, 'F');
-      y = 16;
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.setTextColor(17, 17, 17);
-      doc.text('3. Energia e Cambiamenti Climatici', pad, y);
-      y += 12;
-
-      const elecRen   = n('elec_ren_kwh');
-      const elecNren  = n('elec_nren_kwh');
-      const gasKwh    = n('gas_kwh');
-      const dieselL   = n('diesel_l');
-      const elecTotal = (elecRen != null ? elecRen : 0) + (elecNren != null ? elecNren : 0);
-      const dieselKwh = dieselL != null ? dieselL * 9.97 : null;
-      const energyTotal = elecTotal + (gasKwh != null ? gasKwh : 0) + (dieselKwh != null ? dieselKwh : 0);
-      const dipE = n('vsme_emp_total') || n('emp_total');
-      const energyInt = (energyTotal > 0 && dipE) ? energyTotal / dipE : null;
-      const elecRenPct = (elecRen != null && energyTotal > 0) ? elecRen / energyTotal * 100 : null;
-      const ghgData = c.ghg || {};
-      const s1t = ghgData.s1 != null ? ghgData.s1 / 1000 : null;
-      const s2t = ghgData.s2 != null ? ghgData.s2 / 1000 : null;
-      const s3t = ghgData.s3 != null ? ghgData.s3 / 1000 : null;
-      const ghgTotal = ghgData.total != null ? ghgData.total / 1000 : null;
-      const ghgInt = (ghgTotal != null && dipE) ? ghgTotal / dipE : null;
-
-      const energyRows = [
-        ['Consumo elettricità totale', elecTotal > 0 ? fmt(elecTotal) : '—', 'kWh'],
-        ['di cui rinnovabile', elecRen != null ? fmt(elecRen) : '—', 'kWh'],
-        ['Consumo gas naturale', gasKwh != null ? fmt(gasKwh) : '—', 'kWh'],
-        ['Consumo gasolio', dieselL != null ? fmt(dieselL) : '—', 'litri'],
-        ['Consumo gasolio (equiv.)', dieselKwh != null ? fmt(dieselKwh) : '—', 'kWh'],
-        ['Energia totale', energyTotal > 0 ? fmt(energyTotal) : '—', 'kWh'],
-        ['Intensità energetica', energyInt != null ? fmt(energyInt, 1) : '—', 'kWh/dip'],
-        ['% energia rinnovabile', elecRenPct != null ? fmt(elecRenPct, 1) + '%' : '—', ''],
-        ['Emissioni Scope 1', s1t != null ? fmt(s1t, 2) : '—', 'tCO₂e'],
-        ['Emissioni Scope 2', s2t != null ? fmt(s2t, 2) : '—', 'tCO₂e'],
-        ['Emissioni Scope 3', s3t != null ? fmt(s3t, 2) : '—', 'tCO₂e'],
-        ['Emissioni totali GHG', ghgTotal != null ? fmt(ghgTotal, 2) : '—', 'tCO₂e'],
-        ['Intensità GHG', ghgInt != null ? fmt(ghgInt, 4) : '—', 'tCO₂e/dip'],
-      ];
-
-      doc.autoTable({
-        startY: y,
-        head: [['Indicatore', 'Valore', 'Unità']],
-        body: energyRows,
-        styles: { fontSize: 9, cellPadding: 3 },
-        headStyles: { fillColor: [17, 17, 17], textColor: 255, fontStyle: 'bold', fontSize: 9 },
-        alternateRowStyles: { fillColor: [248, 250, 252] },
-        columnStyles: { 0: { cellWidth: 80 }, 1: { cellWidth: 50, halign: 'right', fontStyle: 'bold' }, 2: { cellWidth: 30, textColor: [100, 116, 139] } },
-        margin: { left: pad, right: pad },
-        didParseCell: (data) => { if (data.cell.raw === '—') data.cell.styles.textColor = [200, 200, 200]; },
-      });
-      y = doc.lastAutoTable.finalY + 10;
-    }
-
-    // ── PAGE 5: Forza Lavoro ──────────────────────────────────
-    {
-      doc.addPage();
-      doc.setFillColor(22, 163, 74);
-      doc.rect(0, 0, W, 2, 'F');
-      y = 16;
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.setTextColor(17, 17, 17);
-      doc.text('4. Forza Lavoro Propria', pad, y);
-      y += 12;
-
-      const empTotal = n('vsme_emp_total') || n('emp_total');
-      const empF     = n('vsme_emp_f_n')   || n('emp_f');
-      const empM     = n('vsme_emp_m_n')   || n('emp_m');
-      const empFt    = n('vsme_emp_ft')    || n('emp_ft');
-      const empPt    = n('vsme_emp_pt')    || n('emp_pt');
-      const empTemp  = n('vsme_emp_temp');
-      const wageM    = n('vsme_wage_m_avg');
-      const wageF    = n('vsme_wage_f_avg');
-      const gpg      = (wageM && wageF && wageM > 0) ? (wageM - wageF) / wageM * 100 : null;
-      const injuries = n('vsme_injuries') || n('ohs_rec_injuries');
-      const fatal    = n('vsme_fatal')    || n('ohs_fatalities');
-      const hrsWorked = n('vsme_hrs_worked') || n('hrs_worked');
-      const trir     = (injuries != null && hrsWorked && hrsWorked > 0) ? injuries / hrsWorked * 200000 : null;
-      const trainTotal = n('vsme_train_hrs_total') || n('train_hrs_total');
-      const trainPerDip = (trainTotal != null && empTotal) ? trainTotal / empTotal : null;
-      const hireTotal  = n('hire_total');
-      const turnTotal  = n('turn_total');
-      const turnPct    = (turnTotal != null && empTotal) ? turnTotal / empTotal * 100 : null;
-
-      const workRows = [
-        ['Dipendenti totali', empTotal != null ? fmt(empTotal) : '—', ''],
-        ['di cui donne', empF != null ? fmt(empF) : '—', ''],
-        ['di cui uomini', empM != null ? fmt(empM) : '—', ''],
-        ['Tempo pieno', empFt != null ? fmt(empFt) : '—', ''],
-        ['Tempo parziale', empPt != null ? fmt(empPt) : '—', ''],
-        ['Contratti a tempo determinato', empTemp != null ? fmt(empTemp) : '—', ''],
-        ['Retribuzione media uomini', wageM != null ? fmt(wageM) : '—', '€/anno'],
-        ['Retribuzione media donne', wageF != null ? fmt(wageF) : '—', '€/anno'],
-        ['Gender pay gap', gpg != null ? fmt(gpg, 1) + '%' : '—', ''],
-        ['Infortuni registrabili', injuries != null ? fmt(injuries) : '—', ''],
-        ['Infortuni mortali', fatal != null ? fmt(fatal) : '—', ''],
-        ['TRIR', trir != null ? fmt(trir, 2) : '—', 'per 200.000 h'],
-        ['Ore formazione totali', trainTotal != null ? fmt(trainTotal) : '—', 'ore'],
-        ['Ore formazione per dipendente', trainPerDip != null ? fmt(trainPerDip, 1) : '—', 'ore/dip'],
-        ['Nuovi assunti (GRI 401-1)', hireTotal != null ? fmt(hireTotal) : '—', ''],
-        ['Turnover', turnPct != null ? fmt(turnPct, 1) + '%' : '—', ''],
-      ];
-
-      doc.autoTable({
-        startY: y,
-        head: [['Indicatore', 'Valore', 'Unità']],
-        body: workRows,
-        styles: { fontSize: 9, cellPadding: 3 },
-        headStyles: { fillColor: [17, 17, 17], textColor: 255, fontStyle: 'bold', fontSize: 9 },
-        alternateRowStyles: { fillColor: [248, 250, 252] },
-        columnStyles: { 0: { cellWidth: 80 }, 1: { cellWidth: 50, halign: 'right', fontStyle: 'bold' }, 2: { cellWidth: 30, textColor: [100, 116, 139] } },
-        margin: { left: pad, right: pad },
-        didParseCell: (data) => { if (data.cell.raw === '—') data.cell.styles.textColor = [200, 200, 200]; },
-      });
-      y = doc.lastAutoTable.finalY + 10;
-    }
-
-    // ── PAGE 6: Rifiuti, Acqua e Sociale ─────────────────────
-    {
-      doc.addPage();
-      doc.setFillColor(22, 163, 74);
-      doc.rect(0, 0, W, 2, 'F');
-      y = 16;
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.setTextColor(17, 17, 17);
-      doc.text('5. Ambiente — Rifiuti e Risorse', pad, y);
-      y += 12;
-
-      const wasteT    = n('vsme_waste_t');
-      const wasteHaz  = n('vsme_waste_haz');
-      const wasteRec  = n('vsme_waste_rec');
-      const wasteLand = n('vsme_waste_land');
-      const recPct    = (wasteRec != null && wasteT && wasteT > 0) ? wasteRec / wasteT * 100 : null;
-      const waterM3   = n('vsme_water_m3');
-      const waterOut  = n('vsme_water_out');
-
-      const wasteRows = [
-        ['Rifiuti totali', wasteT != null ? fmt(wasteT, 2) : '—', 'tonnellate'],
-        ['di cui pericolosi', wasteHaz != null ? fmt(wasteHaz, 2) : '—', 'tonnellate'],
-        ['Avviati a riciclo', wasteRec != null ? fmt(wasteRec, 2) : '—', 'tonnellate'],
-        ['Smaltiti in discarica', wasteLand != null ? fmt(wasteLand, 2) : '—', 'tonnellate'],
-        ['Tasso di riciclo', recPct != null ? fmt(recPct, 1) + '%' : '—', ''],
-        ['Acqua prelevata', waterM3 != null ? fmt(waterM3) : '—', 'm³'],
-        ['Scarichi idrici', waterOut != null ? fmt(waterOut) : '—', 'm³'],
-      ];
-
-      doc.autoTable({
-        startY: y,
-        head: [['Indicatore', 'Valore', 'Unità']],
-        body: wasteRows,
-        styles: { fontSize: 9, cellPadding: 3 },
-        headStyles: { fillColor: [17, 17, 17], textColor: 255, fontStyle: 'bold', fontSize: 9 },
-        alternateRowStyles: { fillColor: [248, 250, 252] },
-        columnStyles: { 0: { cellWidth: 80 }, 1: { cellWidth: 50, halign: 'right', fontStyle: 'bold' }, 2: { cellWidth: 30, textColor: [100, 116, 139] } },
-        margin: { left: pad, right: pad },
-        didParseCell: (data) => { if (data.cell.raw === '—') data.cell.styles.textColor = [200, 200, 200]; },
-      });
-      y = doc.lastAutoTable.finalY + 14;
-
-      // Second table: Sociale e Consumatori
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(13);
-      doc.setTextColor(17, 17, 17);
-      doc.text('Sociale e Consumatori', pad, y);
-      y += 8;
-
-      const complaints    = n('vsme_complaints')     || n('privacy_complaints');
-      const complaintsRes = n('vsme_complaints_res');
-      const supScreen     = n('vsme_suppliers_screened') || n('sup_screen');
-      const transpKm      = n('vsme_transp_km');
-      // transport CO2: same factor used elsewhere in codebase (0.00008 tCO2/km default)
-      const transpCo2     = transpKm != null ? transpKm * 0.00008 : null;
-
-      const socialRows = [
-        ['Reclami consumatori', complaints != null ? fmt(complaints) : '—', ''],
-        ['Reclami risolti', complaintsRes != null ? fmt(complaintsRes, 1) + '%' : '—', ''],
-        ['Fornitori valutati ESG', supScreen != null ? fmt(supScreen) : '—', ''],
-        ['Km trasporto merci', transpKm != null ? fmt(transpKm) : '—', 'km'],
-        ['CO₂ trasporti (stima)', transpCo2 != null ? fmt(transpCo2, 2) : '—', 'tCO₂e'],
-      ];
-
-      doc.autoTable({
-        startY: y,
-        head: [['Indicatore', 'Valore', 'Unità']],
-        body: socialRows,
-        styles: { fontSize: 9, cellPadding: 3 },
-        headStyles: { fillColor: [17, 17, 17], textColor: 255, fontStyle: 'bold', fontSize: 9 },
-        alternateRowStyles: { fillColor: [248, 250, 252] },
-        columnStyles: { 0: { cellWidth: 80 }, 1: { cellWidth: 50, halign: 'right', fontStyle: 'bold' }, 2: { cellWidth: 30, textColor: [100, 116, 139] } },
-        margin: { left: pad, right: pad },
-        didParseCell: (data) => { if (data.cell.raw === '—') data.cell.styles.textColor = [200, 200, 200]; },
-      });
-      y = doc.lastAutoTable.finalY + 10;
-    }
-
-    // ── PAGE 7: Governance ────────────────────────────────────
-    {
-      doc.addPage();
-      doc.setFillColor(22, 163, 74);
-      doc.rect(0, 0, W, 2, 'F');
-      y = 16;
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.setTextColor(17, 17, 17);
-      doc.text('6. Condotta Aziendale e Governance', pad, y);
-      y += 12;
-
-      const antiPolicy   = sv('vsme_anti_policy')  || sv('anti_policy');
-      const antiTraining = n('vsme_anti_training');
-      const corruptCases = n('vsme_corrupt_n')     || n('corrupt_cases');
-      const whistle      = sv('vsme_whistleblow')  || sv('whistle_channel');
-      const mod231       = sv('vsme_231');
-      const boardTotal   = n('vsme_board_total')   || n('board_total');
-      const boardF       = n('vsme_board_f')       || n('board_f');
-      const boardIndep   = n('vsme_board_indep')   || n('board_indep');
-      const boardFpct    = (boardF != null && boardTotal && boardTotal > 0) ? boardF / boardTotal * 100 : null;
-      const boardIpct    = (boardIndep != null && boardTotal && boardTotal > 0) ? boardIndep / boardTotal * 100 : null;
-
-      const govRows = [
-        ['Politica anticorruzione', antiPolicy != null ? antiPolicy : '—', ''],
-        ['Formazione anticorruzione', antiTraining != null ? fmt(antiTraining, 1) + '%' : '—', '% dip.'],
-        ['Casi di corruzione accertati', corruptCases != null ? fmt(corruptCases) : '—', ''],
-        ['Canale whistleblowing', whistle != null ? whistle : '—', ''],
-        ['Modello Organizzativo 231', mod231 != null ? mod231 : '—', ''],
-        ['Componenti CdA (totale)', boardTotal != null ? fmt(boardTotal) : '—', ''],
-        ['di cui donne', boardF != null ? fmt(boardF) + (boardFpct != null ? ' (' + fmt(boardFpct, 1) + '%)' : '') : '—', ''],
-        ['di cui indipendenti', boardIndep != null ? fmt(boardIndep) + (boardIpct != null ? ' (' + fmt(boardIpct, 1) + '%)' : '') : '—', ''],
-      ];
-
-      doc.autoTable({
-        startY: y,
-        head: [['Indicatore', 'Valore', 'Unità']],
-        body: govRows,
-        styles: { fontSize: 9, cellPadding: 3 },
-        headStyles: { fillColor: [17, 17, 17], textColor: 255, fontStyle: 'bold', fontSize: 9 },
-        alternateRowStyles: { fillColor: [248, 250, 252] },
-        columnStyles: { 0: { cellWidth: 80 }, 1: { cellWidth: 60, halign: 'right', fontStyle: 'bold' }, 2: { cellWidth: 30, textColor: [100, 116, 139] } },
-        margin: { left: pad, right: pad },
-        didParseCell: (data) => { if (data.cell.raw === '—') data.cell.styles.textColor = [200, 200, 200]; },
-      });
-      y = doc.lastAutoTable.finalY + 10;
-    }
-
-    // ── FOOTER on all pages ──────────────────────────────────
+    // ══ FOOTER SU TUTTE LE PAGINE ══════════════════════════
     const totalPages = doc.internal.getNumberOfPages();
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
       if (p > 1) {
-        doc.setFillColor(248, 250, 252);
-        doc.rect(0, 285, W, 12, 'F');
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8);
-        doc.setTextColor(156, 163, 175);
-        doc.text(`${c?.name || ''} · Bilancio di Sostenibilità ${c?.year || 2024} · VERA ESG Platform`, pad, 292);
-        doc.text(`Pagina ${p} di ${totalPages}`, W - pad, 292, { align: 'right' });
+        doc.setFillColor(248, 250, 252); doc.rect(0, 285, W, 12, 'F');
+        doc.setFillColor(...bk.p1); doc.rect(0, 285, W, 1, 'F');
+        doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(156,163,175);
+        doc.text(cname+' · Bilancio di Sostenibilità '+year+' · VERA ESG Platform', pad, 293);
+        doc.text('Pagina '+p+' di '+totalPages, W-pad, 293, {align:'right'});
       }
     }
 

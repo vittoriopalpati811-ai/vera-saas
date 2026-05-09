@@ -905,8 +905,8 @@ function _renderReportScreen(c) {
         tbl(['Indicatore','Valore','Unità','Note'], [
           supN     != null ? tr('Fornitori attivi', fmt(supN,0), 'n.') : '',
           n('vsme_supply_key') != null ? tr('Di cui: fornitori chiave/strategici', fmt(n('vsme_supply_key'),0), 'n.') : '',
-          supAudit != null ? tr('Sottoposti a valutazione ESG', fmt(supAudit,1)+'%', '', 'anno '+year) : '',
-          supLocal != null ? tr('Fornitori locali (stesso paese)', fmt(supLocal,1)+'%') : '',
+          supAudit != null ? tr('Sottoposti a valutazione ESG', supN ? fmt(supAudit/supN*100,1)+'% ('+fmt(supAudit,0)+'/'+fmt(supN,0)+')' : fmt(supAudit,0)+' forn.', '', 'anno '+year) : '',
+          supLocal != null ? tr('Fornitori locali (stesso paese)', supN ? fmt(supLocal/supN*100,1)+'% ('+fmt(supLocal,0)+'/'+fmt(supN,0)+')' : fmt(supLocal,0)+' forn.') : '',
           sv('vsme_supply_risk')   ? trQ('Rischi identificati nella supply chain', sv('vsme_supply_risk')) : '',
           sv('vsme_supply_action') ? trQ('Azioni correttive adottate', sv('vsme_supply_action')) : '',
         ].filter(Boolean))
@@ -936,7 +936,7 @@ function _renderReportScreen(c) {
       ${sec('B4-G — Governance · Condotta aziendale · Anticorruzione',
         tbl(['Indicatore','Valore','',''], [
           antiPol  ? tr('Politica anticorruzione formalizzata', antiPol) : '',
-          antiTrn  != null ? tr('Dipendenti formati su anticorruzione', fmt(antiTrn,1)+'%', 'del tot.', 'anno '+year) : '',
+          antiTrn  != null ? tr('Dipendenti formati su anticorruzione', empTotal ? fmt(antiTrn/empTotal*100,1)+'% ('+fmt(antiTrn,0)+'/'+fmt(empTotal,0)+' dip.)' : fmt(antiTrn,0)+' dip.', '', 'anno '+year) : '',
           whistle  ? tr('Sistema whistleblowing', whistle) : '',
           corruptN != null ? tr('Incidenti corruzione confermati', fmt(corruptN,0), 'n.', 'anno '+year) : '',
           m231     ? tr('Modello organizzativo D.Lgs. 231/2001', m231) : '',
@@ -2333,21 +2333,23 @@ const VSME_QUESTIONS = {
     { id:'vsme_train_hrs_f', label:'Ore di formazione per dipendenti donne (totale)', type:'number', placeholder:'es. 480' },
     { id:'vsme_min_wage',    label:'Tutti i dipendenti ricevono una retribuzione pari o superiore al salario minimo di legge / CCNL?',
       type:'select', required:true, options:['Sì — per tutti i dipendenti','Sì — con alcune eccezioni documentate','No'] },
-    { id:'vsme_cba_pct',     label:'Percentuale di dipendenti coperti da contrattazione collettiva / CCNL (%)', type:'number',
-      placeholder:'es. 95', hint:'Include accordi aziendali e di categoria (B10 VSME 2026 §42c)' },
+    { id:'vsme_cba_n',       label:'Dipendenti coperti da contrattazione collettiva / CCNL (numero assoluto)', type:'number',
+      placeholder:'es. 114', hint:'La % sul totale dipendenti viene calcolata automaticamente — B10 VSME 2026 §42c' },
     { id:'vsme_emp_country', label:'Paesi in cui l\'organizzazione ha dipendenti (se operante in più paesi)', type:'textarea',
       placeholder:'es. Italia (120), Germania (15), Polonia (8)\nLasciare vuoto se solo Italia',
       hint:'Obbligatorio se il perimetro copre più paesi (B8 §40c VSME 2026)' },
-    { id:'ohs_med_coverage', label:'Sorveglianza sanitaria: % dipendenti sottoposti a visita medica periodica', type:'number',
-      placeholder:'es. 100' },
+    { id:'ohs_med_coverage', label:'Sorveglianza sanitaria: dipendenti sottoposti a visita medica periodica (numero assoluto)', type:'number',
+      placeholder:'es. 120', hint:'La % sul totale dipendenti viene calcolata automaticamente' },
   ],
 
   /* ── B3-S2: Catena del valore ───────────────────────────── */
   'B3-S2': [
     { id:'vsme_supply_n',    label:'Numero di fornitori attivi nella catena del valore', type:'number', required:true },
     { id:'vsme_supply_key',  label:'Di cui: fornitori chiave / strategici', type:'number' },
-    { id:'vsme_supply_audit',label:'Fornitori sottoposti a valutazione ESG o audit nell\'anno (%)', type:'number' },
-    { id:'vsme_supply_local',label:'Percentuale di fornitori locali (stesso paese) sul totale (%)', type:'number' },
+    { id:'vsme_supply_audit',label:'Fornitori sottoposti a valutazione ESG o audit nell\'anno (numero assoluto)', type:'number',
+      hint:'La % sul totale fornitori viene calcolata automaticamente (÷ fornitori attivi totali)' },
+    { id:'vsme_supply_local',label:'Fornitori locali — stesso paese (numero assoluto)', type:'number',
+      hint:'La % sul totale fornitori viene calcolata automaticamente' },
     { id:'vsme_supply_risk', label:'Rischi sociali o ambientali identificati nella supply chain', type:'textarea',
       placeholder:'es. rischio lavoro minorile in paese X, emissioni elevate fornitore Y' },
     { id:'vsme_supply_action',label:'Azioni correttive adottate verso fornitori a rischio', type:'textarea' },
@@ -2382,8 +2384,8 @@ const VSME_QUESTIONS = {
       options:['Sì — adottata e comunicata a tutti i dipendenti','Sì — adottata ma non ancora comunicata','In corso di adozione','No'] },
     { id:'vsme_anti_doc',      label:'Carica documento politica anticorruzione (opzionale)', type:'file',
       accept:'.pdf,.docx,.doc', hint:'PDF o Word — max 10 MB' },
-    { id:'vsme_anti_training', label:'Dipendenti formati su temi anticorruzione nell\'anno (%)', type:'number',
-      placeholder:'es. 80' },
+    { id:'vsme_anti_training', label:'Dipendenti formati su temi anticorruzione nell\'anno (numero assoluto)', type:'number',
+      placeholder:'es. 24', hint:'La % sul totale dipendenti viene calcolata automaticamente' },
     { id:'vsme_whistleblow',   label:'Sistema di segnalazione illeciti (whistleblowing) disponibile?', type:'select',
       options:['Sì — canale digitale dedicato','Sì — canale interno (email/HR)','No — in fase di adozione','No'] },
     { id:'vsme_corrupt_n',     label:'Incidenti di corruzione confermati nell\'anno', type:'number',
@@ -2465,7 +2467,8 @@ const VSME_QUESTIONS = {
 
   /* C5: Condotta aziendale avanzata */
   'C5': [
-    { id:'c5_ethics_train', label:'Dipendenti che hanno ricevuto formazione su etica/anticorruzione nell\'anno (%)', type:'number' },
+    { id:'c5_ethics_train', label:'Dipendenti che hanno ricevuto formazione su etica/anticorruzione nell\'anno (numero assoluto)', type:'number',
+      hint:'La % sul totale dipendenti viene calcolata automaticamente' },
     { id:'c5_wh_cases',     label:'Segnalazioni ricevute via canale whistleblowing nell\'anno', type:'number' },
     { id:'c5_wh_resolved',  label:'Di cui: chiuse con esito nell\'anno', type:'number' },
     { id:'c5_polit_contrib',label:'Contributi politici erogati nell\'anno (€ — 0 se nessuno)', type:'number' },
@@ -5120,6 +5123,14 @@ async _buildPDF(client) {
     const wRec = n('vsme_waste_rec'); const wTot=n('vsme_waste_t');
     const recPct=(wRec!=null&&wTot&&wTot>0)?wRec/wTot*100:null;
     const supN = n('vsme_supply_n'); const supAud=n('vsme_supply_audit');
+    const supAudPct=(supAud!=null&&supN&&supN>0)?supAud/supN*100:null;
+    const supLoc2=n('vsme_supply_local');
+    const supLocPct=(supLoc2!=null&&supN&&supN>0)?supLoc2/supN*100:null;
+    const cbaN=n('vsme_cba_n'); const cbaPct=(cbaN!=null&&empT&&empT>0)?cbaN/empT*100:null;
+    const antiTrnN=n('vsme_anti_training');
+    const antiTrnPct=(antiTrnN!=null&&empT&&empT>0)?antiTrnN/empT*100:null;
+    const ohsMedN=n('ohs_med_coverage');
+    const ohsMedPct=(ohsMedN!=null&&empT&&empT>0)?ohsMedN/empT*100:null;
     const compl= n('vsme_complaints'); const complR=n('vsme_complaints_res');
     const complPct=(complR!=null&&compl&&compl>0)?complR/compl*100:null;
     const s1t  = ghg.s1?ghg.s1/1000:null;
@@ -5310,7 +5321,7 @@ async _buildPDF(client) {
     y=kpiRow([
       {val:trainP!=null?fmt(trainP,1):'—',label:'Ore formazione/dip.',color:[243,232,255]},
       {val:injur!=null?fmt(injur):'—',label:'Infortuni registrabili',color:[255,237,213]},
-      {val:supAud!=null?fmt(supAud,1)+'%':'—',label:'Fornitori valutati ESG',color:[240,253,244]},
+      {val:supAudPct!=null?fmt(supAudPct,1)+'%':(supAud!=null?fmt(supAud,0)+' forn.':'—'),label:'Fornitori valutati ESG',color:[240,253,244]},
       {val:complPct!=null?fmt(complPct,1)+'%':'—',label:'Reclami risolti',color:[220,252,231]},
     ],y);
     y=barChart('Emissioni GHG per Scope (tCO₂e)',[
@@ -5496,6 +5507,7 @@ async _buildPDF(client) {
       ['Tempo pieno (FTE)',empFt!=null?fmt(empFt):'—',pct(empFt,empT)],
       ['Tempo parziale',empPt!=null?fmt(empPt):'—',pct(empPt,empT)],
       ['Contratti a tempo determinato',empTemp!=null?fmt(empTemp):'—',pct(empTemp,empT)],
+      ['Coperti da contrattazione collettiva (CCNL)',cbaN!=null?fmt(cbaN):'—',cbaPct!=null?fmt(cbaPct,1)+'%':'—'],
     ],y,{0:{cellWidth:88,fontStyle:'bold'},1:{cellWidth:40,halign:'right'},2:{cellWidth:46,halign:'right'}});
 
     // ══ PAG 23 — DIVERSITÀ ═════════════════════════════════
@@ -5538,7 +5550,7 @@ async _buildPDF(client) {
       ['Infortuni ad alta conseguenza',n('ohs_hc_injuries')!=null?fmt(n('ohs_hc_injuries')):'—','n.'],
       ['Ore totali lavorate',hrsW!=null?fmt(hrsW):'—','ore'],
       ['TRIR (per 200.000 ore)',trir!=null?fmt(trir,2):'—','—'],
-      ['Copertura sorveglianza sanitaria',n('ohs_med_coverage')!=null?fmt(n('ohs_med_coverage'),1)+'%':'—','%'],
+      ['Copertura sorveglianza sanitaria',ohsMedPct!=null?fmt(ohsMedPct,1)+'%':(ohsMedN!=null?fmt(ohsMedN,0)+' dip.':'—'),'%'],
       ['Visite mediche effettuate',n('ohs_med_visits')!=null?fmt(n('ohs_med_visits')):'—','n.'],
     ],y,{0:{cellWidth:90,fontStyle:'bold'},1:{cellWidth:44,halign:'right'},2:{cellWidth:40}});
     y=narrative('Principali tipologie di infortuni',sv('ohs_main_types'),y);
@@ -5580,14 +5592,14 @@ async _buildPDF(client) {
     y=kpiRow([
       {val:supN!=null?fmt(supN):'—',label:'Fornitori attivi',color:[219,234,254]},
       {val:supKey!=null?fmt(supKey):'—',label:'Fornitori strategici',color:[220,252,231]},
-      {val:supAud!=null?fmt(supAud,1)+'%':'—',label:'Valutati ESG',color:[254,243,199]},
-      {val:supLoc!=null?fmt(supLoc,1)+'%':'—',label:'Fornitori locali',color:[243,232,255]},
+      {val:supAudPct!=null?fmt(supAudPct,1)+'%':(supAud!=null?fmt(supAud,0)+' forn.':'—'),label:'Valutati ESG',color:[254,243,199]},
+      {val:supLocPct!=null?fmt(supLocPct,1)+'%':(supLoc2!=null?fmt(supLoc2,0)+' forn.':'—'),label:'Fornitori locali',color:[243,232,255]},
     ],y);
     y=tbl(['Indicatore supply chain','Valore'],[
       ['Fornitori attivi nella catena del valore',supN!=null?fmt(supN):'—'],
       ['di cui fornitori chiave / strategici',supKey!=null?fmt(supKey):'—'],
-      ['Fornitori sottoposti a valutazione ESG (%)',supAud!=null?fmt(supAud,1)+'%':'—'],
-      ['Fornitori locali (stesso paese) (%)',supLoc!=null?fmt(supLoc,1)+'%':'—'],
+      ['Fornitori sottoposti a valutazione ESG',supAudPct!=null?fmt(supAudPct,1)+'% ('+fmt(supAud,0)+'/'+fmt(supN,0)+')': supAud!=null?fmt(supAud,0)+' su '+fmt(supN||0,0):'—'],
+      ['Fornitori locali (stesso paese)',supLocPct!=null?fmt(supLocPct,1)+'% ('+fmt(supLoc2,0)+'/'+fmt(supN,0)+')': supLoc2!=null?fmt(supLoc2,0)+' su '+fmt(supN||0,0):'—'],
     ],y,{0:{cellWidth:120,fontStyle:'bold'},1:{cellWidth:54,halign:'right'}});
     y=narrative('Rischi sociali e ambientali nella supply chain',sv('vsme_supply_risk'),y);
     y=narrative('Azioni correttive adottate verso fornitori a rischio',sv('vsme_supply_action'),y);
@@ -5631,7 +5643,7 @@ async _buildPDF(client) {
     doc.addPage(); y=pgTitle('22. Etica Aziendale e Anticorruzione',null,18);
     y=tbl(['Indicatore','Dettaglio'],[
       ['Politica anticorruzione formalizzata',dash(sv('vsme_anti_policy'))],
-      ['Dipendenti formati su anticorruzione (%)',n('vsme_anti_training')!=null?fmt(n('vsme_anti_training'),1)+'%':'—'],
+      ['Dipendenti formati su anticorruzione',antiTrnPct!=null?fmt(antiTrnPct,1)+'% ('+fmt(antiTrnN,0)+' dip.)': (antiTrnN!=null?fmt(antiTrnN,0)+' dip.':'—')],
       ['Canale di whistleblowing disponibile',dash(sv('vsme_whistleblow'))],
       ['Incidenti di corruzione confermati',n('vsme_corrupt_n')!=null?fmt(n('vsme_corrupt_n')):'—'],
       ['Attività di lobbying / relazioni istituzionali',dash(sv('vsme_lobby'))],
@@ -5826,6 +5838,7 @@ async _buildPDF(client) {
       ['SOCIALE — Lavoro','Retribuzione media uomini',wageM!=null?fmt(wageM):'—','€/anno','baseline'],
       ['SOCIALE — Lavoro','Retribuzione media donne',wageF!=null?fmt(wageF):'—','€/anno','baseline'],
       ['SOCIALE — Lavoro','Gender Pay Gap',gpg!=null?fmt(gpg,1):'—','%','baseline'],
+      ['SOCIALE — Lavoro','Copertura contrattazione collettiva (CCNL)',cbaPct!=null?fmt(cbaPct,1):cbaN!=null?fmt(cbaN,0)+' dip.':'—','%','baseline'],
       ['SOCIALE — Salute','Infortuni registrabili',injur!=null?fmt(injur):'—','n.','baseline'],
       ['SOCIALE — Salute','TRIR',trir!=null?fmt(trir,2):'—','per 200k ore','baseline'],
       ['SOCIALE — Formazione','Ore totali formazione',trainT!=null?fmt(trainT):'—','ore','baseline'],
@@ -5833,12 +5846,12 @@ async _buildPDF(client) {
       ['SOCIALE — Assunzioni','Nuove assunzioni',hireT!=null?fmt(hireT):'—','n.','baseline'],
       ['SOCIALE — Assunzioni','Tasso turnover',(turnT!=null&&empT)?fmt(turnT/empT*100,1):'—','%','baseline'],
       ['SOCIALE — Supply','Fornitori attivi',supN!=null?fmt(supN):'—','n.','baseline'],
-      ['SOCIALE — Supply','% fornitori valutati ESG',supAud!=null?fmt(supAud,1):'—','%','baseline'],
+      ['SOCIALE — Supply','Fornitori valutati ESG',supAudPct!=null?fmt(supAudPct,1):supAud!=null?fmt(supAud,0)+' n.':'—','%','baseline'],
       ['SOCIALE — Clienti','Reclami ricevuti',compl!=null?fmt(compl):'—','n.','baseline'],
       ['SOCIALE — Clienti','Tasso risoluzione reclami',complPct!=null?fmt(complPct,1):'—','%','baseline'],
       ['GOVERNANCE','Componenti CdA',boardT!=null?fmt(boardT):'—','n.','baseline'],
       ['GOVERNANCE','% donne nel CdA',boardFp!=null?fmt(boardFp,1):'—','%','baseline'],
-      ['GOVERNANCE','Formazione anticorruzione (%)',n('vsme_anti_training')!=null?fmt(n('vsme_anti_training'),1):'—','%','baseline'],
+      ['GOVERNANCE','Formazione anticorruzione',antiTrnPct!=null?fmt(antiTrnPct,1):antiTrnN!=null?fmt(antiTrnN,0)+' dip.':'—','%','baseline'],
       ['GOVERNANCE','Incidenti corruzione confermati',n('vsme_corrupt_n')!=null?fmt(n('vsme_corrupt_n')):'—','n.','baseline'],
       ['GOVERNANCE','Incidenti violazione dati (GDPR)',n('vsme_privacy')!=null?fmt(n('vsme_privacy')):'—','n.','baseline'],
     ];

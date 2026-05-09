@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VERA ESG — Bilancio di Sostenibilità in 30 minuti</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --g:#22c55e;--g2:#16a34a;--g3:#bbf7d0;
+  --dark:#060d06;--dark2:#0b160b;--dark3:#111e11;
+  --light:#f3faf3;--mono:'Courier New',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--dark);color:#fff;font-family:'Inter',system-ui,sans-serif;overflow-x:hidden}
+
+/* ── LOADER ── */
+#loader{
+  position:fixed;inset:0;background:#000;z-index:1000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  transition:opacity .6s ease;
+}
+#loader-bar-wrap{width:280px;height:1px;background:rgba(255,255,255,0.08)}
+#loader-bar{height:100%;width:0;background:var(--g);transition:width .04s linear}
+#loader-meta{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,0.3);
+  display:flex;justify-content:space-between;width:280px;letter-spacing:.1em}
+
+/* ── NAV ── */
+#nav{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  padding:20px 48px;display:flex;align-items:center;justify-content:space-between;
+  transition:background .3s,border-color .3s;
+}
+.nav-logo{font-family:var(--mono);font-size:16px;font-weight:700;letter-spacing:.25em;color:#fff}
+.nav-logo em{font-style:normal;color:var(--g)}
+.nav-links{display:flex;gap:36px}
+.nav-links a{font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:rgba(255,255,255,0.45);
+  text-decoration:none;text-transform:uppercase;transition:color .2s}
+.nav-links a:hover{color:var(--g)}
+.nav-cta{
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+  padding:10px 22px;border:1px solid rgba(34,197,94,.5);color:var(--g);
+  text-decoration:none;transition:all .2s;
+}
+.nav-cta:hover{background:var(--g);color:#000;border-color:var(--g)}
+
+/* ── HERO ── */
+#hero{
+  height:100vh;display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+  background:radial-gradient(ellipse 120% 80% at 50% 110%, rgba(34,197,94,.07) 0%, transparent 60%),
+             linear-gradient(170deg,#050d05 0%,#091609 50%,#060e06 100%);
+}
+/* animated particle dots */
+.hero-particles{position:absolute;inset:0;pointer-events:none}
+.hero-particles span{
+  position:absolute;width:1px;height:1px;background:var(--g);border-radius:50%;
+  opacity:0;animation:particleFade var(--dur,4s) var(--delay,0s) infinite;
+}
+@keyframes particleFade{0%,100%{opacity:0;transform:translateY(0)}50%{opacity:.4;transform:translateY(-20px)}}
+
+/* corner brackets */
+.corner{position:absolute;width:24px;height:24px;pointer-events:none}
+.corner-tl{top:48px;left:48px;border-top:1px solid rgba(34,197,94,.35);border-left:1px solid rgba(34,197,94,.35)}
+.corner-tr{top:48px;right:48px;border-top:1px solid rgba(34,197,94,.35);border-right:1px solid rgba(34,197,94,.35)}
+.corner-bl{bottom:48px;left:48px;border-bottom:1px solid rgba(34,197,94,.35);border-left:1px solid rgba(34,197,94,.35)}
+.corner-br{bottom:48px;right:48px;border-bottom:1px solid rgba(34,197,94,.35);border-right:1px solid rgba(34,197,94,.35)}
+.coord{
+  position:absolute;font-family:var(--mono);font-size:9px;
+  color:rgba(34,197,94,.3);letter-spacing:.1em;pointer-events:none;
+}
+.coord-tl{top:56px;left:82px}.coord-tr{top:56px;right:82px;text-align:right}
+.coord-bl{bottom:56px;left:82px}.coord-br{bottom:56px;right:82px;text-align:right}
+
+.hero-content{text-align:center;position:relative;z-index:2;max-width:860px;padding:0 40px}
+.hero-eyebrow{
+  font-family:var(--mono);font-size:10px;letter-spacing:.35em;color:var(--g);
+  text-transform:uppercase;margin-bottom:28px;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+}
+.hero-eyebrow::before,.hero-eyebrow::after{content:'';width:32px;height:1px;background:var(--g);opacity:.4}
+h1{font-size:clamp(44px,7.5vw,88px);font-weight:800;line-height:1.03;letter-spacing:-.025em;margin-bottom:28px}
+h1 em{font-style:normal;color:var(--g)}
+.hero-sub{font-size:17px;color:rgba(255,255,255,.5);line-height:1.7;max-width:520px;margin:0 auto 44px}
+.hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btn-p{
+  padding:14px 34px;background:var(--g);color:#000;
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;
+  text-decoration:none;font-weight:700;transition:all .2s;
+}
+.btn-p:hover{background:#16a34a;transform:translateY(-1px)}
+.btn-g{
+  padding:14px 34px;border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.65);
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;
+  text-decoration:none;transition:all .2s;
+}
+.btn-g:hover{border-color:var(--g);color:var(--g)}
+.scroll-cue{
+  position:absolute;bottom:32px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+}
+.scroll-cue span{font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:rgba(255,255,255,.2)}
+.scroll-line{width:1px;height:44px;background:linear-gradient(to bottom,rgba(34,197,94,.5),transparent);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:.3;transform:scaleY(1)}50%{opacity:1;transform:scaleY(1.15)}}
+
+/* ── BLUEPRINT SECTION ── */
+#blueprint{position:relative;min-height:500vh}
+.bp-sticky{
+  position:sticky;top:0;height:100vh;
+  overflow:hidden;display:flex;align-items:center;
+}
+.bp-grid{
+  position:absolute;inset:0;
+  background-image:linear-gradient(rgba(34,197,94,.04) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(34,197,94,.04) 1px,transparent 1px);
+  background-size:56px 56px;
+}
+.bp-glow{
+  position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 60% 60% at 50% 50%,rgba(34,197,94,.04) 0%,transparent 70%);
+}
+
+/* Left nav */
+.bp-nav{
+  position:absolute;left:44px;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:0;z-index:10;
+}
+.bp-nav-item{
+  display:flex;align-items:center;gap:10px;padding:12px 0;cursor:pointer;
+  position:relative;
+}
+.bp-nav-dot{
+  width:6px;height:6px;border:1px solid rgba(255,255,255,.2);
+  background:transparent;flex-shrink:0;transition:all .3s;
+}
+.bp-nav-label{
+  font-family:var(--mono);font-size:9px;letter-spacing:.18em;
+  color:rgba(255,255,255,.25);text-transform:uppercase;transition:color .3s;
+}
+.bp-nav-item.active .bp-nav-dot{background:var(--g);border-color:var(--g);box-shadow:0 0 6px var(--g)}
+.bp-nav-item.active .bp-nav-label{color:rgba(255,255,255,.8)}
+
+/* SVG area */
+.bp-svg{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:480px;height:560px;
+}
+.bp-svg svg{width:100%;height:100%;overflow:visible}
+
+/* Right text panels */
+.bp-text{
+  position:absolute;right:72px;top:50%;transform:translateY(-50%);
+  width:300px;
+}
+.bp-panel{
+  position:absolute;top:0;left:0;width:100%;
+  opacity:0;transform:translateY(16px);transition:opacity .4s,transform .4s;
+  pointer-events:none;
+}
+.bp-panel.active{opacity:1;transform:translateY(0);pointer-events:auto}
+.bp-tag{
+  font-family:var(--mono);font-size:9px;letter-spacing:.25em;color:var(--g);
+  margin-bottom:14px;display:flex;align-items:center;gap:10px;
+}
+.bp-tag::before{content:'';width:16px;height:1px;background:var(--g)}
+.bp-panel h2{font-size:26px;font-weight:700;line-height:1.22;margin-bottom:14px}
+.bp-panel p{font-size:13px;color:rgba(255,255,255,.5);line-height:1.75;margin-bottom:22px}
+.bp-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.bp-list li{
+  font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.55);
+  display:flex;align-items:flex-start;gap:10px;
+}
+.bp-list li::before{content:'\\2198';color:var(--g);flex-shrink:0}
+
+/* ── PROCESS (LIGHT) ── */
+#process{background:var(--light);color:#071207;padding:120px 80px}
+.process-inner{max-width:1160px;margin:0 auto}
+.sec-tag{font-family:var(--mono);font-size:10px;letter-spacing:.25em;color:var(--g2);margin-bottom:14px;text-transform:uppercase}
+.sec-title{font-size:clamp(30px,4vw,54px);font-weight:800;line-height:1.1;color:#071207;margin-bottom:60px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:48px}
+.step-n{font-family:var(--mono);font-size:10px;color:rgba(7,18,7,.25);margin-bottom:8px}
+.step-rule{width:36px;height:2px;background:var(--g2);margin-bottom:20px}
+.step h3{font-size:17px;font-weight:700;color:#071207;margin-bottom:10px}
+.step p{font-size:13px;color:rgba(7,18,7,.55);line-height:1.75}
+
+/* ── STANDARDS (DARK) ── */
+#standards{background:var(--dark2);padding:110px 80px;border-top:1px solid rgba(34,197,94,.07)}
+.std-inner{max-width:1160px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+.std-frame{border:1px solid rgba(34,197,94,.18);position:relative;padding:2px}
+.std-frame::before{
+  content:attr(data-label);position:absolute;top:-1px;left:18px;
+  font-family:var(--mono);font-size:8px;letter-spacing:.15em;
+  background:var(--dark2);padding:0 8px;color:var(--g);text-transform:uppercase;
+}
+.std-inner-box{background:rgba(34,197,94,.025);padding:44px 40px;display:flex;flex-direction:column;gap:18px}
+.std-badge{
+  display:flex;align-items:center;gap:18px;padding:16px 20px;
+  border:1px solid rgba(34,197,94,.12);transition:all .2s;cursor:default;
+}
+.std-badge:hover{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.05)}
+.std-ico{
+  width:38px;height:38px;flex-shrink:0;background:rgba(34,197,94,.08);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:11px;font-weight:700;color:var(--g);letter-spacing:.05em;
+}
+.std-bname{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--g);margin-bottom:3px}
+.std-bdesc{font-size:12px;color:rgba(255,255,255,.38)}
+.std-text .sec-tag{color:var(--g)}
+.std-text .sec-title{color:#fff;margin-bottom:24px}
+.std-text > p{color:rgba(255,255,255,.5);font-size:14px;line-height:1.8;margin-bottom:36px}
+.std-checklist{display:flex;flex-direction:column;gap:12px}
+.std-checklist li{
+  font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.55);
+  display:flex;align-items:center;gap:12px;list-style:none;
+}
+.std-checklist li::before{content:'';width:5px;height:5px;background:var(--g);flex-shrink:0}
+
+/* ── CTA ── */
+#cta{
+  background:var(--dark3);padding:140px 80px;text-align:center;
+  position:relative;overflow:hidden;
+}
+#cta::before{
+  content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:700px;height:700px;border-radius:50%;
+  background:radial-gradient(circle,rgba(34,197,94,.055) 0%,transparent 70%);
+  pointer-events:none;
+}
+#cta h2{font-size:clamp(34px,5.5vw,72px);font-weight:800;line-height:1.07;
+  max-width:640px;margin:0 auto 20px}
+#cta > p{color:rgba(255,255,255,.45);font-size:16px;margin-bottom:56px}
+.cta-stats{display:flex;justify-content:center;gap:72px;margin-bottom:60px;flex-wrap:wrap}
+.cta-stat-n{font-size:44px;font-weight:800;color:var(--g);line-height:1}
+.cta-stat-l{font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:rgba(255,255,255,.3);margin-top:6px;text-transform:uppercase}
+
+/* ── FOOTER ── */
+footer{
+  background:#020702;padding:36px 56px;
+  display:flex;justify-content:space-between;align-items:center;
+  border-top:1px solid rgba(255,255,255,.04);
+}
+.f-logo{font-family:var(--mono);font-size:13px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.2em}
+.f-logo em{font-style:normal;color:var(--g)}
+.f-copy{font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.18);letter-spacing:.05em}
+
+/* ── REVEAL UTILITY ── */
+.reveal{opacity:0;transform:translateY(32px);transition:opacity .7s,transform .7s}
+.reveal.in{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div id="loader-bar-wrap"><div id="loader-bar"></div></div>
+  <div id="loader-meta"><span>LOADING</span><span id="loader-n">0 / 100</span></div>
+</div>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-logo">VER<em>A</em></div>
+  <div class="nav-links">
+    <a href="#">Piattaforma</a>
+    <a href="#">Standard</a>
+    <a href="#">Pricing</a>
+  </div>
+  <a href="#" class="nav-cta">Inizia ora &rarr;</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-particles" id="particles"></div>
+  <div class="corner corner-tl"></div>
+  <div class="corner corner-tr"></div>
+  <div class="corner corner-bl"></div>
+  <div class="corner corner-br"></div>
+  <span class="coord coord-tl">48.2&deg; N &mdash; 16.3&deg; E</span>
+  <span class="coord coord-tr">ESG / VSME 2026</span>
+  <span class="coord coord-bl">REV. 2.0 &mdash; 2026</span>
+  <span class="coord coord-br">VERA-ESG.COM</span>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Piattaforma ESG certificata</div>
+    <h1>Il tuo Bilancio<br>di Sostenibilit&agrave;<br><em>in 30 minuti</em></h1>
+    <p class="hero-sub">Dalla raccolta dati al PDF da 43 pagine conforme VSME 2026 e GRI Standards. Zero consulenti. Zero fogli Excel.</p>
+    <div class="hero-btns">
+      <a href="#" class="btn-p">Genera il report &rarr;</a>
+      <a href="#" class="btn-g">Vedi un esempio</a>
+    </div>
+  </div>
+  <div class="scroll-cue">
+    <span>SCROLL</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- BLUEPRINT SCROLL SECTION -->
+<section id="blueprint">
+  <div class="bp-sticky">
+    <div class="bp-grid"></div>
+    <div class="bp-glow"></div>
+
+    <!-- Side nav -->
+    <div class="bp-nav">
+      <div class="bp-nav-item active" data-i="0">
+        <div class="bp-nav-dot"></div>
+        <span class="bp-nav-label">Overview</span>
+      </div>
+      <div class="bp-nav-item" data-i="1">
+        <div class="bp-nav-dot"></div>
+        <span class="bp-nav-label">Ambiente</span>
+      </div>
+      <div class="bp-nav-item" data-i="2">
+        <div class="bp-nav-dot"></div>
+        <span class="bp-nav-label">Sociale</span>
+      </div>
+      <div class="bp-nav-item" data-i="3">
+        <div class="bp-nav-dot"></div>
+        <span class="bp-nav-label">Governance</span>
+      </div>
+    </div>
+
+    <!-- ESG Report SVG Blueprint -->
+    <div class="bp-svg">
+      <svg viewBox="0 0 480 560" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- DOCUMENT OUTLINE -->
+        <rect id="sv-doc" x="72" y="30" width="336" height="490" rx="3"
+          stroke="rgba(34,197,94,0.35)" stroke-width="1.5"/>
+
+        <!-- PAGE FOLD corner -->
+        <polyline id="sv-fold1" points="348,30 408,30 408,88"
+          stroke="rgba(34,197,94,0.25)" stroke-width="1"/>
+        <polyline id="sv-fold2" points="348,30 348,88 408,88"
+          stroke="rgba(34,197,94,0.1)" stroke-width="1"/>
+
+        <!-- HEADER BAR -->
+        <rect id="sv-hdr" x="72" y="30" width="336" height="44" rx="3"
+          fill="rgba(34,197,94,0.05)" stroke="rgba(34,197,94,0.15)" stroke-width="1"/>
+        <line id="sv-hdrline" x1="96" y1="52" x2="200" y2="52"
+          stroke="rgba(34,197,94,0.55)" stroke-width="1.5"/>
+
+        <!-- Top divider -->
+        <line id="sv-div0" x1="72" y1="74" x2="408" y2="74"
+          stroke="rgba(34,197,94,0.15)" stroke-width="1"/>
+
+        <!-- ─── AMBIENTE BLOCK ─── -->
+        <!-- Badge -->
+        <rect id="sv-ebadge" x="88" y="90" width="66" height="16" rx="1"
+          fill="rgba(34,197,94,0.1)" stroke="rgba(34,197,94,0.4)" stroke-width="1"/>
+
+        <!-- Bar chart axes -->
+        <line id="sv-xax" x1="86" y1="174" x2="220" y2="174"
+          stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+        <line id="sv-yax" x1="86" y1="118" x2="86" y2="174"
+          stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+
+        <!-- Bars (height animated via JS) -->
+        <rect class="sv-bar" id="sv-b1" x="96"  y="174" width="22" height="0"
+          fill="rgba(34,197,94,0.4)" data-h="48"/>
+        <rect class="sv-bar" id="sv-b2" x="124" y="174" width="22" height="0"
+          fill="rgba(34,197,94,0.5)" data-h="38"/>
+        <rect class="sv-bar" id="sv-b3" x="152" y="174" width="22" height="0"
+          fill="rgba(34,197,94,0.62)" data-h="30"/>
+        <rect class="sv-bar" id="sv-b4" x="180" y="174" width="22" height="0"
+          fill="rgba(34,197,94,0.8)" data-h="22"/>
+
+        <!-- Energy donut -->
+        <circle id="sv-donut-bg" cx="290" cy="143" r="30"
+          stroke="rgba(34,197,94,0.1)" stroke-width="7" fill="none"/>
+        <circle id="sv-donut-arc" cx="290" cy="143" r="30"
+          stroke="rgba(34,197,94,0.7)" stroke-width="7" fill="none"
+          stroke-dasharray="188.5" stroke-dashoffset="188.5"
+          stroke-linecap="round" transform="rotate(-90 290 143)"/>
+        <!-- trend arrow -->
+        <polyline id="sv-trend" points="242,160 260,148 278,154 296,138"
+          stroke="rgba(34,197,94,0.5)" stroke-width="1.5" fill="none"/>
+        <polygon id="sv-trend-arrow" points="296,134 302,141 289,141"
+          fill="rgba(34,197,94,0.6)" stroke="none"/>
+
+        <!-- Divider 1 -->
+        <line id="sv-div1" x1="88" y1="190" x2="392" y2="190"
+          stroke="rgba(255,255,255,0.06)" stroke-width="1" stroke-dasharray="4 4"/>
+
+        <!-- ─── SOCIALE BLOCK ─── -->
+        <rect id="sv-sbadge" x="88" y="202" width="54" height="16" rx="1"
+          fill="rgba(96,165,250,0.1)" stroke="rgba(96,165,250,0.4)" stroke-width="1"/>
+
+        <!-- People network -->
+        <!-- center node -->
+        <circle id="sv-nc" cx="168" cy="272" r="12"
+          fill="rgba(96,165,250,0.1)" stroke="rgba(96,165,250,0.5)" stroke-width="1.5"/>
+        <!-- satellite lines + nodes -->
+        <line id="sv-l1" x1="168" y1="260" x2="168" y2="234"
+          stroke="rgba(96,165,250,0.22)" stroke-width="1"/>
+        <circle id="sv-n1" cx="168" cy="228" r="6"
+          fill="rgba(96,165,250,0.15)" stroke="rgba(96,165,250,0.4)" stroke-width="1"/>
+        <line id="sv-l2" x1="178" y1="264" x2="198" y2="244"
+          stroke="rgba(96,165,250,0.22)" stroke-width="1"/>
+        <circle id="sv-n2" cx="204" cy="238" r="6"
+          fill="rgba(96,165,250,0.15)" stroke="rgba(96,165,250,0.4)" stroke-width="1"/>
+        <line id="sv-l3" x1="158" y1="264" x2="138" y2="244"
+          stroke="rgba(96,165,250,0.22)" stroke-width="1"/>
+        <circle id="sv-n3" cx="132" cy="238" r="6"
+          fill="rgba(96,165,250,0.15)" stroke="rgba(96,165,250,0.4)" stroke-width="1"/>
+        <line id="sv-l4" x1="180" y1="274" x2="206" y2="274"
+          stroke="rgba(96,165,250,0.22)" stroke-width="1"/>
+        <circle id="sv-n4" cx="213" cy="274" r="6"
+          fill="rgba(96,165,250,0.15)" stroke="rgba(96,165,250,0.4)" stroke-width="1"/>
+        <line id="sv-l5" x1="156" y1="274" x2="130" y2="274"
+          stroke="rgba(96,165,250,0.22)" stroke-width="1"/>
+        <circle id="sv-n5" cx="123" cy="274" r="6"
+          fill="rgba(96,165,250,0.15)" stroke="rgba(96,165,250,0.4)" stroke-width="1"/>
+
+        <!-- Progress bars (social KPIs) -->
+        <!-- track 1 -->
+        <rect id="sv-pt1" x="240" y="238" width="144" height="4" rx="2"
+          fill="rgba(255,255,255,0.05)"/>
+        <rect class="sv-prog" id="sv-p1" x="240" y="238" width="0" height="4" rx="2"
+          fill="rgba(96,165,250,0.55)" data-w="103"/>
+        <!-- track 2 -->
+        <rect id="sv-pt2" x="240" y="256" width="144" height="4" rx="2"
+          fill="rgba(255,255,255,0.05)"/>
+        <rect class="sv-prog" id="sv-p2" x="240" y="256" width="0" height="4" rx="2"
+          fill="rgba(96,165,250,0.55)" data-w="130"/>
+        <!-- track 3 -->
+        <rect id="sv-pt3" x="240" y="274" width="144" height="4" rx="2"
+          fill="rgba(255,255,255,0.05)"/>
+        <rect class="sv-prog" id="sv-p3" x="240" y="274" width="0" height="4" rx="2"
+          fill="rgba(96,165,250,0.55)" data-w="86"/>
+
+        <!-- Divider 2 -->
+        <line id="sv-div2" x1="88" y1="305" x2="392" y2="305"
+          stroke="rgba(255,255,255,0.06)" stroke-width="1" stroke-dasharray="4 4"/>
+
+        <!-- ─── GOVERNANCE BLOCK ─── -->
+        <rect id="sv-gbadge" x="88" y="318" width="80" height="16" rx="1"
+          fill="rgba(167,139,250,0.1)" stroke="rgba(167,139,250,0.4)" stroke-width="1"/>
+
+        <!-- Hexagons -->
+        <polygon id="sv-h0"
+          points="240,348 264,362 264,390 240,404 216,390 216,362"
+          stroke="rgba(167,139,250,0.45)" stroke-width="1.5"
+          fill="rgba(167,139,250,0.04)"/>
+        <polygon id="sv-h1"
+          points="278,340 296,350 296,370 278,380 260,370 260,350"
+          stroke="rgba(167,139,250,0.25)" stroke-width="1"
+          fill="rgba(167,139,250,0.02)"/>
+        <polygon id="sv-h2"
+          points="202,340 220,350 220,370 202,380 184,370 184,350"
+          stroke="rgba(167,139,250,0.25)" stroke-width="1"
+          fill="rgba(167,139,250,0.02)"/>
+        <polygon id="sv-h3"
+          points="240,400 258,410 258,430 240,440 222,430 222,410"
+          stroke="rgba(167,139,250,0.25)" stroke-width="1"
+          fill="rgba(167,139,250,0.02)"/>
+        <!-- connector lines -->
+        <line id="sv-hc1" x1="264" y1="375" x2="260" y2="375"
+          stroke="rgba(167,139,250,0.2)" stroke-width="1"/>
+        <line id="sv-hc2" x1="216" y1="375" x2="220" y2="375"
+          stroke="rgba(167,139,250,0.2)" stroke-width="1"/>
+        <line id="sv-hc3" x1="240" y1="404" x2="240" y2="400"
+          stroke="rgba(167,139,250,0.2)" stroke-width="1"/>
+
+        <!-- ─── CERTIFICATION STAMP ─── -->
+        <circle id="sv-cert1" cx="356" cy="390" r="44"
+          stroke="rgba(34,197,94,0.22)" stroke-width="1"
+          stroke-dasharray="5 4" fill="none"/>
+        <circle id="sv-cert2" cx="356" cy="390" r="35"
+          stroke="rgba(34,197,94,0.35)" stroke-width="1" fill="none"/>
+        <circle id="sv-cert3" cx="356" cy="390" r="26"
+          stroke="rgba(34,197,94,0.2)" stroke-width="1" fill="rgba(34,197,94,0.03)"/>
+
+        <!-- BOTTOM LINE -->
+        <line id="sv-bot" x1="72" y1="500" x2="408" y2="500"
+          stroke="rgba(34,197,94,0.15)" stroke-width="1"/>
+
+        <!-- TEXT LABELS (fade in via opacity animation) -->
+        <text class="sv-txt" id="t-hdr" x="224" y="56" text-anchor="middle"
+          font-family="Courier New" font-size="8" letter-spacing="3"
+          fill="rgba(34,197,94,0.6)" opacity="0">BILANCIO DI SOSTENIBILITA 2025</text>
+
+        <text class="sv-txt" id="t-e" x="122" y="102" text-anchor="middle"
+          font-family="Courier New" font-size="7" letter-spacing="2"
+          fill="rgba(34,197,94,0.85)" opacity="0">AMBIENTE</text>
+        <text class="sv-txt" id="t-ghg" x="88" y="118"
+          font-family="Courier New" font-size="6.5" fill="rgba(255,255,255,0.28)" opacity="0">GHG EMISSIONS tCO2e</text>
+        <text class="sv-txt" id="t-y1" x="96"  y="184" font-family="Courier New" font-size="6" fill="rgba(255,255,255,0.22)" opacity="0">2022</text>
+        <text class="sv-txt" id="t-y2" x="124" y="184" font-family="Courier New" font-size="6" fill="rgba(255,255,255,0.22)" opacity="0">2023</text>
+        <text class="sv-txt" id="t-y3" x="152" y="184" font-family="Courier New" font-size="6" fill="rgba(255,255,255,0.22)" opacity="0">2024</text>
+        <text class="sv-txt" id="t-y4" x="180" y="184" font-family="Courier New" font-size="6" fill="rgba(34,197,94,0.7)" opacity="0">2025</text>
+        <text class="sv-txt" id="t-pct" x="290" y="140" text-anchor="middle"
+          font-family="Courier New" font-size="9" font-weight="bold"
+          fill="rgba(34,197,94,0.9)" opacity="0">67%</text>
+        <text class="sv-txt" id="t-ren" x="290" y="151" text-anchor="middle"
+          font-family="Courier New" font-size="6" fill="rgba(255,255,255,0.3)" opacity="0">RINNOVABILI</text>
+
+        <text class="sv-txt" id="t-s" x="116" y="214" text-anchor="middle"
+          font-family="Courier New" font-size="7" letter-spacing="2"
+          fill="rgba(147,197,253,0.85)" opacity="0">SOCIALE</text>
+        <text class="sv-txt" id="t-emp" x="168" y="276" text-anchor="middle"
+          font-family="Courier New" font-size="7" font-weight="bold"
+          fill="rgba(96,165,250,0.8)" opacity="0">248</text>
+        <text class="sv-txt" id="t-k1" x="240" y="233" font-family="Courier New" font-size="6.5" fill="rgba(255,255,255,0.22)" opacity="0">CCNL COVERAGE</text>
+        <text class="sv-txt" id="t-k2" x="240" y="251" font-family="Courier New" font-size="6.5" fill="rgba(255,255,255,0.22)" opacity="0">GENDER PAY GAP</text>
+        <text class="sv-txt" id="t-k3" x="240" y="269" font-family="Courier New" font-size="6.5" fill="rgba(255,255,255,0.22)" opacity="0">TRAINING h/dip</text>
+
+        <text class="sv-txt" id="t-g" x="130" y="330" text-anchor="middle"
+          font-family="Courier New" font-size="7" letter-spacing="2"
+          fill="rgba(196,181,253,0.85)" opacity="0">GOVERNANCE</text>
+        <text class="sv-txt" id="t-cda" x="240" y="379" text-anchor="middle"
+          font-family="Courier New" font-size="7" fill="rgba(196,181,253,0.6)" opacity="0">CDA</text>
+        <text class="sv-txt" id="t-c1" x="356" y="385" text-anchor="middle"
+          font-family="Courier New" font-size="7" letter-spacing="1"
+          fill="rgba(34,197,94,0.55)" opacity="0">VSME 2026</text>
+        <text class="sv-txt" id="t-c2" x="356" y="397" text-anchor="middle"
+          font-family="Courier New" font-size="11" font-weight="bold"
+          fill="rgba(34,197,94,0.85)" opacity="0">VERA</text>
+        <text class="sv-txt" id="t-c3" x="356" y="408" text-anchor="middle"
+          font-family="Courier New" font-size="6" letter-spacing="2"
+          fill="rgba(34,197,94,0.45)" opacity="0">CERTIFICATO</text>
+        <text class="sv-txt" id="t-footer" x="240" y="514" text-anchor="middle"
+          font-family="Courier New" font-size="6.5"
+          fill="rgba(255,255,255,0.12)" opacity="0">GENERATO DA VERA ESG PLATFORM — CONFORME EFRAG VSME 2026</text>
+      </svg>
+    </div>
+
+    <!-- Text panels -->
+    <div class="bp-text">
+      <div class="bp-panel active" id="panel-0">
+        <div class="bp-tag">Overview</div>
+        <h2>Il report si assembla mentre rispondi</h2>
+        <p>VERA costruisce il tuo Bilancio di Sostenibilit&agrave; in tempo reale. Ogni risposta popola automaticamente le sezioni E, S, G del documento finale.</p>
+        <ul class="bp-list">
+          <li>43 pagine di report conforme</li>
+          <li>Compilazione in ~30 minuti</li>
+          <li>Export PDF immediato</li>
+        </ul>
+      </div>
+      <div class="bp-panel" id="panel-1">
+        <div class="bp-tag">E &mdash; Ambiente</div>
+        <h2>Emissioni GHG, energia e acqua</h2>
+        <p>Calcola Scope 1, 2 e 3 secondo il GHG Protocol con fattori ISPRA 2024. I grafici si generano in automatico dai tuoi dati.</p>
+        <ul class="bp-list">
+          <li>Scope 1, 2, 3 (9 categorie)</li>
+          <li>Mix energetico e rinnovabili</li>
+          <li>Consumi idrici e rifiuti</li>
+        </ul>
+      </div>
+      <div class="bp-panel" id="panel-2">
+        <div class="bp-tag">S &mdash; Sociale</div>
+        <h2>Persone, diversit&agrave; e sicurezza</h2>
+        <p>Dipendenti, contrattazione collettiva, formazione, parit&agrave; di genere, salute e sicurezza. Le percentuali si calcolano in automatico dai valori assoluti.</p>
+        <ul class="bp-list">
+          <li>Struttura forza lavoro</li>
+          <li>Diversity &amp; Inclusion</li>
+          <li>Infortuni e OHS</li>
+        </ul>
+      </div>
+      <div class="bp-panel" id="panel-3">
+        <div class="bp-tag">G &mdash; Governance</div>
+        <h2>Struttura, etica e compliance</h2>
+        <p>Composizione del CDA, politiche anticorruzione, gestione dei rischi ESG e conformit&agrave; normativa. Tutto documentato nel report finale con timbro di certificazione.</p>
+        <ul class="bp-list">
+          <li>Composizione CDA</li>
+          <li>Codice etico e anticorruzione</li>
+          <li>Risk management ESG</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section id="process">
+  <div class="process-inner">
+    <div class="sec-tag reveal">Come funziona</div>
+    <div class="sec-title reveal">Dalla raccolta dati<br>al report certificato</div>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-n">01 &mdash;</div>
+        <div class="step-rule"></div>
+        <h3>Rispondi al questionario</h3>
+        <p>Guida passo-passo sui moduli VSME 2026: Basic (B1&ndash;B11) e Comprehensive (C1&ndash;C9). Ogni domanda spiega perch&eacute; il dato &egrave; necessario.</p>
+      </div>
+      <div class="step reveal">
+        <div class="step-n">02 &mdash;</div>
+        <div class="step-rule"></div>
+        <h3>VERA elabora i dati</h3>
+        <p>Emissioni GHG, percentuali, benchmark di settore e indicatori derivati vengono calcolati automaticamente. Nessun foglio Excel.</p>
+      </div>
+      <div class="step reveal">
+        <div class="step-n">03 &mdash;</div>
+        <div class="step-rule"></div>
+        <h3>Scarica il PDF da 43 pagine</h3>
+        <p>Report professionale con grafica brandizzata, indici GRI, sezioni VSME, grafici e tabelle. Pronto per CDA, banche e stakeholder.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STANDARDS -->
+<section id="standards">
+  <div class="std-inner">
+    <div class="std-frame" data-label="Standard supportati">
+      <div class="std-inner-box">
+        <div class="std-badge reveal">
+          <div class="std-ico">VSME</div>
+          <div>
+            <div class="std-bname">EFRAG VSME 2026</div>
+            <div class="std-bdesc">Voluntary Sustainability Reporting &mdash; PMI</div>
+          </div>
+        </div>
+        <div class="std-badge reveal">
+          <div class="std-ico">GRI</div>
+          <div>
+            <div class="std-bname">GRI Standards</div>
+            <div class="std-bdesc">Global Reporting Initiative &mdash; riferimento globale</div>
+          </div>
+        </div>
+        <div class="std-badge reveal">
+          <div class="std-ico">GHG</div>
+          <div>
+            <div class="std-bname">GHG Protocol</div>
+            <div class="std-bdesc">Scope 1, 2, 3 &mdash; fattori ISPRA / DEFRA 2024</div>
+          </div>
+        </div>
+        <div class="std-badge reveal">
+          <div class="std-ico">CSRD</div>
+          <div>
+            <div class="std-bname">CSRD Ready</div>
+            <div class="std-bdesc">Percorso verso ESRS quando richiesto</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="std-text">
+      <div class="sec-tag reveal">Conformit&agrave; normativa</div>
+      <div class="sec-title reveal">Aggiornato agli<br>standard 2026</div>
+      <p class="reveal">VERA &egrave; allineato all&rsquo;ultimo regolamento EFRAG VSME (Ares(2026)4624010 del 06/05/2026). La struttura del questionario rispecchia esattamente i disclosure obbligatori e volontari.</p>
+      <ul class="std-checklist">
+        <li class="reveal">Aggiornamento automatico agli standard</li>
+        <li class="reveal">Mapping GRI &harr; VSME incluso</li>
+        <li class="reveal">Storico report multi-anno</li>
+        <li class="reveal">Export dati per revisori</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta">
+  <h2 class="reveal">Inizia il tuo<br>report ESG oggi</h2>
+  <p class="reveal">Nessuna installazione. Nessun consulente. Solo dati e un PDF professionale.</p>
+  <div class="cta-stats">
+    <div>
+      <div class="cta-stat-n" data-target="43">0</div>
+      <div class="cta-stat-l">Pagine di report</div>
+    </div>
+    <div>
+      <div class="cta-stat-n" data-target="30">0</div>
+      <div class="cta-stat-l">Minuti in media</div>
+    </div>
+    <div>
+      <div class="cta-stat-n" data-target="100">0</div>
+      <div class="cta-stat-l">% conformit&agrave; VSME</div>
+    </div>
+  </div>
+  <div class="hero-btns">
+    <a href="#" class="btn-p">Genera il tuo report &rarr;</a>
+    <a href="#" class="btn-g">Vedi demo PDF</a>
+  </div>
+</section>
+
+<footer>
+  <div class="f-logo">VER<em>A</em> ESG</div>
+  <div class="f-copy">&copy; 2026 VERA ESG Platform &mdash; Tutti i diritti riservati</div>
+</footer>
+
+<!-- GSAP -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+<script>
+gsap.registerPlugin(ScrollTrigger);
+
+/* ── PARTICLES ─────────────────────────────────── */
+(function(){
+  const wrap = document.getElementById('particles');
+  const positions = [
+    [12,20],[25,70],[38,35],[52,85],[65,15],[78,60],[90,40],[8,55],
+    [45,10],[72,90],[30,80],[85,25],[55,50],[20,45],[60,75],[42,65]
+  ];
+  positions.forEach(([x,y],i)=>{
+    const s = document.createElement('span');
+    s.style.left=x+'%'; s.style.top=y+'%';
+    s.style.setProperty('--dur',(3+Math.random()*3)+'s');
+    s.style.setProperty('--delay',(Math.random()*4)+'s');
+    wrap.appendChild(s);
+  });
+})();
+
+/* ── LOADER ────────────────────────────────────── */
+const loaderEl = document.getElementById('loader');
+const barEl    = document.getElementById('loader-bar');
+const numEl    = document.getElementById('loader-n');
+let prog = 0;
+const iv = setInterval(()=>{
+  prog += Math.random()*3.2 + 0.8;
+  if(prog>=100){ prog=100; clearInterval(iv); }
+  barEl.style.width = prog+'%';
+  numEl.textContent = Math.floor(prog)+' / 100';
+  if(prog>=100){
+    setTimeout(()=>{
+      loaderEl.style.opacity='0';
+      setTimeout(()=>{ loaderEl.remove(); heroIn(); }, 650);
+    },200);
+  }
+},35);
+
+/* ── HERO IN ───────────────────────────────────── */
+function heroIn(){
+  const tl = gsap.timeline();
+  tl.fromTo('.hero-eyebrow',{opacity:0,y:16},{opacity:1,y:0,duration:.6,ease:'power3.out'})
+    .fromTo('h1',{opacity:0,y:40},{opacity:1,y:0,duration:.9,ease:'power3.out'},'-=.25')
+    .fromTo('.hero-sub',{opacity:0,y:20},{opacity:1,y:0,duration:.7,ease:'power3.out'},'-=.45')
+    .fromTo('.hero-btns',{opacity:0,y:16},{opacity:1,y:0,duration:.6,ease:'power3.out'},'-=.4')
+    .fromTo('.corner,.coord,.scroll-cue',{opacity:0},{opacity:1,duration:.8,stagger:.06},'-=.3');
+}
+
+/* ── NAV SCROLL STATE ──────────────────────────── */
+ScrollTrigger.create({
+  start:'top -60',
+  onUpdate(self){
+    const nav=document.getElementById('nav');
+    if(self.progress>0){
+      nav.style.background='rgba(6,13,6,0.92)';
+      nav.style.backdropFilter='blur(14px)';
+      nav.style.borderBottom='1px solid rgba(34,197,94,0.08)';
+    } else {
+      nav.style.background='transparent';
+      nav.style.backdropFilter='none';
+      nav.style.borderBottom='none';
+    }
+  }
+});
+
+/* ── SVG PREP ──────────────────────────────────── */
+function prepSVG(){
+  // Stroke-draw elements
+  const drawIds = [
+    'sv-doc','sv-fold1','sv-fold2','sv-hdr','sv-hdrline','sv-div0',
+    'sv-ebadge','sv-xax','sv-yax','sv-donut-bg','sv-donut-arc',
+    'sv-trend','sv-trend-arrow','sv-div1',
+    'sv-sbadge','sv-nc',
+    'sv-l1','sv-n1','sv-l2','sv-n2','sv-l3','sv-n3','sv-l4','sv-n4','sv-l5','sv-n5',
+    'sv-pt1','sv-pt2','sv-pt3','sv-div2',
+    'sv-gbadge','sv-h0','sv-h1','sv-h2','sv-h3','sv-hc1','sv-hc2','sv-hc3',
+    'sv-cert1','sv-cert2','sv-cert3','sv-bot'
+  ];
+  drawIds.forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    let len=200;
+    try{ if(el.getTotalLength) len=el.getTotalLength(); }catch(e){}
+    // Don't override existing stroke-dasharray on donut-arc / cert1
+    if(!el.style.strokeDasharray){
+      el.style.strokeDasharray = len;
+      el.style.strokeDashoffset = len;
+    } else {
+      // already has dasharray (donut-arc, cert1): just set offset to full
+      el.style.strokeDashoffset = parseFloat(el.getAttribute('stroke-dasharray') || len);
+    }
+  });
+  // Bars
+  document.querySelectorAll('.sv-bar').forEach(b=>{
+    b.setAttribute('height',0); b.setAttribute('y',174);
+  });
+  // Progress
+  document.querySelectorAll('.sv-prog').forEach(p=>{ p.setAttribute('width',0); });
+}
+prepSVG();
+
+function setPath(id, pct){
+  const el=document.getElementById(id); if(!el) return;
+  const da = parseFloat(el.style.strokeDasharray)||200;
+  el.style.strokeDashoffset = da*(1-Math.max(0,Math.min(1,pct)));
+}
+function setBar(id, pct){
+  const el=document.getElementById(id); if(!el) return;
+  const maxH=parseFloat(el.dataset.h)||50;
+  const h=maxH*Math.max(0,Math.min(1,pct));
+  el.setAttribute('height',h); el.setAttribute('y',174-h);
+}
+function setProg(id, pct){
+  const el=document.getElementById(id); if(!el) return;
+  const maxW=parseFloat(el.dataset.w)||100;
+  el.setAttribute('width',maxW*Math.max(0,Math.min(1,pct)));
+}
+function setTxt(id, pct){
+  const el=document.getElementById(id); if(!el) return;
+  el.setAttribute('opacity', Math.max(0,Math.min(1,pct)));
+}
+function ease(t){ return t<.5 ? 2*t*t : -1+(4-2*t)*t; } // ease in-out
+
+/* ── BLUEPRINT SCROLL DRIVER ───────────────────── */
+ScrollTrigger.create({
+  trigger:'#blueprint',
+  start:'top top',
+  end:'bottom bottom',
+  onUpdate(self){
+    const p = self.progress;
+
+    /* — Panel switching — */
+    const idx = Math.min(3, Math.floor(p*4));
+    document.querySelectorAll('.bp-nav-item').forEach((it,i)=>it.classList.toggle('active',i===idx));
+    document.querySelectorAll('.bp-panel').forEach((pl,i)=>pl.classList.toggle('active',i===idx));
+
+    /* — Phase 0 (0→0.18): document shell + header — */
+    const ph0 = ease(Math.min(1,p/0.18));
+    setPath('sv-doc',  ph0);
+    setPath('sv-fold1',ph0);
+    setPath('sv-fold2',ph0*.6);
+    setPath('sv-hdr',  ph0*.8);
+    setPath('sv-hdrline',ph0);
+    setPath('sv-div0', ph0);
+    setTxt('t-hdr',    ph0);
+
+    /* — Phase 1 (0.1→0.38): Ambiente — */
+    const ph1 = ease(Math.max(0,Math.min(1,(p-.10)/.28)));
+    setPath('sv-ebadge',ph1);
+    setTxt('t-e',  ph1);
+    setTxt('t-ghg',ph1);
+    setPath('sv-xax',ph1);
+    setPath('sv-yax',ph1);
+    setBar('sv-b1', Math.max(0,(ph1-.0)/.9));
+    setBar('sv-b2', Math.max(0,(ph1-.08)/.9));
+    setBar('sv-b3', Math.max(0,(ph1-.16)/.9));
+    setBar('sv-b4', Math.max(0,(ph1-.24)/.9));
+    setTxt('t-y1',ph1); setTxt('t-y2',ph1); setTxt('t-y3',ph1); setTxt('t-y4',ph1);
+    // Donut
+    setPath('sv-donut-bg', ph1);
+    const arc=document.getElementById('sv-donut-arc');
+    if(arc){ arc.style.strokeDashoffset = 188.5*(1-ph1*0.67); }
+    setTxt('t-pct',ph1); setTxt('t-ren',ph1);
+    // Trend
+    setPath('sv-trend',ph1); setPath('sv-trend-arrow',ph1);
+    setPath('sv-div1',ph1);
+
+    /* — Phase 2 (0.35→0.62): Sociale — */
+    const ph2 = ease(Math.max(0,Math.min(1,(p-.35)/.27)));
+    setPath('sv-sbadge',ph2); setTxt('t-s',ph2);
+    setPath('sv-nc', ph2);
+    ['sv-l1','sv-n1','sv-l2','sv-n2','sv-l3','sv-n3','sv-l4','sv-n4','sv-l5','sv-n5'].forEach((id,i)=>{
+      setPath(id, Math.max(0,(ph2-i*.07)/.7));
+    });
+    setTxt('t-emp',ph2);
+    // Progress track backgrounds
+    ['sv-pt1','sv-pt2','sv-pt3'].forEach(id=>setPath(id,ph2));
+    // Progress fills
+    ['t-k1','t-k2','t-k3'].forEach((id,i)=>setTxt(id,Math.max(0,(ph2-i*.1)/.8)));
+    setProg('sv-p1',Math.max(0,(ph2-.05)/.9));
+    setProg('sv-p2',Math.max(0,(ph2-.12)/.85));
+    setProg('sv-p3',Math.max(0,(ph2-.19)/.8));
+    setPath('sv-div2',ph2);
+
+    /* — Phase 3 (0.60→0.85): Governance — */
+    const ph3 = ease(Math.max(0,Math.min(1,(p-.60)/.25)));
+    setPath('sv-gbadge',ph3); setTxt('t-g',ph3);
+    setPath('sv-h0',ph3);
+    setPath('sv-h1',Math.max(0,(ph3-.1)/.9));
+    setPath('sv-h2',Math.max(0,(ph3-.15)/.9));
+    setPath('sv-h3',Math.max(0,(ph3-.20)/.9));
+    setPath('sv-hc1',ph3); setPath('sv-hc2',ph3); setPath('sv-hc3',ph3);
+    setTxt('t-cda',ph3);
+
+    /* — Phase 4 (0.78→1.0): Stamp + footer — */
+    const ph4 = ease(Math.max(0,Math.min(1,(p-.78)/.22)));
+    setPath('sv-cert1',ph4); setPath('sv-cert2',ph4); setPath('sv-cert3',ph4);
+    setTxt('t-c1',ph4); setTxt('t-c2',ph4); setTxt('t-c3',ph4);
+    setPath('sv-bot',ph4); setTxt('t-footer',ph4);
+  }
+});
+
+/* ── REVEAL ON SCROLL ──────────────────────────── */
+const revEls = document.querySelectorAll('.reveal');
+const revObs = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); revObs.unobserve(e.target); }});
+},{ threshold:.15 });
+revEls.forEach(el=>revObs.observe(el));
+
+/* ── COUNTERS ──────────────────────────────────── */
+document.querySelectorAll('[data-target]').forEach(el=>{
+  const target=parseInt(el.dataset.target);
+  ScrollTrigger.create({
+    trigger:el, start:'top 85%', once:true,
+    onEnter(){
+      gsap.to({v:0},{v:target,duration:2,ease:'power2.out',
+        onUpdate(){ el.textContent=Math.floor(this.targets()[0].v); }
+      });
+    }
+  });
+});
+</script>
+</body>
+</html>

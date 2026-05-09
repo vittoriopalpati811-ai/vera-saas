@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VERA ESG — Bilancio di Sostenibilità VSME 2026</title>
+<title>VERA ESG — Bilancio di Sostenibilità VSME 2026 & GRI Standards</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -173,7 +173,7 @@ h1 em{font-style:normal;color:var(--g)}
   font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.55);
   display:flex;align-items:flex-start;gap:10px;
 }
-.bp-list li::before{content:'\\2198';color:var(--g);flex-shrink:0}
+.bp-list li::before{content:'';width:5px;height:5px;background:var(--g);flex-shrink:0;margin-top:4px;border-radius:1px}
 
 /* ── PROCESS (LIGHT) ── */
 #process{background:var(--light);color:#071207;padding:120px 80px}
@@ -246,6 +246,41 @@ footer{
 .f-logo em{font-style:normal;color:var(--g)}
 .f-copy{font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.18);letter-spacing:.05em}
 
+/* ── HERO STANDARD BADGES ── */
+.hero-badges{
+  display:flex;gap:10px;justify-content:center;flex-wrap:wrap;
+  margin-bottom:34px;margin-top:-8px;
+}
+.hbadge{
+  font-family:var(--mono);font-size:9px;letter-spacing:.15em;
+  padding:6px 14px;border:1px solid rgba(34,197,94,.28);color:rgba(34,197,94,.75);
+  border-radius:2px;background:rgba(34,197,94,.04);
+  animation:badgeFloat var(--fdur,3.4s) var(--fdelay,0s) ease-in-out infinite;
+}
+@keyframes badgeFloat{
+  0%,100%{transform:translateY(0);opacity:.75}
+  50%{transform:translateY(-5px);opacity:1}
+}
+
+/* ── TICKER STRIP ── */
+.ticker-wrap{
+  overflow:hidden;background:rgba(34,197,94,.04);
+  border-top:1px solid rgba(34,197,94,.1);border-bottom:1px solid rgba(34,197,94,.1);
+  padding:11px 0;white-space:nowrap;
+}
+.ticker-track{
+  display:inline-flex;gap:0;
+  animation:tickerScroll 28s linear infinite;
+}
+.ticker-track:hover{animation-play-state:paused}
+.ticker-item{
+  font-family:var(--mono);font-size:9px;letter-spacing:.2em;
+  color:rgba(34,197,94,.45);padding:0 40px;text-transform:uppercase;
+  display:flex;align-items:center;gap:10px;
+}
+.ticker-item::after{content:'·';color:rgba(34,197,94,.25)}
+@keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
 /* ── REVEAL UTILITY ── */
 .reveal{opacity:0;transform:translateY(32px);transition:opacity .7s,transform .7s}
 .reveal.in{opacity:1;transform:translateY(0)}
@@ -278,13 +313,19 @@ footer{
   <div class="corner corner-bl"></div>
   <div class="corner corner-br"></div>
   <span class="coord coord-tl">48.2&deg; N &mdash; 16.3&deg; E</span>
-  <span class="coord coord-tr">ESG / VSME 2026</span>
+  <span class="coord coord-tr">VSME 2026 &middot; GRI &middot; GHG</span>
   <span class="coord coord-bl">REV. 2.0 &mdash; 2026</span>
   <span class="coord coord-br">VERA-ESG.COM</span>
   <div class="hero-content">
-    <div class="hero-eyebrow">Piattaforma ESG certificata</div>
+    <div class="hero-eyebrow">Piattaforma ESG per PMI italiane</div>
     <h1>Il tuo Bilancio<br>di Sostenibilit&agrave;<br><em>in 4 giorni</em></h1>
-    <p class="hero-sub">Dalla raccolta dati al PDF professionale conforme VSME 2026 e GRI Standards. Zero consulenti. Zero fogli Excel.</p>
+    <p class="hero-sub">Dalla raccolta dati al PDF professionale conforme a VSME 2026 e GRI Standards. Zero consulenti. Zero fogli Excel.</p>
+    <div class="hero-badges">
+      <span class="hbadge" style="--fdur:3.2s;--fdelay:0s">VSME 2026</span>
+      <span class="hbadge" style="--fdur:3.8s;--fdelay:.4s">GRI Standards</span>
+      <span class="hbadge" style="--fdur:3.5s;--fdelay:.8s">GHG Protocol</span>
+      <span class="hbadge" style="--fdur:4.1s;--fdelay:1.2s">CSRD Ready</span>
+    </div>
     <div class="hero-btns">
       <a href="#" class="btn-p">Genera il report &rarr;</a>
       <a href="#" class="btn-g">Vedi un esempio</a>
@@ -513,8 +554,8 @@ footer{
         <text class="sv-txt" id="t-cda" x="240" y="379" text-anchor="middle"
           font-family="Courier New" font-size="7" fill="rgba(196,181,253,0.6)" opacity="0">CDA</text>
         <text class="sv-txt" id="t-c1" x="356" y="385" text-anchor="middle"
-          font-family="Courier New" font-size="7" letter-spacing="1"
-          fill="rgba(34,197,94,0.55)" opacity="0">VSME 2026</text>
+          font-family="Courier New" font-size="6" letter-spacing="1"
+          fill="rgba(34,197,94,0.55)" opacity="0">VSME &amp; GRI</text>
         <text class="sv-txt" id="t-c2" x="356" y="397" text-anchor="middle"
           font-family="Courier New" font-size="11" font-weight="bold"
           fill="rgba(34,197,94,0.85)" opacity="0">VERA</text>
@@ -523,7 +564,7 @@ footer{
           fill="rgba(34,197,94,0.45)" opacity="0">CERTIFICATO</text>
         <text class="sv-txt" id="t-footer" x="240" y="514" text-anchor="middle"
           font-family="Courier New" font-size="6.5"
-          fill="rgba(255,255,255,0.12)" opacity="0">GENERATO DA VERA ESG PLATFORM — CONFORME EFRAG VSME 2026</text>
+          fill="rgba(255,255,255,0.12)" opacity="0">GENERATO DA VERA ESG PLATFORM — VSME 2026 + GRI STANDARDS</text>
       </svg>
     </div>
 
@@ -574,29 +615,56 @@ footer{
   </div>
 </section>
 
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker-track">
+    <span class="ticker-item">VSME 2026</span>
+    <span class="ticker-item">GRI Standards</span>
+    <span class="ticker-item">GHG Protocol</span>
+    <span class="ticker-item">Scope 1 · 2 · 3</span>
+    <span class="ticker-item">CSRD Ready</span>
+    <span class="ticker-item">Bilancio di Sostenibilità</span>
+    <span class="ticker-item">ESG Reporting</span>
+    <span class="ticker-item">EFRAG VSME 2026</span>
+    <span class="ticker-item">ISPRA 2024</span>
+    <span class="ticker-item">VERA ESG Platform</span>
+    <!-- duplicate for seamless loop -->
+    <span class="ticker-item">VSME 2026</span>
+    <span class="ticker-item">GRI Standards</span>
+    <span class="ticker-item">GHG Protocol</span>
+    <span class="ticker-item">Scope 1 · 2 · 3</span>
+    <span class="ticker-item">CSRD Ready</span>
+    <span class="ticker-item">Bilancio di Sostenibilità</span>
+    <span class="ticker-item">ESG Reporting</span>
+    <span class="ticker-item">EFRAG VSME 2026</span>
+    <span class="ticker-item">ISPRA 2024</span>
+    <span class="ticker-item">VERA ESG Platform</span>
+  </div>
+</div>
+
 <!-- PROCESS -->
 <section id="process">
   <div class="process-inner">
-    <div class="sec-tag reveal">Come funziona</div>
-    <div class="sec-title reveal">Dalla raccolta dati<br>al report certificato</div>
+    <div class="sec-tag" id="process-tag">Come funziona</div>
+    <div class="sec-title" id="process-title">Dalla raccolta dati<br>al report VSME &amp; GRI</div>
     <div class="steps">
-      <div class="step reveal">
+      <div class="step" id="step-0">
         <div class="step-n">01 &mdash;</div>
         <div class="step-rule"></div>
         <h3>Rispondi al questionario</h3>
-        <p>Guida passo-passo sui moduli VSME 2026: Basic (B1&ndash;B11) e Comprehensive (C1&ndash;C9). Ogni domanda spiega perch&eacute; il dato &egrave; necessario.</p>
+        <p>Guida passo-passo su VSME 2026 (Basic B1&ndash;B11, Comprehensive C1&ndash;C9) e GRI Standards. Ogni domanda spiega perch&eacute; il dato &egrave; necessario per la conformit&agrave;.</p>
       </div>
-      <div class="step reveal">
+      <div class="step" id="step-1">
         <div class="step-n">02 &mdash;</div>
         <div class="step-rule"></div>
         <h3>VERA elabora i dati</h3>
-        <p>Emissioni GHG, percentuali, benchmark di settore e indicatori derivati vengono calcolati automaticamente. Nessun foglio Excel.</p>
+        <p>Emissioni GHG Scope 1&ndash;3, indici GRI, percentuali e benchmark di settore calcolati in automatico. Il mapping VSME &harr; GRI &egrave; incluso senza sforzo aggiuntivo.</p>
       </div>
-      <div class="step reveal">
+      <div class="step" id="step-2">
         <div class="step-n">03 &mdash;</div>
         <div class="step-rule"></div>
         <h3>Scarica il PDF professionale</h3>
-        <p>Report con grafica brandizzata, indici GRI, sezioni VSME, grafici e tabelle. Pronto per CDA, banche e stakeholder.</p>
+        <p>Report con grafica brandizzata, disclosure GRI, sezioni VSME 2026, grafici e tabelle KPI. Pronto per CDA, banche, istituti finanziatori e stakeholder.</p>
       </div>
     </div>
   </div>
@@ -638,14 +706,14 @@ footer{
       </div>
     </div>
     <div class="std-text">
-      <div class="sec-tag reveal">Conformit&agrave; normativa</div>
-      <div class="sec-title reveal">Aggiornato agli<br>standard 2026</div>
-      <p class="reveal">VERA &egrave; allineato all&rsquo;ultimo regolamento EFRAG VSME (Ares(2026)4624010 del 06/05/2026). La struttura del questionario rispecchia esattamente i disclosure obbligatori e volontari.</p>
+      <div class="sec-tag">Conformit&agrave; normativa</div>
+      <div class="sec-title">VSME 2026<br>&amp; GRI Standards</div>
+      <p>VERA supporta nativamente sia EFRAG VSME 2026 (Ares(2026)4624010) che GRI Standards. Puoi generare un unico report che soddisfa entrambi i framework — senza duplicare la raccolta dati.</p>
       <ul class="std-checklist">
-        <li class="reveal">Aggiornamento automatico agli standard</li>
-        <li class="reveal">Mapping GRI &harr; VSME incluso</li>
-        <li class="reveal">Storico report multi-anno</li>
-        <li class="reveal">Export dati per revisori</li>
+        <li>Mapping automatico GRI &harr; VSME</li>
+        <li>Disclosure VSME Basic e Comprehensive</li>
+        <li>GRI Topic Standards inclusi</li>
+        <li>Export dati per revisori e banche</li>
       </ul>
     </div>
   </div>
@@ -653,8 +721,8 @@ footer{
 
 <!-- CTA -->
 <section id="cta">
-  <h2 class="reveal">Il tuo primo Bilancio<br>di Sostenibilit&agrave;</h2>
-  <p class="reveal">Guidato passo dopo passo. Nessun consulente, nessun foglio Excel. Solo il tuo report VSME 2026 pronto in 4 giorni.</p>
+  <h2>Il tuo primo Bilancio<br>di Sostenibilit&agrave;</h2>
+  <p>Guidato passo dopo passo. Nessun consulente, nessun foglio Excel. VSME 2026 e GRI Standards — pronti in 4 giorni.</p>
   <div class="cta-stats">
     <div>
       <div class="cta-stat-n">4</div>
@@ -666,7 +734,7 @@ footer{
     </div>
     <div>
       <div class="cta-stat-n" data-target="100">0</div>
-      <div class="cta-stat-l">% conformit&agrave; VSME</div>
+      <div class="cta-stat-l">% conformit&agrave; VSME &amp; GRI</div>
     </div>
   </div>
   <div class="hero-btns">
@@ -890,6 +958,46 @@ const revObs = new IntersectionObserver((entries)=>{
   entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); revObs.unobserve(e.target); }});
 },{ threshold:.15 });
 revEls.forEach(el=>revObs.observe(el));
+
+/* ── PROCESS: GSAP stagger entrance ───────────── */
+gsap.set('#process-tag,#process-title',{opacity:0,y:28});
+gsap.set('#step-0,#step-1,#step-2',{opacity:0,y:44});
+ScrollTrigger.create({
+  trigger:'#process',start:'top 75%',once:true,
+  onEnter(){
+    gsap.to('#process-tag',{opacity:1,y:0,duration:.5,ease:'power3.out'});
+    gsap.to('#process-title',{opacity:1,y:0,duration:.7,ease:'power3.out',delay:.15});
+    gsap.to(['#step-0','#step-1','#step-2'],{
+      opacity:1,y:0,duration:.7,ease:'power3.out',stagger:.18,delay:.35
+    });
+  }
+});
+
+/* ── STANDARDS: stagger badges ─────────────────── */
+gsap.set('.std-badge',{opacity:0,x:-18});
+ScrollTrigger.create({
+  trigger:'#standards',start:'top 70%',once:true,
+  onEnter(){
+    gsap.to('.std-badge',{opacity:1,x:0,duration:.6,ease:'power3.out',stagger:.12,delay:.2});
+    gsap.to('.std-text .sec-tag',{opacity:1,y:0,duration:.5,ease:'power3.out',delay:.1});
+    gsap.to('.std-text .sec-title',{opacity:1,y:0,duration:.7,ease:'power3.out',delay:.25});
+    gsap.to('.std-text > p',{opacity:1,y:0,duration:.6,ease:'power3.out',delay:.4});
+    gsap.to('.std-checklist li',{opacity:1,y:0,duration:.5,ease:'power3.out',stagger:.1,delay:.55});
+  }
+});
+gsap.set('.std-text .sec-tag,.std-text .sec-title,.std-text > p,.std-checklist li',{opacity:0,y:22});
+
+/* ── CTA: slide in ─────────────────────────────── */
+gsap.set('#cta h2,#cta > p,#cta .cta-stats,#cta .hero-btns',{opacity:0,y:32});
+ScrollTrigger.create({
+  trigger:'#cta',start:'top 70%',once:true,
+  onEnter(){
+    gsap.to('#cta h2',{opacity:1,y:0,duration:.8,ease:'power3.out'});
+    gsap.to('#cta > p',{opacity:1,y:0,duration:.7,ease:'power3.out',delay:.2});
+    gsap.to('#cta .cta-stats',{opacity:1,y:0,duration:.7,ease:'power3.out',delay:.4});
+    gsap.to('#cta .hero-btns',{opacity:1,y:0,duration:.6,ease:'power3.out',delay:.6});
+  }
+});
 
 /* ── COUNTERS ──────────────────────────────────── */
 document.querySelectorAll('[data-target]').forEach(el=>{
